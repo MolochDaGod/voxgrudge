@@ -1012,45 +1012,99 @@ function tryAttack(){
   gcd = GCD_DURATION;
   playerAttackPhase = 1.0;
 
+  // Face aim before attack
+  playerMesh.rotation.y = Math.atan2(fw.x, fw.z);
+  // Weapon-tip spawn offset
+  const weaponTip = pp.clone().add(fw.clone().multiplyScalar(1.2)).add(new THREE.Vector3(0,1.4,0));
+
   if(currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee'){
-    aoeAttack(pp, currentWeapon.range||4, dmg, 0xffffff, 0);
-    spawnHitFlash(pp.clone().add(fw.clone().multiplyScalar(2)), 0xcccccc, 4);
-    // Melee hit VFX: spawn spline arc
-    const arcEnd = pp.clone().add(fw.clone().multiplyScalar(currentWeapon.range||4));
-    const arcMid = pp.clone().add(fw.clone().multiplyScalar((currentWeapon.range||4)*0.5)).add(new THREE.Vector3(0,2,0));
-    spawnTrail(pp.clone().add(new THREE.Vector3(0,1.5,0)), arcEnd.clone().add(new THREE.Vector3(0,0.5,0)), currentWeapon.id==='greatsword'?0xff4400:0xcccccc, 0.3);
+    const isHeavy = currentWeapon.type==='heavy_melee';
+    const slashColor = isHeavy ? 0xff4400 : (currentWeapon.canBlock ? 0xccaa44 : 0xcccccc);
+    // Animated slash arc with directional cone damage + push
+    spawnSlashArc(pp, fw, currentWeapon.range||4, slashColor, isHeavy);
+    // Cone damage (replaces radial aoeAttack for melee)
+    enemies.forEach(e=>{
+      if(!e.alive) return;
+      const toE=e.mesh.position.clone().sub(pp);
+      const dist=toE.length();
+      if(dist>(currentWeapon.range||4)*1.1) return;
+      toE.y=0; toE.normalize();
+      const fwFlat=new THREE.Vector3(fw.x,0,fw.z).normalize();
+      if(fwFlat.dot(toE)<(isHeavy?0.3:0.5)) return;
+      damageEnemy(e, dmg, toE);
+    });
+    spawnHitFlash(weaponTip, slashColor, 5);
+    if(isHeavy) triggerShake(0.25, 0.12);
   } else {
     if(currentWeapon.ammo <= 0) return;
     currentWeapon.ammo--;
-    const bulletColor = currentWeapon.type==='magic'?0xcc44ff:currentWeapon.type==='auto'?0xffdd00:0xffff44;
-    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg, speed:currentWeapon.speed||1.8, color:bulletColor});
-    // Muzzle flash for gun
-    if(currentWeapon.type==='auto'){
-      spawnHitFlash(pp.clone().add(fw.clone().multiplyScalar(1.5)).add(new THREE.Vector3(0,1.4,0)), 0xffaa00, 3);
-    }
-    // Arrow trail for bow
+
     if(currentWeapon.type==='projectile'){
-      const trailEnd = pp.clone().add(fw.clone().multiplyScalar(8)).add(new THREE.Vector3(0,1,0));
-      spawnTrail(pp.clone().add(new THREE.Vector3(0,1,0)), trailEnd, 0x88ff44, 0.4);
+      // Arrow: gravity arc, directional knockback
+      fireBullet(weaponTip, fw, {
+        dmg, speed:currentWeapon.speed||1.8, color:0xddff44,
+        gravity:4, knockback:2.5, impactType:'spark', impactColor:0xddff44
+      });
+    } else if(currentWeapon.type==='magic'){
+      // Magic: slight homing, fire/frost impact
+      fireBullet(weaponTip, fw, {
+        dmg, speed:currentWeapon.speed||0.9, color:0xcc44ff,
+        homing:3, knockback:1, impactType:'fire', impactColor:0xcc44ff
+      });
+    } else if(currentWeapon.type==='auto'){
+      // Gun: fast, spark impact, muzzle flash
+      fireBullet(weaponTip, fw, {
+        dmg, speed:currentWeapon.speed||2.1, color:0xffdd00,
+        knockback:0.5, impactType:'spark', impactColor:0xffaa00
+      });
+      spawnHitFlash(weaponTip, 0xffaa00, 4);
     }
   }
   updateWeaponUI();
 }
 
 function fireBullet(pos, dir, opts){
-  const geo = new THREE.SphereGeometry(0.15,6,6);
-  const mat = new THREE.MeshStandardMaterial({color:opts.color||0xffff44,emissive:opts.color||0xffff44,emissiveIntensity:1,transparent:true});
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.copy(pos);
-  scene.add(mesh);
-  bullets.push({mesh, dir:dir.clone(), speed:opts.speed||2.0, dmg:opts.dmg||30, life:3.5, pierce:opts.pierce||false, explosive:opts.explosive||false, expRadius:opts.expRadius||0, hit:false});
+  const col = opts.color||0xffff44;
+  const g = new THREE.Group();
+  // Core projectile mesh
+  const coreGeo = new THREE.SphereGeometry(0.18,8,8);
+  const coreMat = new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.5,transparent:true,opacity:0.95});
+  const core = new THREE.Mesh(coreGeo, coreMat);
+  g.add(core);
+  // Glow halo
+  const haloGeo = new THREE.SphereGeometry(0.35,6,6);
+  const haloMat = new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.25});
+  g.add(new THREE.Mesh(haloGeo, haloMat));
+  g.position.copy(pos);
+  scene.add(g);
+
+  const vel = dir.clone().multiplyScalar(opts.speed||2.0);
+  // Gravity for arrows, slight arc for magic
+  const gravity = opts.gravity||0;
+  const homing = opts.homing||0;
+
+  bullets.push({
+    mesh:g, core, dir:dir.clone(), vel, speed:opts.speed||2.0,
+    dmg:opts.dmg||30, life:3.5, pierce:opts.pierce||false,
+    explosive:opts.explosive||false, expRadius:opts.expRadius||0,
+    hit:false, gravity, homing,
+    trailTimer:0, trailInterval:0.03,
+    knockback:opts.knockback||1.5,
+    impactType:opts.impactType||'spark', // spark, explosion, frost, fire, poison
+    impactColor:opts.impactColor||col,
+    prevPositions:[] // for spline trail
+  });
 }
 
 function damageEnemy(e, dmg, dir){
   if(!e||!e.alive) return;
   e.hp -= dmg;
-  e.flashTimer = 0.1;
-  if(dir) { e.mesh.position.add(dir.clone().multiplyScalar(0.5)); }
+  e.flashTimer = 0.12;
+  // Knockback via physics velocity (decelerates over time)
+  if(dir){
+    if(!e.knockbackVel) e.knockbackVel=new THREE.Vector3();
+    e.knockbackVel.add(dir.clone().multiplyScalar(Math.min(dmg*0.08, 4)));
+  }
   spawnHitFlash(e.mesh.position, 0xff3300, 4);
   spawnDmgNumber(e.mesh.position.clone().add(new THREE.Vector3(0,3,0)), Math.round(dmg), dmg>100?'#ff0':'#f40');
   registerComboHit();
@@ -1206,6 +1260,13 @@ function updateEnemies(dt){
       }
     }
 
+    // Physics knockback deceleration
+    if(e.knockbackVel && e.knockbackVel.lengthSq()>0.01){
+      ep.add(e.knockbackVel.clone().multiplyScalar(dt));
+      e.knockbackVel.multiplyScalar(Math.max(0, 1-dt*8)); // friction
+      if(e.knockbackVel.lengthSq()<0.01) e.knockbackVel=null;
+    }
+
     // Stun check
     if(e.stunTimer&&e.stunTimer>0){e.stunTimer-=dt;return;}
 
@@ -1301,29 +1362,179 @@ function updateMinions(dt){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BULLETS
+// SPLINE PROJECTILE ENGINE
 // ═══════════════════════════════════════════════════════════════
 function updateBullets(dt){
-  bullets.forEach((b,bi)=>{
+  bullets.forEach(b=>{
     if(b.hit) return;
-    b.mesh.position.add(b.dir.clone().multiplyScalar(b.speed*18*dt));
-    b.life-=dt;
-    if(b.life<=0){ scene.remove(b.mesh); b.hit=true; return; }
 
+    // Apply gravity (arrows arc)
+    if(b.gravity) b.vel.y -= b.gravity*dt;
+
+    // Homing toward mouse target (magic projectiles)
+    if(b.homing>0){
+      const target=getAimTarget();
+      target.y=b.mesh.position.y;
+      const desired=target.clone().sub(b.mesh.position).normalize().multiplyScalar(b.speed);
+      b.vel.lerp(desired, b.homing*dt);
+      b.dir.copy(b.vel).normalize();
+    }
+
+    // Move
+    b.mesh.position.add(b.vel.clone().multiplyScalar(18*dt));
+    b.life-=dt;
+
+    // Record trail positions for spline
+    b.trailTimer+=dt;
+    if(b.trailTimer>=b.trailInterval){
+      b.trailTimer=0;
+      b.prevPositions.push(b.mesh.position.clone());
+      if(b.prevPositions.length>12) b.prevPositions.shift();
+    }
+
+    // Draw live spline trail
+    if(b.prevPositions.length>=3){
+      if(b._trailMesh) scene.remove(b._trailMesh);
+      const curve=new THREE.CatmullRomCurve3(b.prevPositions);
+      const tGeo=new THREE.TubeGeometry(curve,b.prevPositions.length,0.06,4,false);
+      const tMat=new THREE.MeshBasicMaterial({color:b.impactColor,transparent:true,opacity:0.5});
+      b._trailMesh=new THREE.Mesh(tGeo,tMat);
+      scene.add(b._trailMesh);
+    }
+
+    // Rotate projectile to face travel direction
+    if(b.vel.lengthSq()>0.01){
+      b.mesh.lookAt(b.mesh.position.clone().add(b.vel));
+    }
+
+    // Expire
+    if(b.life<=0){ projectileCleanup(b); b.hit=true; return; }
+
+    // Hit detection
     const bp=b.mesh.position;
     enemies.forEach(e=>{
       if(!e.alive||b.hit) return;
       if(bp.distanceTo(e.mesh.position)<1.5){
-        damageEnemy(e,b.dmg,b.dir);
-        if(b.explosive){ aoeAttack(bp,b.expRadius,b.dmg*0.5,0xff6600); }
-        if(!b.pierce){ scene.remove(b.mesh); b.hit=true; }
+        // Physics knockback with deceleration
+        const kbDir=e.mesh.position.clone().sub(bp).normalize();
+        e.knockbackVel=kbDir.clone().multiplyScalar(b.knockback*8);
+        damageEnemy(e,b.dmg,kbDir);
+        // Impact VFX
+        spawnImpact(bp.clone(), b.impactType, b.impactColor, kbDir);
+        if(b.explosive){ aoeAttack(bp,b.expRadius,b.dmg*0.5,0xff6600,2); spawnImpact(bp.clone(),'explosion',0xff4400,kbDir); }
+        if(!b.pierce){ projectileCleanup(b); b.hit=true; }
       }
     });
-
-    // Enemy bullets hit player
-    // (enemy bullets are separate - not tracked here; handled by spitter behavior above using fireBullet which goes into bullets array)
   });
-  bullets = bullets.filter(b=>!b.hit&&b.life>0);
+  bullets=bullets.filter(b=>!b.hit&&b.life>0);
+}
+
+function projectileCleanup(b){
+  scene.remove(b.mesh);
+  if(b._trailMesh) scene.remove(b._trailMesh);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IMPACT VFX SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function spawnImpact(pos, type, color, dir){
+  pos=pos.clone().add(new THREE.Vector3(0,1,0));
+  if(type==='spark'){
+    // Directional spark shower
+    for(let i=0;i<8;i++){
+      const spread=new THREE.Vector3((Math.random()-0.5)*0.8, Math.random()*0.6, (Math.random()-0.5)*0.8);
+      const vel=dir?dir.clone().multiplyScalar(2+Math.random()*3).add(spread):spread.multiplyScalar(3);
+      spawnParticle(pos,vel,color,0.08+Math.random()*0.06,0.3+Math.random()*0.3);
+    }
+    triggerShake(0.1,0.05);
+  } else if(type==='explosion'){
+    // Radial burst + expanding ring + screen shake
+    spawnScatterBurst(pos, color, 24, 4, 0.6);
+    spawnAoeRing(pos, 5, color, 20);
+    // Expanding shockwave ring mesh
+    const ringGeo=new THREE.RingGeometry(0.1,0.3,24);
+    const ringMat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.7,side:THREE.DoubleSide});
+    const ring=new THREE.Mesh(ringGeo,ringMat);
+    ring.rotation.x=-Math.PI/2;
+    ring.position.copy(pos);
+    ring.position.y=0.1;
+    scene.add(ring);
+    trailSystems.push({mesh:ring,life:0.5,maxLife:0.5,_expandRing:true,_ringScale:1});
+    triggerShake(0.6,0.25);
+  } else if(type==='frost'){
+    for(let i=0;i<10;i++){
+      const a=Math.random()*Math.PI*2;
+      const vel=new THREE.Vector3(Math.cos(a)*2,1+Math.random()*2,Math.sin(a)*2);
+      spawnParticle(pos,vel,0x88ccff,0.12,0.5+Math.random()*0.3);
+    }
+    spawnAoeRing(pos, 3, 0x4488ff, 12);
+  } else if(type==='fire'){
+    for(let i=0;i<12;i++){
+      const vel=new THREE.Vector3((Math.random()-0.5)*3,2+Math.random()*4,(Math.random()-0.5)*3);
+      spawnParticle(pos,vel,Math.random()>0.5?0xff4400:0xff8800,0.1+Math.random()*0.08,0.4+Math.random()*0.4);
+    }
+    triggerShake(0.15,0.08);
+  } else if(type==='poison'){
+    for(let i=0;i<8;i++){
+      const vel=new THREE.Vector3((Math.random()-0.5)*1.5,0.5+Math.random()*1.5,(Math.random()-0.5)*1.5);
+      spawnParticle(pos,vel,0x44ff00,0.14,0.6+Math.random()*0.5);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MELEE SLASH ARC VFX (animated sweep with push)
+// ═══════════════════════════════════════════════════════════════
+let slashArcs=[]; // {mesh, life, maxLife, expandSpeed}
+
+function spawnSlashArc(origin, aimDir, range, color, isHeavy){
+  const halfAngle = isHeavy ? Math.PI*0.6 : Math.PI*0.4;
+  const segments = 16;
+  const thickness = isHeavy ? 0.15 : 0.08;
+  // Build arc points as a fan in the aim direction
+  const pts=[];
+  const baseAngle=Math.atan2(aimDir.x,aimDir.z);
+  for(let i=0;i<=segments;i++){
+    const t=i/segments;
+    const a=baseAngle - halfAngle + t*halfAngle*2;
+    const r=range*(0.3+t*0.7); // expand outward
+    pts.push(new THREE.Vector3(origin.x+Math.sin(a)*r, 1.2+Math.sin(t*Math.PI)*0.8, origin.z+Math.cos(a)*r));
+  }
+  const curve=new THREE.CatmullRomCurve3(pts);
+  const geo=new THREE.TubeGeometry(curve,segments,thickness,6,false);
+  const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85,side:THREE.DoubleSide});
+  const mesh=new THREE.Mesh(geo,mat);
+  scene.add(mesh);
+  slashArcs.push({mesh,life:0.25,maxLife:0.25});
+
+  // Directional cone damage with physics push
+  enemies.forEach(e=>{
+    if(!e.alive) return;
+    const toE=e.mesh.position.clone().sub(origin);
+    const dist=toE.length();
+    if(dist>range*1.1) return;
+    toE.normalize();
+    const dot=aimDir.dot(new THREE.Vector3(toE.x,0,toE.z).normalize());
+    if(dot<Math.cos(halfAngle)) return;
+    // Push enemy away from slash
+    const pushDir=toE.clone();
+    pushDir.y=0;
+    pushDir.normalize();
+    const pushForce=isHeavy?12:6;
+    e.knockbackVel=pushDir.multiplyScalar(pushForce);
+  });
+}
+
+function updateSlashArcs(dt){
+  slashArcs.forEach(s=>{
+    s.life-=dt;
+    const pct=s.life/s.maxLife;
+    s.mesh.material.opacity=pct*0.85;
+    s.mesh.scale.y=1+((1-pct)*0.3); // slight vertical expand
+  });
+  const dead=slashArcs.filter(s=>s.life<=0);
+  dead.forEach(s=>scene.remove(s.mesh));
+  slashArcs=slashArcs.filter(s=>s.life>0);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2238,6 +2449,11 @@ function updateTrails(dt){
   trailSystems.forEach(t=>{
     t.life-=dt;
     t.mesh.material.opacity=Math.max(0,t.life/t.maxLife)*0.8;
+    // Expanding shockwave rings
+    if(t._expandRing){
+      t._ringScale+=dt*25;
+      t.mesh.scale.set(t._ringScale,t._ringScale,1);
+    }
   });
   const dead=trailSystems.filter(t=>t.life<=0);
   dead.forEach(t=>scene.remove(t.mesh));
@@ -2315,6 +2531,7 @@ function animate(){
   updateScreenShake(dt);
   updateDmgNumbers(dt);
   updateTrails(dt);
+  updateSlashArcs(dt);
   updateSkeletonAnims(dt);
 
   // Apply screen shake to camera
