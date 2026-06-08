@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "grudge-warlords-openworld.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/grudge-warlords-openworld.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}

@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Grudge Warlords — Open World Voxel Edition</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
+#class-screen{position:absolute;inset:0;z-index:50;background:radial-gradient(ellipse at center,#0d1520 0%,#04080f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center}
+#class-screen h1{color:#e63d3d;font-size:42px;margin:0 0 4px;letter-spacing:-2px}
+#class-screen .sub{color:#555;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:36px}
+.class-grid{display:grid;grid-template-columns:repeat(3,190px);gap:14px}
+.class-card{background:rgba(10,14,20,0.9);border:2px solid #2a2e3a;border-radius:8px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center}
+.class-card:hover,.class-card.sel{border-color:var(--cc);box-shadow:0 0 20px rgba(255,255,255,0.08)}
+.class-card .c-icon{font-size:32px;margin-bottom:6px}
+.class-card .c-name{font-size:14px;font-weight:800;color:var(--cc);margin-bottom:4px}
+.class-card .c-desc{font-size:9px;color:#555;line-height:1.5}
+#hud{position:absolute;top:16px;left:16px;z-index:10;pointer-events:none;display:flex;flex-direction:column;gap:8px;min-width:190px}
+.stat-box{background:rgba(6,10,18,0.85);padding:8px 16px;border-radius:4px;border-left:3px solid #e63d3d;backdrop-filter:blur(8px)}
+.stat-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#e63d3d;margin-bottom:2px}
+.stat-value{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.bar-track{width:100%;height:4px;background:#1a1e26;border-radius:3px;margin-top:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.15s}
+#hp-fill{background:linear-gradient(90deg,#e63d3d,#ff7777)}
+#exp-fill{background:linear-gradient(90deg,#4488ff,#88bbff)}
+#top-center{position:absolute;top:16px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:10}
+#biome-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#e63d3d;font-weight:700}
+#day-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+#day-icon{font-size:16px}
+#day-bar-wrap{width:110px;height:4px;background:#1a1e26;border-radius:2px;overflow:hidden}
+#day-bar{height:100%;background:linear-gradient(90deg,#ffcc44,#ff8800);transition:width 0.5s}
+#day-num{font-size:11px;color:#666}
+#status-bar{position:absolute;top:16px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
+.status-pill{background:rgba(6,10,18,0.85);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;gap:6px}
+.s-timer{color:#aaa}
+.status-rage{border-color:#ff4400;color:#ff8844}
+.status-speed{border-color:#00ffee;color:#88ffee}
+.status-invuln{border-color:#ffdd00;color:#ffee88}
+.status-berserk{border-color:#ff0066;color:#ff88aa}
+#res-bar{position:absolute;top:16px;right:220px;z-index:10;display:flex;gap:10px;pointer-events:none}
+.res-chip{background:rgba(6,10,18,0.85);border:1px solid #2a2e3a;border-radius:4px;padding:5px 10px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+#skill-bar{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:none;z-index:10}
+.skill-slot{width:64px;height:64px;background:rgba(6,10,18,0.9);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;transition:border-color 0.2s}
+.skill-slot.off-cd{border-color:#e63d3d}.skill-slot.on-cd{border-color:#333}
+.skill-icon{font-size:20px}.skill-key{font-size:8px;font-weight:700;letter-spacing:1px;color:#e63d3d;margin-top:2px}
+.skill-name{font-size:7px;color:#777;margin-top:1px;text-align:center;line-height:1.2;padding:0 2px}
+.skill-cd-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.skill-cd-overlay.hidden{display:none}
+#item-bar{position:absolute;bottom:16px;left:16px;display:flex;gap:6px;z-index:10;pointer-events:none}
+.item-slot{width:52px;height:52px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.item-slot.filled{border-color:#555}
+.i-num{position:absolute;top:2px;left:5px;font-size:9px;color:#555;font-weight:700}
+.i-icon{font-size:18px}.i-count{font-size:9px;color:#aaa;position:absolute;bottom:2px;right:4px}
+#weapon-bar{position:absolute;bottom:16px;right:16px;display:flex;gap:8px;z-index:10;pointer-events:none}
+.w-slot{width:60px;height:60px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0.4;transition:all 0.15s}
+.w-slot.owned{opacity:0.8;border-color:#555}.w-slot.active{opacity:1;border-color:#e63d3d;background:rgba(230,61,61,0.15);transform:scale(1.08)}
+.w-icon{font-size:20px}.w-name{font-size:7px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px}.w-ammo{font-size:9px;font-weight:700;color:#4af}
+#build-indicator{position:absolute;bottom:170px;right:16px;z-index:10;pointer-events:none;background:rgba(6,10,18,0.9);border:1px solid #44ffaa;border-radius:4px;padding:6px 12px;font-size:11px;font-weight:700;color:#44ffaa;opacity:0;transition:opacity 0.3s}
+#build-indicator.active{opacity:1}
+#build-bar{position:absolute;bottom:88px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:10;opacity:0;transition:opacity 0.3s;pointer-events:none}
+#build-bar.active{opacity:1;pointer-events:auto}
+.build-slot{width:54px;height:54px;background:rgba(6,10,18,0.9);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+.build-slot.sel{border-color:#44ffaa}
+.b-icon{font-size:18px}.b-name{font-size:7px;color:#666;text-align:center;margin-top:1px}.b-cost{font-size:7px;color:#444;margin-top:1px}
+#craft-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;background:rgba(4,8,16,0.98);border:2px solid #e63d3d;border-radius:8px;z-index:40;display:none;padding:18px;box-shadow:0 0 40px rgba(230,61,61,0.2)}
+#craft-panel h2{margin:0 0 14px;font-size:14px;letter-spacing:3px;color:#e63d3d;text-transform:uppercase}
+.craft-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #1a1e26}
+.craft-emoji{font-size:22px;width:30px;text-align:center}
+.craft-info{flex:1}.craft-name{font-size:12px;font-weight:700}.craft-cost{font-size:9px;color:#555;margin-top:2px}
+.craft-btn{background:#e63d3d;border:none;color:#fff;padding:5px 12px;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;pointer-events:auto}
+.craft-btn:disabled{background:#222;color:#444;cursor:not-allowed}
+#craft-close{margin-top:14px;background:transparent;border:1px solid #333;color:#555;padding:7px 20px;font-size:9px;letter-spacing:2px;border-radius:3px;cursor:pointer;pointer-events:auto;text-transform:uppercase}
+#raid-alert{position:absolute;top:80px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:800;letter-spacing:4px;color:#ff4400;text-transform:uppercase;pointer-events:none;z-index:20;opacity:0;transition:opacity 0.5s;text-shadow:0 0 20px rgba(255,68,0,0.8)}
+#raid-alert.show{opacity:1}
+#wave-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:#e63d3d;pointer-events:none;z-index:30;opacity:0;transition:opacity 0.3s;text-shadow:0 0 40px rgba(230,61,61,0.8)}
+#night-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;background:rgba(0,5,25,0);transition:background 8s}
+.screen-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:20;background:rgba(4,6,12,0.96);padding:48px 56px;border-radius:6px;border:1px solid #e63d3d;box-shadow:0 0 60px rgba(230,61,61,0.2)}
+.screen-overlay h1{color:#e63d3d;font-size:48px;margin:0 0 8px;letter-spacing:-2px}
+.screen-overlay .sub{color:#555;font-size:11px;letter-spacing:2px;margin-bottom:20px}
+.gw-btn{background:#e63d3d;color:#fff;border:none;padding:12px 44px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:3px;border-radius:3px;cursor:pointer;margin-top:24px;pointer-events:auto;transition:all 0.2s}
+.gw-btn:hover{background:#fff;color:#e63d3d;transform:scale(1.04)}
+.hidden{display:none!important}
+#minimap{position:absolute;bottom:170px;left:16px;z-index:10;pointer-events:none}
+#mm-canvas{border:1px solid #2a2e3a;border-radius:3px;display:block}
+#instructions{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#252a36;pointer-events:none;white-space:nowrap}
+#mine-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,60px);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#44ffaa;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.3s}
+#mine-hint.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="class-screen">
+  <h1>⚔ GRUDGE WARLORDS</h1>
+  <div class="sub">Open World · Voxel Edit · Survival Edition</div>
+  <div class="class-grid" id="class-grid"></div>
+  <button class="gw-btn hidden" id="start-btn" onclick="startGame()">BEGIN SURVIVAL</button>
+</div>
+
+<div id="hud">
+  <div class="stat-box">
+    <div class="stat-label">Integrity</div>
+    <div class="bar-track"><div class="bar-fill" id="hp-fill" style="width:100%"></div></div>
+    <div id="hp-val" class="stat-value" style="font-size:14px;margin-top:3px">100/100</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Experience</div>
+    <div class="bar-track"><div class="bar-fill" id="exp-fill" style="width:0%"></div></div>
+    <div id="level-val" class="stat-value" style="font-size:14px;margin-top:3px">Lv.1 — 0 XP</div>
+  </div>
+  <div class="stat-box"><div class="stat-label">Eliminated</div><div id="score-val" class="stat-value">0000</div></div>
+  <div class="stat-box"><div class="stat-label">Survived</div><div id="timer-val" class="stat-value">00:00</div></div>
+</div>
+
+<div id="top-center">
+  <div id="biome-label">STARTER ISLAND</div>
+  <div id="day-row">
+    <span id="day-icon">☀️</span>
+    <div id="day-bar-wrap"><div id="day-bar" style="width:100%"></div></div>
+    <span id="day-num">Day 1</span>
+  </div>
+</div>
+
+<div id="status-bar"></div>
+<div id="res-bar">
+  <div class="res-chip">🪵 <span id="res-wood">0</span></div>
+  <div class="res-chip">🪨 <span id="res-stone">0</span></div>
+  <div class="res-chip">⚙️ <span id="res-ore">0</span></div>
+</div>
+
+<div id="skill-bar">
+  <div class="skill-slot off-cd" id="skill-q"><div class="skill-icon" id="sq-icon">⚔️</div><div class="skill-key">Q</div><div class="skill-name" id="sq-name">Heroic Cleave</div><div class="skill-cd-overlay hidden" id="sq-cd">0</div></div>
+  <div class="skill-slot off-cd" id="skill-e"><div class="skill-icon" id="se-icon">🌑</div><div class="skill-key">E</div><div class="skill-name" id="se-name">Shadow Edge</div><div class="skill-cd-overlay hidden" id="se-cd">0</div></div>
+  <div class="skill-slot off-cd" id="skill-r"><div class="skill-icon" id="sr-icon">🩸</div><div class="skill-key">R</div><div class="skill-name" id="sr-name">Blood Rush</div><div class="skill-cd-overlay hidden" id="sr-cd">0</div></div>
+  <div class="skill-slot off-cd" id="skill-f"><div class="skill-icon" id="sf-icon">💀</div><div class="skill-key">F</div><div class="skill-name" id="sf-name">Execute</div><div class="skill-cd-overlay hidden" id="sf-cd">0</div></div>
+</div>
+
+<div id="item-bar">
+  <div class="item-slot" id="isl-1"><div class="i-num">1</div><div class="i-icon" id="ii-1"></div><div class="i-count" id="ic-1"></div></div>
+  <div class="item-slot" id="isl-2"><div class="i-num">2</div><div class="i-icon" id="ii-2"></div><div class="i-count" id="ic-2"></div></div>
+  <div class="item-slot" id="isl-3"><div class="i-num">3</div><div class="i-icon" id="ii-3"></div><div class="i-count" id="ic-3"></div></div>
+  <div class="item-slot" id="isl-4"><div class="i-num">4</div><div class="i-icon" id="ii-4"></div><div class="i-count" id="ic-4"></div></div>
+  <div class="item-slot" id="isl-5"><div class="i-num">5</div><div class="i-icon" id="ii-5"></div><div class="i-count" id="ic-5"></div></div>
+  <div class="item-slot" id="isl-6"><div class="i-num">6</div><div class="i-icon" id="ii-6"></div><div class="i-count" id="ic-6"></div></div>
+</div>
+
+<div id="weapon-bar">
+  <div class="w-slot owned active" id="ws-sword"><div class="w-icon">⚔️</div><div class="w-name">Sword</div><div class="w-ammo">∞</div></div>
+  <div class="w-slot" id="ws-axe"><div class="w-icon">🪓</div><div class="w-name">Axe</div><div class="w-ammo" id="wa-axe">∞</div></div>
+  <div class="w-slot" id="ws-bow"><div class="w-icon">🏹</div><div class="w-name">Bow</div><div class="w-ammo" id="wa-bow">0</div></div>
+  <div class="w-slot" id="ws-staff"><div class="w-icon">🪄</div><div class="w-name">Staff</div><div class="w-ammo" id="wa-staff">0</div></div>
+  <div class="w-slot" id="ws-gun"><div class="w-icon">🔫</div><div class="w-name">Gun</div><div class="w-ammo" id="wa-gun">0</div></div>
+</div>
+
+<div id="build-indicator">🔨 BUILD MODE — LClick:Place RClick:Remove</div>
+<div id="build-bar">
+  <div class="build-slot sel" id="bs-wood" onclick="selectBuild('wood')"><div class="b-icon">🪵</div><div class="b-name">Wood Wall</div><div class="b-cost">2🪵</div></div>
+  <div class="build-slot" id="bs-stone" onclick="selectBuild('stone')"><div class="b-icon">🪨</div><div class="b-name">Stone Wall</div><div class="b-cost">3🪨</div></div>
+  <div class="build-slot" id="bs-floor" onclick="selectBuild('floor')"><div class="b-icon">🟫</div><div class="b-name">Floor</div><div class="b-cost">1🪵</div></div>
+  <div class="build-slot" id="bs-heal" onclick="selectBuild('heal')"><div class="b-icon">💚</div><div class="b-name">Heal Station</div><div class="b-cost">4🪵+2⚙️</div></div>
+</div>
+
+<div id="craft-panel">
+  <h2>⚒ Crafting Table</h2>
+  <div id="craft-list"></div>
+  <button id="craft-close" onclick="toggleCraft()">CLOSE [C]</button>
+</div>
+
+<div id="raid-alert">⚠ NIGHT RAID — DEFEND YOUR BASE</div>
+<div id="wave-flash"></div>
+<div id="night-overlay"></div>
+<div id="minimap"><canvas id="mm-canvas" width="120" height="120"></canvas></div>
+<div id="mine-hint">Press M to harvest</div>
+
+<div class="screen-overlay hidden" id="game-over">
+  <h1>FALLEN</h1>
+  <div class="sub">THE WORLD CONSUMED YOU</div>
+  <div id="go-stats" style="margin-top:16px;color:#666;font-size:12px"></div>
+  <button class="gw-btn" onclick="location.reload()">RESPAWN</button>
+</div>
+
+<div id="instructions">WASD:Move · Click:Attack · Q/E/R/F:Skills · B:Build · C:Craft · M:Mine · 1-6:Items · Scroll:Weapon</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════
+// CLASS DEFINITIONS
+// ═══════════════════════════════════════════════════════════════
+const CLASSES = {
+  swordsman:{name:'Swordsman',emoji:'⚔️',color:'#e63d3d',desc:'+25% melee dmg · +20% HP · Starts with Sword+Axe',hpMult:1.20,meleeMult:1.25,startWeapons:['sword','axe']},
+  archer:   {name:'Archer',   emoji:'🏹',color:'#44bb44',desc:'+30% ranged dmg · +20% speed · Starts with Bow',speedMult:1.20,rangedMult:1.30,startWeapons:['sword','bow']},
+  mage:     {name:'Mage',     emoji:'🪄',color:'#aa44ff',desc:'+40% magic dmg · Staff starts charged · Blink ready',magicMult:1.40,startWeapons:['sword','staff']},
+  druid:    {name:'Druid',    emoji:'🌿',color:'#22cc88',desc:'2× resource harvest · Wolves passive · Nature affinity',resourceMult:2,startWeapons:['sword','bow']},
+  paladin:  {name:'Paladin',  emoji:'🛡️',color:'#ffdd44',desc:'+60% HP · Regen near built floors · Holy Shield',hpMult:1.60,regenNearFloor:true,startWeapons:['sword']},
+  necromancer:{name:'Necromancer',emoji:'💀',color:'#8844aa',desc:'Raise up to 3 fallen enemies · Soul Harvest kills restore HP',minionMax:3,soulHarvest:true,startWeapons:['staff']},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// WEAPONS
+// ═══════════════════════════════════════════════════════════════
+const WEAPONS = {
+  sword:{id:'sword',name:'Grudge Sword',emoji:'⚔️',type:'melee',cd:0.28,range:4.8,dmg:45,owned:true,ammo:Infinity,maxAmmo:Infinity,pickup:0,skills:['heroic_cleave','shadow_edge','blood_rush','execute'],color:0x888888},
+  axe:  {id:'axe',  name:'Gorehowl',    emoji:'🪓',type:'heavy_melee',cd:0.55,range:5.5,dmg:75,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,skills:['whirl_pain','carnage_spin','bloodletting','apocalypse_cleave'],color:0x8b0000},
+  bow:  {id:'bow',  name:'Shadowflight',emoji:'🏹',type:'projectile',cd:0.22,speed:1.8,dmg:48,owned:false,ammo:30,maxAmmo:90,pickup:15,skills:['aimed_shot','multi_shot','piercing_arrow','rain_of_arrows'],color:0x2d5a1a},
+  staff:{id:'staff',name:'Emberwrath', emoji:'🪄',type:'magic',cd:0.38,speed:0.9,dmg:62,owned:false,ammo:50,maxAmmo:150,pickup:25,skills:['fireball','chain_lightning','blink','emberwrath_nova'],color:0x6600cc},
+  gun:  {id:'gun',  name:'Ironstorm',  emoji:'🔫',type:'auto',cd:0.07,speed:2.1,dmg:20,owned:false,ammo:60,maxAmmo:180,pickup:30,skills:['burst_fire','sniper_shot','explosive_round','ironstorm_minigun'],color:0x222222},
+};
+const WEAPON_ORDER = ['sword','axe','bow','staff','gun'];
+
+// ═══════════════════════════════════════════════════════════════
+// SKILLS
+// ═══════════════════════════════════════════════════════════════
+const SKILLS = {
+  heroic_cleave:    {name:'Heroic Cleave',   key:'Q',icon:'⚔️',maxCd:6, cd:0,type:'melee_aoe',    dmg:60, range:6.5},
+  shadow_edge:      {name:'Shadow Edge',     key:'E',icon:'🌑',maxCd:10,cd:0,type:'dash_strike',   dmg:55, range:4.5},
+  blood_rush:       {name:'Blood Rush',      key:'R',icon:'🩸',maxCd:8, cd:0,type:'buff_speed',    duration:5},
+  execute:          {name:'Execute',         key:'F',icon:'💀',maxCd:15,cd:0,type:'execute',       dmg:150,range:4.5},
+  whirl_pain:       {name:'Whirl of Pain',   key:'Q',icon:'🌀',maxCd:10,cd:0,type:'spin_aoe',      dmg:80, range:5.5},
+  carnage_spin:     {name:'Carnage Spin',    key:'E',icon:'🌪️',maxCd:12,cd:0,type:'spin_aoe_kb',   dmg:65, range:7.0,knockback:5},
+  bloodletting:     {name:'Bloodletting',    key:'R',icon:'🩸',maxCd:8, cd:0,type:'bleed',         dmg:45, dotDmg:10,dotDur:5},
+  apocalypse_cleave:{name:'Apoc.Cleave',     key:'F',icon:'💥',maxCd:50,cd:0,type:'massive_aoe',   dmg:180,range:11},
+  aimed_shot:       {name:'Aimed Shot',      key:'Q',icon:'🎯',maxCd:2, cd:0,type:'power_shot',    mult:2.5},
+  multi_shot:       {name:'Multi Shot',      key:'E',icon:'🏹',maxCd:8, cd:0,type:'spread_shot',   count:5,spread:0.22},
+  piercing_arrow:   {name:'Piercing Arrow',  key:'R',icon:'➡️',maxCd:6, cd:0,type:'pierce_shot',   mult:1.6},
+  rain_of_arrows:   {name:'Rain of Arrows',  key:'F',icon:'☔',maxCd:12,cd:0,type:'rain',           dmg:42, count:14,radius:9},
+  fireball:         {name:'Fireball',        key:'Q',icon:'🔥',maxCd:8, cd:0,type:'explosive_proj', dmg:110,radius:7},
+  chain_lightning:  {name:'Chain Lightning', key:'E',icon:'⚡',maxCd:10,cd:0,type:'chain',          dmg:65, chains:5},
+  blink:            {name:'Blink',           key:'R',icon:'✨',maxCd:10,cd:0,type:'teleport',       range:16},
+  emberwrath_nova:  {name:"Emberwrath's Nova",key:'F',icon:'🌋',maxCd:60,cd:0,type:'nova',          dmg:260,radius:13},
+  burst_fire:       {name:'Burst Fire',      key:'Q',icon:'💥',maxCd:5, cd:0,type:'burst',          count:3,dmg:44},
+  sniper_shot:      {name:'Sniper Shot',     key:'E',icon:'🎯',maxCd:10,cd:0,type:'power_shot',     mult:7, pierce:true},
+  explosive_round:  {name:'Explosive Round', key:'R',icon:'💣',maxCd:8, cd:0,type:'explosive_proj', dmg:90, radius:5.5},
+  ironstorm_minigun:{name:"Minigun",         key:'F',icon:'🔫',maxCd:50,cd:0,type:'minigun',        duration:5,dmg:20},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ENEMIES
+// ═══════════════════════════════════════════════════════════════
+const ENEMY_TYPES = {
+  dire_wolf:     {name:'Dire Wolf',      emoji:'🐺',tier:1,hp:150, dmg:12, speed:5.5,score:25,  sc:0.9,body:0x5a4532,beh:'chase'},
+  cave_bat:      {name:'Cave Bat',       emoji:'🦇',tier:1,hp:80,  dmg:8,  speed:7.5,score:15,  sc:0.7,body:0x2a1a2e,beh:'swoop'},
+  green_spider:  {name:'Green Spider',   emoji:'🕷️',tier:1,hp:100, dmg:10, speed:6.5,score:20,  sc:0.75,body:0x1a4a10,beh:'poison'},
+  orc_scout:     {name:'Orc Scout',      emoji:'👺',tier:1,hp:200, dmg:15, speed:4.5,score:30,  sc:1.0,body:0x2a5a10,beh:'chase'},
+  cave_troll:    {name:'Cave Troll',     emoji:'👹',tier:2,hp:350, dmg:28, speed:3.2,score:60,  sc:1.7,body:0x5a4a3a,beh:'heavy'},
+  velociraptor:  {name:'Velociraptor',   emoji:'🦖',tier:3,hp:420, dmg:35, speed:6.8,score:80,  sc:1.2,body:0x3a6022,beh:'leaper'},
+  orc_warrior:   {name:'Orc Warrior',    emoji:'👺',tier:3,hp:500, dmg:38, speed:4.5,score:90,  sc:1.15,body:0x1a5010,beh:'chase'},
+  battle_spider: {name:'Battle Spider',  emoji:'🕷️',tier:3,hp:450, dmg:32, speed:5.5,score:85,  sc:1.0,body:0x0a2a0a,beh:'spitter'},
+  rhino_charger: {name:'Rhino Charger',  emoji:'🦏',tier:4,hp:900, dmg:50, speed:5.0,score:150, sc:1.9,body:0x5a5a5a,beh:'charger'},
+  orc_berserker: {name:'Orc Berserker',  emoji:'👺',tier:4,hp:700, dmg:55, speed:5.8,score:150, sc:1.3,body:0x8b0000,beh:'berserker'},
+  fire_phantom:  {name:'Fire Phantom',   emoji:'🔥',tier:4,hp:600, dmg:50, speed:4.0,score:175, sc:1.1,body:0xff4400,beh:'spitter',emit:true},
+  ghost_tiger:   {name:'Ghost Tiger',    emoji:'🐯',tier:5,hp:1200,dmg:65, speed:7.8,score:250, sc:1.45,body:0xbbbbbb,beh:'ghost_leap'},
+  minotaur_guard:{name:'Minotaur Guard', emoji:'🐂',tier:5,hp:1500,dmg:72, speed:3.5,score:400, sc:2.3,body:0x3a2010,beh:'tank'},
+  fire_drake:    {name:'Fire Drake',     emoji:'🐉',tier:5,hp:1800,dmg:80, speed:4.0,score:500, sc:2.1,body:0xff2200,beh:'spitter',emit:true},
+  frost_wyrm:    {name:'Frost Wyrm',     emoji:'🐲',tier:6,hp:2500,dmg:95, speed:3.5,score:600, sc:2.4,body:0x4488ff,beh:'spitter',emit:true},
+  juggernaut:    {name:'Juggernaut',     emoji:'🦾',tier:6,hp:3000,dmg:110,speed:3.0,score:750, sc:2.9,body:0x444444,beh:'tank'},
+  shadow_dragon: {name:'Shadow Dragon',  emoji:'🐉',tier:7,hp:3500,dmg:120,speed:4.5,score:1000,sc:2.6,body:0x220033,beh:'spitter',emit:true},
+  creature_titan:{name:'Creature Titan', emoji:'⚡',tier:7,hp:4000,dmg:130,speed:2.5,score:1200,sc:3.3,body:0x113355,beh:'titan',emit:true},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ITEMS
+// ═══════════════════════════════════════════════════════════════
+const ITEM_DEFS = {
+  health_potion:{name:'Health Potion',    icon:'❤️', color:0xdd0000,effect:'heal',     healAmt:150},
+  medkit:       {name:'Medkit',           icon:'🧰', color:0x00aa00,effect:'heal',     healAmt:300},
+  swiftness:    {name:'Swiftness Potion', icon:'💨', color:0x00ddee,effect:'speed',    duration:15,mult:1.45},
+  rage_potion:  {name:'Rage Potion',      icon:'🔴', color:0xff4400,effect:'rage',     duration:15,mult:1.35},
+  frag_grenade: {name:'Frag Grenade',     icon:'💣', color:0x888800,effect:'explosive',dmg:200,radius:8},
+  berserker:    {name:'Berserker Elixir', icon:'💢', color:0xff0066,effect:'berserker',duration:15,dmgMult:1.6,defMult:0.7},
+  invuln_potion:{name:'Invulnerability',  icon:'🛡️', color:0xffdd00,effect:'invuln',   duration:5},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// BLOCK / BUILD DEFS
+// ═══════════════════════════════════════════════════════════════
+const BLOCK_DEFS = {
+  wood: {name:'Wood Wall',    color:0x8B5A2B, cost:{wood:2},  hp:100, solid:true},
+  stone:{name:'Stone Wall',   color:0x777788, cost:{stone:3}, hp:300, solid:true},
+  floor:{name:'Wood Floor',   color:0xaa7744, cost:{wood:1},  hp:50,  solid:false},
+  heal: {name:'Heal Station', color:0x228822, cost:{wood:4,ore:2}, hp:80, solid:true, special:'heal'},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// BIOMES (by distance from origin)
+// ═══════════════════════════════════════════════════════════════
+const BIOMES = [
+  {name:'STARTER ISLAND',  minD:0,  maxD:28, ground:0x3a6a2a, fog:0x2a4a1a, tiers:[1,1,2],     label:'Starter Island'},
+  {name:'FABLED SWAMP',    minD:28, maxD:55, ground:0x2a4a1a, fog:0x1a2a10, tiers:[2,3,3],     label:'Fabled Swamp'},
+  {name:'CRUSADE RUINS',   minD:55, maxD:80, ground:0x554444, fog:0x3a2a2a, tiers:[3,4,4],     label:'Crusade Ruins'},
+  {name:'PIGLIN WASTELAND',minD:80, maxD:110,ground:0x7a5a2a, fog:0x4a3a1a, tiers:[4,5,5],     label:'Piglin Wasteland'},
+  {name:'DARK SANCTUM',    minD:110,maxD:999,ground:0x220033, fog:0x110022, tiers:[6,7,7],     label:'Dark Sanctum'},
+];
+
+const TIER_POOLS = {
+  1:['dire_wolf','cave_bat','green_spider','orc_scout'],
+  2:['cave_troll','dire_wolf','orc_scout'],
+  3:['velociraptor','orc_warrior','battle_spider','cave_troll'],
+  4:['rhino_charger','orc_berserker','fire_phantom'],
+  5:['ghost_tiger','minotaur_guard','fire_drake'],
+  6:['frost_wyrm','juggernaut'],
+  7:['shadow_dragon','creature_titan'],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// CRAFTING RECIPES (items from raw resources)
+// ═══════════════════════════════════════════════════════════════
+const RECIPES = [
+  {id:'health_potion',name:'Health Potion',  emoji:'❤️', cost:{wood:2},            result:{item:'health_potion',count:2}},
+  {id:'medkit',       name:'Medkit',         emoji:'🧰', cost:{stone:2,ore:1},      result:{item:'medkit',count:1}},
+  {id:'swiftness',    name:'Swiftness Pot',  emoji:'💨', cost:{wood:3},            result:{item:'swiftness',count:1}},
+  {id:'rage_potion',  name:'Rage Potion',    emoji:'🔴', cost:{ore:2},             result:{item:'rage_potion',count:1}},
+  {id:'frag_grenade', name:'Frag Grenade',   emoji:'💣', cost:{stone:3,ore:1},     result:{item:'frag_grenade',count:1}},
+  {id:'berserker',    name:'Berserker Elixir',emoji:'💢',cost:{ore:3,wood:2},      result:{item:'berserker',count:1}},
+  {id:'invuln_potion',name:'Invuln Potion',  emoji:'🛡️', cost:{ore:4,stone:2},     result:{item:'invuln_potion',count:1}},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════════════════════════════
+let scene, camera, renderer, clock;
+let playerMesh, playerBodyMat, weaponMeshObj;
+let floorMesh;
+let enemies = [], bullets = [], particles = [], worldItems = [], resourceNodes = [], minions = [];
+let hp, maxHp, score, survivalTime, isGameOver, gameStarted;
+let currentWeapon, attackTimer;
+let itemHotbar = [{},{},{},{},{},{}];
+let statusEffects = {};
+let skillCds = {};
+let resources = {wood:0,stone:0,ore:0};
+let isBuildMode = false, buildType = 'wood', ghostMesh;
+let blocks = new Map(); // "gx,gz,gy" -> {type}
+let blockInstMesh, blockDirty = false;
+let dayTimer = 0, dayNumber = 1, isNight = false, nightRaidCount = 0, raidAlertTimer = 0;
+let DAY_LEN = 90, NIGHT_LEN = 60;
+let playerClass = null;
+let level = 1, exp = 0, expToNext = 500;
+let minigunActive = false, minigunTimer = 0, minigunFireTimer = 0;
+let lastSpawnTime = 0, spawnInterval = 2200;
+let nearResourceNode = null;
+let craftOpen = false;
+const keys = {};
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+const _dummy = new THREE.Object3D();
+const _color = new THREE.Color();
+let mmCanvas, mmCtx;
+let ambientLight, dirLight;
+let worldPlane;
+let attackCd = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// CLASS SELECT UI
+// ═══════════════════════════════════════════════════════════════
+(function buildClassUI(){
+  const grid = document.getElementById('class-grid');
+  Object.keys(CLASSES).forEach(cid => {
+    const cls = CLASSES[cid];
+    const card = document.createElement('div');
+    card.className = 'class-card';
+    card.style.setProperty('--cc', cls.color);
+    card.innerHTML = '<div class="c-icon">'+cls.emoji+'</div><div class="c-name">'+cls.name+'</div><div class="c-desc">'+cls.desc+'</div>';
+    card.onclick = function(){
+      document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
+      card.classList.add('sel');
+      playerClass = cid;
+      document.getElementById('start-btn').classList.remove('hidden');
+    };
+    grid.appendChild(card);
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// START GAME
+// ═══════════════════════════════════════════════════════════════
+function startGame(){
+  if(!playerClass) return;
+  document.getElementById('class-screen').style.display='none';
+  init();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function init(){
+  const cls = CLASSES[playerClass];
+
+  // Apply class bonuses to state
+  maxHp = Math.round(100 * (cls.hpMult||1));
+  hp = maxHp;
+  const baseSpeed = 12 * (cls.speedMult||1);
+
+  // Apply start weapons
+  Object.keys(WEAPONS).forEach(w => WEAPONS[w].owned = false);
+  WEAPONS.sword.owned = true;
+  if(cls.startWeapons) cls.startWeapons.forEach(w=>{ if(WEAPONS[w]) WEAPONS[w].owned=true; });
+  currentWeapon = WEAPONS.sword;
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0a0e14, 40, 120);
+
+  // Camera: top-down isometric
+  camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
+  camera.position.set(0, 28, 22);
+  camera.lookAt(0, 0, 0);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(devicePixelRatio);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  clock = new THREE.Clock();
+
+  // Lights
+  ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambientLight);
+  dirLight = new THREE.DirectionalLight(0xffe8c0, 1.2);
+  dirLight.position.set(30, 50, 20);
+  dirLight.castShadow = true;
+  dirLight.shadow.camera.near = 1;
+  dirLight.shadow.camera.far = 200;
+  dirLight.shadow.camera.left = -80;
+  dirLight.shadow.camera.right = 80;
+  dirLight.shadow.camera.top = 80;
+  dirLight.shadow.camera.bottom = -80;
+  dirLight.shadow.mapSize.set(2048,2048);
+  scene.add(dirLight);
+
+  // World ground
+  buildWorld();
+
+  // Block instanced mesh
+  const bGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
+  const bMat = new THREE.MeshStandardMaterial({roughness:0.7,metalness:0.1});
+  blockInstMesh = new THREE.InstancedMesh(bGeo, bMat, 1000);
+  blockInstMesh.count = 0;
+  blockInstMesh.castShadow = true;
+  blockInstMesh.receiveShadow = true;
+  scene.add(blockInstMesh);
+
+  // Ghost block for build mode
+  const gGeo = new THREE.BoxGeometry(1.85, 1.85, 1.85);
+  const gMat = new THREE.MeshStandardMaterial({color:0x44ffaa,transparent:true,opacity:0.35,wireframe:false});
+  ghostMesh = new THREE.Mesh(gGeo, gMat);
+  ghostMesh.visible = false;
+  scene.add(ghostMesh);
+
+  // Player
+  playerMesh = buildVoxChar(0x5588cc, 0x224466);
+  playerMesh.position.set(0, 0, 0);
+  scene.add(playerMesh);
+  weaponMeshObj = buildWeaponMesh('sword');
+  playerMesh.add(weaponMeshObj);
+
+  // Minimap
+  mmCanvas = document.getElementById('mm-canvas');
+  mmCtx = mmCanvas.getContext('2d');
+
+  // Build craft UI
+  buildCraftUI();
+
+  // Skill CDs
+  resetSkillCDs();
+  updateWeaponUI();
+
+  gameStarted = true;
+
+  // Events
+  window.addEventListener('keydown', e=>{
+    keys[e.code] = true;
+    if(e.code==='KeyB') toggleBuildMode();
+    if(e.code==='KeyC') { e.preventDefault(); toggleCraft(); }
+    if(e.code==='KeyM') tryMineResource();
+    if(e.code==='KeyQ') activateSkill(0);
+    if(e.code==='KeyE') activateSkill(1);
+    if(e.code==='KeyR') activateSkill(2);
+    if(e.code==='KeyF') activateSkill(3);
+    if(e.code==='Digit1') useItem(0);
+    if(e.code==='Digit2') useItem(1);
+    if(e.code==='Digit3') useItem(2);
+    if(e.code==='Digit4') useItem(3);
+    if(e.code==='Digit5') useItem(4);
+    if(e.code==='Digit6') useItem(5);
+    if(e.code==='Escape') { if(craftOpen) toggleCraft(); else if(isBuildMode) toggleBuildMode(); }
+  });
+  window.addEventListener('keyup', e=>{ keys[e.code]=false; });
+  window.addEventListener('mousemove', e=>{
+    mouse.x = (e.clientX/innerWidth)*2-1;
+    mouse.y = -(e.clientY/innerHeight)*2+1;
+  });
+  window.addEventListener('mousedown', e=>{
+    if(craftOpen) return;
+    if(isBuildMode){
+      if(e.button===0) placeBlock();
+      if(e.button===2) removeBlock();
+    } else {
+      if(e.button===0) tryAttack();
+    }
+  });
+  window.addEventListener('wheel', e=>{
+    if(craftOpen || isBuildMode) return;
+    const dir = e.deltaY > 0 ? 1 : -1;
+    let idx = WEAPON_ORDER.indexOf(currentWeapon.id);
+    for(let i=0;i<5;i++){
+      idx = (idx+dir+5)%5;
+      if(WEAPONS[WEAPON_ORDER[idx]].owned){ switchWeapon(WEAPON_ORDER[idx]); break; }
+    }
+  });
+  window.addEventListener('contextmenu', e=>e.preventDefault());
+  window.addEventListener('resize',()=>{
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  animate();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WORLD GENERATION
+// ═══════════════════════════════════════════════════════════════
+function buildWorld(){
+  // Multi-biome ground segments
+  BIOMES.forEach((biome,bi)=>{
+    const r = (biome.maxD < 999 ? biome.maxD : 130)*2;
+    const prevR = biome.minD*2;
+    if(bi===0){
+      const geo = new THREE.CircleGeometry(r, 64);
+      const mat = new THREE.MeshLambertMaterial({color:biome.ground});
+      const m = new THREE.Mesh(geo, mat);
+      m.rotation.x = -Math.PI/2;
+      m.receiveShadow = true;
+      scene.add(m);
+      worldPlane = m;
+    } else {
+      // Ring geometry approximation: use a large plane scaled
+      const geo = new THREE.RingGeometry(prevR, r, 64);
+      const mat = new THREE.MeshLambertMaterial({color:biome.ground,side:THREE.DoubleSide});
+      const m = new THREE.Mesh(geo, mat);
+      m.rotation.x = -Math.PI/2;
+      m.receiveShadow = true;
+      scene.add(m);
+    }
+  });
+
+  // Scatter resource nodes
+  spawnResourceNodes();
+
+  // Border wall (visual edge)
+  for(let a=0;a<36;a++){
+    const angle = (a/36)*Math.PI*2;
+    const r = 135;
+    const post = new THREE.Mesh(
+      new THREE.BoxGeometry(2,8,2),
+      new THREE.MeshLambertMaterial({color:0x1a0a22})
+    );
+    post.position.set(Math.cos(angle)*r, 4, Math.sin(angle)*r);
+    scene.add(post);
+  }
+}
+
+function spawnResourceNodes(){
+  const types = [
+    {type:'tree',  count:80, emoji:'🌲', rMin:3,  rMax:100, color:0x228822, scY:3.5},
+    {type:'rock',  count:50, emoji:'🪨', rMin:10, rMax:120, color:0x666666, scY:1.8},
+    {type:'ore',   count:30, emoji:'⚙️', rMin:40, rMax:120, color:0x4488aa, scY:1.5},
+  ];
+  types.forEach(t=>{
+    for(let i=0;i<t.count;i++){
+      const angle = Math.random()*Math.PI*2;
+      const dist = t.rMin + Math.random()*(t.rMax-t.rMin);
+      const x = Math.cos(angle)*dist;
+      const z = Math.sin(angle)*dist;
+      spawnResourceNode(t.type, x, z);
+    }
+  });
+}
+
+function spawnResourceNode(type, x, z){
+  const configs = {
+    tree: {color:0x228822, emColor:0x000000, scX:0.8, scY:2.5, giveWood:2, giveStone:0, giveOre:0},
+    rock: {color:0x666666, emColor:0x000000, scX:1.2, scY:0.8, giveWood:0, giveStone:2, giveOre:0},
+    ore:  {color:0x224455, emColor:0x002233, scX:0.9, scY:0.9, giveWood:0, giveStone:1, giveOre:1},
+  };
+  const cfg = configs[type];
+  const geo = new THREE.BoxGeometry(1.5*cfg.scX, 1.5*cfg.scY, 1.5*cfg.scX);
+  const mat = new THREE.MeshStandardMaterial({color:cfg.color, emissive:cfg.emColor, emissiveIntensity:0.3});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, cfg.scY*0.75, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+
+  // For trees: add a cap
+  if(type==='tree'){
+    const capGeo = new THREE.BoxGeometry(3,2.5,3);
+    const capMat = new THREE.MeshStandardMaterial({color:0x116611});
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(0, cfg.scY*0.75+1.5, 0);
+    mesh.add(cap);
+  }
+
+  // Emoji sprite
+  const sprite = makeEmojiSprite(type==='tree'?'🌲':type==='rock'?'🪨':'⚙️', 1.5);
+  sprite.position.set(0, cfg.scY+1.5, 0);
+  mesh.add(sprite);
+
+  const node = {
+    mesh, type, x, z,
+    wood: configs[type].giveWood,
+    stone: configs[type].giveStone,
+    ore: configs[type].giveOre,
+    alive: true,
+    respawnTimer: 0,
+  };
+  resourceNodes.push(node);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VOX CHARACTER BUILDER
+// ═══════════════════════════════════════════════════════════════
+function buildVoxChar(bodyColor, pantsColor, scale){
+  scale = scale||1;
+  const g = new THREE.Group();
+  function box(w,h,d,col,x,y,z,em){
+    const mat = new THREE.MeshStandardMaterial({color:col,emissive:em||0x000000,emissiveIntensity:em?0.3:0});
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w*scale,h*scale,d*scale),mat);
+    m.position.set(x*scale,y*scale,z*scale);
+    m.castShadow = true;
+    return m;
+  }
+  // body, head, legs, arms
+  g.add(box(1.2,1.4,0.8,bodyColor,0,1.3,0));
+  g.add(box(0.9,0.9,0.9,0xffcc88,0,2.35,0));
+  g.add(box(0.5,1.2,0.5,pantsColor,-0.35,0.2,0));
+  g.add(box(0.5,1.2,0.5,pantsColor,0.35,0.2,0));
+  g.add(box(0.4,1.1,0.4,bodyColor,-0.85,1.2,0));
+  g.add(box(0.4,1.1,0.4,bodyColor,0.85,1.2,0));
+  return g;
+}
+
+function buildWeaponMesh(id){
+  const g = new THREE.Group();
+  if(id==='sword'){
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12,1.6,0.06),new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.9,roughness:0.2}));
+    blade.position.set(0.9,1.2,0);
+    g.add(blade);
+  } else if(id==='axe'){
+    const hndl = new THREE.Mesh(new THREE.BoxGeometry(0.1,1.4,0.1),new THREE.MeshStandardMaterial({color:0x6a3a1a}));
+    hndl.position.set(0.9,1.2,0);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.1),new THREE.MeshStandardMaterial({color:0x888888,metalness:0.8}));
+    head.position.set(1.1,2.0,0);
+    g.add(hndl); g.add(head);
+  } else if(id==='bow'){
+    const arc = new THREE.Mesh(new THREE.TorusGeometry(0.6,0.05,6,20,Math.PI),new THREE.MeshStandardMaterial({color:0x5a3a1a}));
+    arc.position.set(0.9,1.5,0);
+    arc.rotation.z = Math.PI/2;
+    g.add(arc);
+  } else if(id==='staff'){
+    const rod = new THREE.Mesh(new THREE.BoxGeometry(0.1,2.0,0.1),new THREE.MeshStandardMaterial({color:0x663399}));
+    rod.position.set(0.9,1.5,0);
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.25,8,8),new THREE.MeshStandardMaterial({color:0xcc44ff,emissive:0x660099,emissiveIntensity:1}));
+    orb.position.set(0.9,2.6,0);
+    g.add(rod); g.add(orb);
+  } else if(id==='gun'){
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.3,0.2),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.8}));
+    body.position.set(0.9,1.4,0);
+    const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.12,0.12),new THREE.MeshStandardMaterial({color:0x222222,metalness:0.9}));
+    barrel.position.set(1.3,1.48,0);
+    g.add(body); g.add(barrel);
+  }
+  return g;
+}
+
+function makeEmojiSprite(emoji, size){
+  const c = document.createElement('canvas'); c.width=64; c.height=64;
+  const ctx = c.getContext('2d');
+  ctx.font='44px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(emoji,32,32);
+  const mat = new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true});
+  const s = new THREE.Sprite(mat);
+  s.scale.set(size,size,size);
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SKILL SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function resetSkillCDs(){
+  skillCds = {Q:0,E:0,R:0,F:0};
+}
+
+function getWeaponSkills(){
+  return currentWeapon.skills.map(sid=>SKILLS[sid]);
+}
+
+function activateSkill(slotIdx){
+  if(isGameOver||craftOpen||!gameStarted) return;
+  const sk = getWeaponSkills()[slotIdx];
+  if(!sk) return;
+  const key = ['Q','E','R','F'][slotIdx];
+  if(skillCds[key]>0) return;
+  skillCds[key] = sk.maxCd;
+
+  const pp = playerMesh.position;
+  const fw = getAimDir();
+
+  if(sk.type==='melee_aoe'){
+    aoeAttack(pp, sk.range, sk.dmg, 0xff4400);
+  } else if(sk.type==='dash_strike'){
+    const nd = pp.clone().add(fw.clone().multiplyScalar(sk.range));
+    nd.y = 0;
+    playerMesh.position.copy(nd);
+    aoeAttack(nd, 4, sk.dmg, 0x8800ff);
+  } else if(sk.type==='buff_speed'){
+    statusEffects.speed = {timer: sk.duration||5, mult: 1.5};
+  } else if(sk.type==='execute'){
+    enemies.forEach(e=>{
+      const d = pp.distanceTo(e.mesh.position);
+      if(d<sk.range){
+        const bonus = e.hp < e.maxHp*0.3 ? 3 : 1;
+        damageEnemy(e, sk.dmg*bonus, fw);
+      }
+    });
+  } else if(sk.type==='spin_aoe'||sk.type==='spin_aoe_kb'){
+    aoeAttack(pp, sk.range, sk.dmg, 0xff8800, sk.knockback||0);
+  } else if(sk.type==='bleed'){
+    enemies.forEach(e=>{
+      if(pp.distanceTo(e.mesh.position)<sk.range){
+        e.bleed = {dmg:sk.dotDmg, dur:sk.dotDur, timer:1};
+      }
+    });
+  } else if(sk.type==='massive_aoe'){
+    aoeAttack(pp, sk.range, sk.dmg, 0xff0000);
+    spawnAoeRing(pp, sk.range, 0xff2200, 30);
+  } else if(sk.type==='power_shot'){
+    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg:(currentWeapon.dmg||30)*(sk.mult||1), speed:2.5, color:0xffff00, pierce:sk.pierce||false});
+  } else if(sk.type==='spread_shot'){
+    for(let i=0;i<(sk.count||3);i++){
+      const spread = (i - (sk.count-1)/2)*sk.spread;
+      const dir = fw.clone().applyEuler(new THREE.Euler(0,spread,0)).normalize();
+      fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), dir, {dmg:currentWeapon.dmg||30, speed:2.0, color:0x44ff44});
+    }
+  } else if(sk.type==='pierce_shot'){
+    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg:(currentWeapon.dmg||30)*(sk.mult||1.6), speed:2.5, color:0x88ff88, pierce:true});
+  } else if(sk.type==='rain'){
+    const center = getAimTarget();
+    for(let i=0;i<(sk.count||10);i++){
+      const a = Math.random()*Math.PI*2;
+      const r = Math.random()*(sk.radius||8);
+      const tp = center.clone().add(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r));
+      setTimeout(()=>{ if(!isGameOver) aoeAttack(tp, 2, sk.dmg||40, 0x88ff44); }, i*80);
+    }
+  } else if(sk.type==='explosive_proj'){
+    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg:sk.dmg||80, speed:1.2, color:0xff6600, explosive:true, expRadius:sk.radius||5});
+  } else if(sk.type==='chain'){
+    let last = pp.clone(); let hits = 0;
+    let remaining = enemies.filter(e=>pp.distanceTo(e.mesh.position)<30);
+    while(hits<(sk.chains||5)&&remaining.length>0){
+      remaining.sort((a,b)=>last.distanceTo(a.mesh.position)-last.distanceTo(b.mesh.position));
+      const t = remaining.shift();
+      damageEnemy(t, sk.dmg||60, fw);
+      spawnHitFlash(t.mesh.position, 0x88ffff, 4);
+      last = t.mesh.position.clone();
+      hits++;
+    }
+  } else if(sk.type==='teleport'){
+    const tp = getAimTarget();
+    tp.y = 0;
+    playerMesh.position.copy(tp);
+    spawnAoeRing(tp, 3, 0xcc44ff, 12);
+  } else if(sk.type==='nova'){
+    aoeAttack(pp, sk.radius||12, sk.dmg||200, 0xff00ff, 0);
+    spawnAoeRing(pp, sk.radius||12, 0xcc00ff, 40);
+  } else if(sk.type==='burst'){
+    for(let i=0;i<(sk.count||3);i++){
+      setTimeout(()=>{ if(!isGameOver) fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg:sk.dmg||40, speed:2.2, color:0xffcc00}); }, i*80);
+    }
+  } else if(sk.type==='minigun'){
+    minigunActive = true; minigunTimer = sk.duration||5; minigunFireTimer = 0;
+  }
+}
+
+function aoeAttack(pos, range, dmg, color, knockback){
+  enemies.forEach(e=>{
+    const d = pos.distanceTo(e.mesh.position);
+    if(d<range){
+      const dir = e.mesh.position.clone().sub(pos).normalize();
+      if(knockback) { e.mesh.position.add(dir.clone().multiplyScalar(knockback)); }
+      damageEnemy(e, dmg, dir);
+    }
+  });
+  spawnAoeRing(pos, range, color||0xff4400, 16);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMBAT
+// ═══════════════════════════════════════════════════════════════
+function getAimDir(){
+  raycaster.setFromCamera(mouse, camera);
+  const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  const target = new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane, target);
+  return target.sub(playerMesh.position).normalize();
+}
+
+function getAimTarget(){
+  raycaster.setFromCamera(mouse, camera);
+  const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  const target = new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane, target);
+  return target;
+}
+
+function tryAttack(){
+  if(isGameOver||!gameStarted||attackCd>0) return;
+  attackCd = currentWeapon.cd||0.3;
+  const cls = CLASSES[playerClass];
+  const pp = playerMesh.position;
+  const fw = getAimDir();
+
+  let dmg = currentWeapon.dmg||30;
+  // Class multipliers
+  if((currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee')&&cls.meleeMult) dmg*=cls.meleeMult;
+  if((currentWeapon.type==='projectile'||currentWeapon.type==='auto')&&cls.rangedMult) dmg*=cls.rangedMult;
+  if(currentWeapon.type==='magic'&&cls.magicMult) dmg*=cls.magicMult;
+
+  // Status effect bonuses
+  if(statusEffects.rage) dmg *= (statusEffects.rage.mult||1.35);
+  if(statusEffects.berserker) dmg *= (statusEffects.berserker.dmgMult||1.6);
+
+  // Level bonus
+  dmg *= (1 + (level-1)*0.1);
+  dmg = Math.round(dmg);
+
+  if(currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee'){
+    aoeAttack(pp, currentWeapon.range||4, dmg, 0xffffff, 0);
+    spawnHitFlash(pp.clone().add(fw.clone().multiplyScalar(2)), 0xcccccc, 4);
+  } else {
+    if(currentWeapon.ammo <= 0) return;
+    currentWeapon.ammo--;
+    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg, speed:currentWeapon.speed||1.8, color:currentWeapon.type==='magic'?0xcc44ff:0xffff44});
+  }
+  updateWeaponUI();
+}
+
+function fireBullet(pos, dir, opts){
+  const geo = new THREE.SphereGeometry(0.15,6,6);
+  const mat = new THREE.MeshStandardMaterial({color:opts.color||0xffff44,emissive:opts.color||0xffff44,emissiveIntensity:1,transparent:true});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(pos);
+  scene.add(mesh);
+  bullets.push({mesh, dir:dir.clone(), speed:opts.speed||2.0, dmg:opts.dmg||30, life:3.5, pierce:opts.pierce||false, explosive:opts.explosive||false, expRadius:opts.expRadius||0, hit:false});
+}
+
+function damageEnemy(e, dmg, dir){
+  if(!e||!e.alive) return;
+  e.hp -= dmg;
+  e.flashTimer = 0.1;
+  if(dir) { e.mesh.position.add(dir.clone().multiplyScalar(0.5)); }
+  spawnHitFlash(e.mesh.position, 0xff3300, 4);
+  if(e.hp<=0) killEnemy(e);
+}
+
+function killEnemy(e){
+  if(!e.alive) return;
+  e.alive = false;
+  scene.remove(e.mesh);
+  score += e.def.score;
+  exp += e.def.score;
+  spawnHitFlash(e.mesh.position, 0xff6600, 10);
+
+  // Soul harvest (necromancer)
+  if(CLASSES[playerClass].soulHarvest){ hp = Math.min(maxHp, hp+15); }
+
+  // Chance to raise minion (necromancer)
+  if(CLASSES[playerClass].minionMax && minions.length < CLASSES[playerClass].minionMax && Math.random()<0.35){
+    raiseMinion(e);
+  }
+
+  // Drop items
+  if(Math.random()<0.25) spawnWorldItem(e.mesh.position);
+
+  // Level up
+  while(exp >= expToNext){
+    exp -= expToNext;
+    level++;
+    expToNext = Math.round(expToNext*1.5);
+    maxHp += 10;
+    hp = Math.min(maxHp, hp+20);
+    showFlash('LEVEL '+level+'!');
+  }
+}
+
+function raiseMinion(deadEnemy){
+  const mesh = buildVoxChar(0x443366, 0x221133, 0.75);
+  mesh.position.copy(deadEnemy.mesh.position);
+  scene.add(mesh);
+  minions.push({mesh, hp:200, maxHp:200, dmg:20, speed:4, target:null, attackTimer:0});
+}
+
+function damagePlayer(dmg){
+  if(statusEffects.invuln) return;
+  if(statusEffects.berserker) dmg *= statusEffects.berserker.defMult||0.7;
+  hp -= dmg;
+  if(hp<=0){
+    hp=0;
+    triggerGameOver();
+  }
+}
+
+function triggerGameOver(){
+  isGameOver = true;
+  const m = Math.floor(survivalTime/60), s = Math.floor(survivalTime%60);
+  document.getElementById('go-stats').textContent = 'Survived: '+m+'m'+s+'s  ·  Eliminated: '+score+'  ·  Level: '+level+'  ·  Day: '+dayNumber;
+  document.getElementById('game-over').classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENEMY SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function getBiome(x,z){
+  const d = Math.sqrt(x*x+z*z);
+  for(let i=BIOMES.length-1;i>=0;i--){
+    if(d>=BIOMES[i].minD) return BIOMES[i];
+  }
+  return BIOMES[0];
+}
+
+function spawnEnemy(isRaid){
+  const pp = playerMesh.position;
+  const biome = getBiome(pp.x, pp.z);
+  const tiers = biome.tiers;
+  const tier = tiers[Math.floor(Math.random()*tiers.length)];
+  const pool = TIER_POOLS[tier]||TIER_POOLS[1];
+  const typeId = pool[Math.floor(Math.random()*pool.length)];
+  const def = ENEMY_TYPES[typeId];
+
+  // Spawn position
+  let sx, sz;
+  if(isRaid){
+    const angle = Math.random()*Math.PI*2;
+    const d = 50+Math.random()*20;
+    sx = Math.cos(angle)*d;
+    sz = Math.sin(angle)*d;
+  } else {
+    const angle = Math.random()*Math.PI*2;
+    const d = 25+Math.random()*15;
+    sx = pp.x+Math.cos(angle)*d;
+    sz = pp.z+Math.sin(angle)*d;
+  }
+
+  const mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
+  mesh.position.set(sx, 0, sz);
+  const lbl = makeEmojiSprite(def.emoji, 1.5);
+  lbl.position.set(0, 4.5*(def.sc||1), 0);
+  mesh.add(lbl);
+  scene.add(mesh);
+
+  enemies.push({
+    mesh, def, typeId,
+    hp: def.hp, maxHp: def.hp, dmg: def.dmg,
+    speed: def.speed, alive: true,
+    flashTimer:0, attackCd:0,
+    beh: def.beh,
+    bleed: null,
+    chargeVel: null, chargeTimer:0,
+    ghostTimer:0, ghostLeapCd: 3+Math.random()*3,
+    leapTimer: 0, leapCd: 2+Math.random()*2,
+  });
+}
+
+function updateEnemies(dt){
+  const pp = playerMesh.position;
+
+  enemies.forEach((e,idx)=>{
+    if(!e.alive) return;
+    const ep = e.mesh.position;
+    const toPlayer = pp.clone().sub(ep);
+    const dist = toPlayer.length();
+    const dir = toPlayer.normalize();
+
+    // Flash
+    if(e.flashTimer>0){
+      e.flashTimer-=dt;
+      e.mesh.traverse(c=>{ if(c.isMesh&&c.material){ c.material.emissive = e.flashTimer>0?new THREE.Color(1,1,1):new THREE.Color(0,0,0); c.material.emissiveIntensity=e.flashTimer>0?2:0; } });
+    }
+
+    // Bleed DoT
+    if(e.bleed){
+      e.bleed.timer -= dt;
+      if(e.bleed.timer<=0){
+        damageEnemy(e, e.bleed.dmg, null);
+        e.bleed.dur -= 1;
+        if(e.bleed.dur<=0) e.bleed=null;
+        else e.bleed.timer=1;
+      }
+    }
+
+    // Attack cooldown
+    e.attackCd = Math.max(0, e.attackCd-dt);
+
+    // Behaviors
+    let moved = false;
+    if(e.beh==='chase'||e.beh==='heavy'||e.beh==='berserker'||e.beh==='swoop'||e.beh==='tank'){
+      const spd = e.beh==='berserker'&&dist<10 ? e.speed*1.5 : e.speed;
+      ep.add(dir.clone().multiplyScalar(spd*dt));
+      moved=true;
+    } else if(e.beh==='leaper'){
+      e.leapTimer-=dt;
+      if(e.leapTimer<=0){
+        e.leapTimer=e.leapCd;
+        ep.add(dir.clone().multiplyScalar(8));
+      } else {
+        ep.add(dir.clone().multiplyScalar(e.speed*0.5*dt));
+      }
+      moved=true;
+    } else if(e.beh==='ghost_leap'){
+      e.ghostLeapCd-=dt;
+      if(e.ghostLeapCd<=0){
+        e.ghostLeapCd=2+Math.random()*3;
+        ep.copy(pp.clone().add(new THREE.Vector3((Math.random()-0.5)*4,0,(Math.random()-0.5)*4)));
+      } else {
+        ep.add(dir.clone().multiplyScalar(e.speed*0.4*dt));
+      }
+      moved=true;
+    } else if(e.beh==='charger'){
+      if(!e.chargeVel||e.chargeTimer<=0){
+        e.chargeVel=dir.clone().multiplyScalar(e.speed*3);
+        e.chargeTimer=1.5;
+      }
+      e.chargeTimer-=dt;
+      ep.add(e.chargeVel.clone().multiplyScalar(dt));
+      moved=true;
+    } else if(e.beh==='spitter'||e.beh==='poison'||e.beh==='titan'){
+      if(dist>8){
+        ep.add(dir.clone().multiplyScalar(e.speed*0.6*dt));
+      }
+      if(e.attackCd<=0&&dist<25){
+        e.attackCd=2;
+        fireBullet(ep.clone().add(new THREE.Vector3(0,1.5,0)), dir, {dmg:e.dmg*0.7, speed:0.9, color:e.beh==='titan'?0xffff00:e.beh==='poison'?0x44ff00:0xff4400});
+      }
+      moved=true;
+    }
+
+    // Clamp Y
+    ep.y=0;
+
+    // Attack player
+    if(dist<2.0&&e.attackCd<=0){
+      e.attackCd=1.2;
+      damagePlayer(e.dmg);
+    }
+
+    // Face direction
+    if(moved&&dist>0.1){
+      e.mesh.rotation.y = Math.atan2(-dir.x, -dir.z);
+    }
+  });
+
+  // Clean dead enemies
+  enemies = enemies.filter(e=>e.alive);
+
+  // Update minions
+  updateMinions(dt);
+}
+
+function updateMinions(dt){
+  minions.forEach(m=>{
+    if(!m.mesh) return;
+    // Find nearest enemy
+    let nearest=null, nearDist=999;
+    enemies.forEach(e=>{
+      const d=m.mesh.position.distanceTo(e.mesh.position);
+      if(d<nearDist){nearDist=d;nearest=e;}
+    });
+    if(nearest){
+      const dir=nearest.mesh.position.clone().sub(m.mesh.position).normalize();
+      m.mesh.position.add(dir.clone().multiplyScalar(m.speed*dt));
+      m.attackTimer=Math.max(0,m.attackTimer-dt);
+      if(nearDist<2&&m.attackTimer<=0){m.attackTimer=1.5;damageEnemy(nearest,m.dmg,dir);}
+    } else {
+      // Follow player
+      const dir=playerMesh.position.clone().sub(m.mesh.position).normalize();
+      if(m.mesh.position.distanceTo(playerMesh.position)>4) m.mesh.position.add(dir.clone().multiplyScalar(m.speed*dt));
+    }
+    m.mesh.position.y=0;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BULLETS
+// ═══════════════════════════════════════════════════════════════
+function updateBullets(dt){
+  bullets.forEach((b,bi)=>{
+    if(b.hit) return;
+    b.mesh.position.add(b.dir.clone().multiplyScalar(b.speed*18*dt));
+    b.life-=dt;
+    if(b.life<=0){ scene.remove(b.mesh); b.hit=true; return; }
+
+    const bp=b.mesh.position;
+    enemies.forEach(e=>{
+      if(!e.alive||b.hit) return;
+      if(bp.distanceTo(e.mesh.position)<1.5){
+        damageEnemy(e,b.dmg,b.dir);
+        if(b.explosive){ aoeAttack(bp,b.expRadius,b.dmg*0.5,0xff6600); }
+        if(!b.pierce){ scene.remove(b.mesh); b.hit=true; }
+      }
+    });
+
+    // Enemy bullets hit player
+    // (enemy bullets are separate - not tracked here; handled by spitter behavior above using fireBullet which goes into bullets array)
+  });
+  bullets = bullets.filter(b=>!b.hit&&b.life>0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════════════════════
+function spawnParticle(pos,vel,color,size,life){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(size,size,size),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.5}));
+  m.position.copy(pos); scene.add(m);
+  particles.push({mesh:m,vel:vel.clone(),life,maxLife:life});
+}
+function spawnHitFlash(pos,color,count){
+  count=count||6;
+  for(let i=0;i<count;i++){
+    const v=new THREE.Vector3((Math.random()-0.5)*0.6,Math.random()*0.5,(Math.random()-0.5)*0.6);
+    spawnParticle(pos.clone().add(new THREE.Vector3(0,1,0)),v,color||0xff3300,0.12,0.6);
+  }
+}
+function spawnAoeRing(pos,radius,color,count){
+  count=count||16;
+  for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2;
+    const p=pos.clone().add(new THREE.Vector3(Math.cos(a)*radius,0.3,Math.sin(a)*radius));
+    spawnParticle(p,new THREE.Vector3(0,0.08,0),color||0x4488ff,0.22,0.45);
+  }
+}
+function updateParticles(dt){
+  particles.forEach(p=>{
+    p.mesh.position.add(p.vel.clone().multiplyScalar(dt*8));
+    p.vel.y-=dt*4;
+    p.life-=dt;
+    p.mesh.material.opacity=Math.max(0,p.life/p.maxLife);
+    p.mesh.material.transparent=true;
+  });
+  const dead=particles.filter(p=>p.life<=0);
+  dead.forEach(p=>scene.remove(p.mesh));
+  particles=particles.filter(p=>p.life>0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WORLD ITEMS
+// ═══════════════════════════════════════════════════════════════
+function spawnWorldItem(pos){
+  const itemIds = Object.keys(ITEM_DEFS);
+  const id = itemIds[Math.floor(Math.random()*itemIds.length)];
+  const def = ITEM_DEFS[id];
+  const geo = new THREE.BoxGeometry(0.8,0.8,0.8);
+  const mat = new THREE.MeshStandardMaterial({color:def.color||0xffaa00,emissive:def.color||0xffaa00,emissiveIntensity:0.5});
+  const mesh = new THREE.Mesh(geo,mat);
+  mesh.position.copy(pos);
+  mesh.position.y=0.5;
+  const lbl = makeEmojiSprite(def.icon,1.2);
+  lbl.position.y=1.2;
+  mesh.add(lbl);
+  scene.add(mesh);
+  worldItems.push({mesh, id, def, spinAngle:Math.random()*Math.PI*2});
+}
+
+function updateWorldItems(dt){
+  const pp=playerMesh.position;
+  worldItems.forEach((it,i)=>{
+    it.spinAngle+=dt*2;
+    it.mesh.rotation.y=it.spinAngle;
+    it.mesh.position.y=0.4+Math.sin(it.spinAngle)*0.15;
+    if(pp.distanceTo(it.mesh.position)<2.2){
+      addToHotbar(it.id);
+      scene.remove(it.mesh);
+      it.picked=true;
+    }
+  });
+  worldItems=worldItems.filter(w=>!w.picked);
+}
+
+function addToHotbar(id){
+  const def=ITEM_DEFS[id];
+  for(let i=0;i<6;i++){
+    if(itemHotbar[i].id===id){itemHotbar[i].count++;updateItemUI();return;}
+  }
+  for(let i=0;i<6;i++){
+    if(!itemHotbar[i].id){itemHotbar[i]={id,icon:def.icon,count:1};updateItemUI();return;}
+  }
+}
+
+function useItem(slotIdx){
+  const slot=itemHotbar[slotIdx];
+  if(!slot.id||slot.count<=0) return;
+  const def=ITEM_DEFS[slot.id];
+  slot.count--;
+  if(slot.count<=0) itemHotbar[slotIdx]={};
+  applyItem(def);
+  updateItemUI();
+}
+
+function applyItem(def){
+  if(def.effect==='heal'){ hp=Math.min(maxHp,hp+(def.healAmt||100)); }
+  else if(def.effect==='speed'){ statusEffects.speed={timer:def.duration||10,mult:def.mult||1.4}; }
+  else if(def.effect==='rage'){ statusEffects.rage={timer:def.duration||10,mult:def.mult||1.35}; }
+  else if(def.effect==='explosive'){ aoeAttack(playerMesh.position,def.radius||8,def.dmg||150,0xff8800); }
+  else if(def.effect==='berserker'){ statusEffects.berserker={timer:def.duration||10,dmgMult:def.dmgMult||1.6,defMult:def.defMult||0.7}; }
+  else if(def.effect==='invuln'){ statusEffects.invuln={timer:def.duration||5}; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUILD SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function toggleBuildMode(){
+  isBuildMode=!isBuildMode;
+  document.getElementById('build-indicator').classList.toggle('active',isBuildMode);
+  document.getElementById('build-bar').classList.toggle('active',isBuildMode);
+  ghostMesh.visible=isBuildMode;
+}
+
+function selectBuild(type){
+  buildType=type;
+  document.querySelectorAll('.build-slot').forEach(s=>s.classList.remove('sel'));
+  const el=document.getElementById('bs-'+type);
+  if(el) el.classList.add('sel');
+}
+
+function getBlockGridPos(){
+  raycaster.setFromCamera(mouse,camera);
+  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+  const target=new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane,target);
+  const gx=Math.round(target.x/2);
+  const gz=Math.round(target.z/2);
+  return {gx,gz,wx:gx*2,wz:gz*2};
+}
+
+function canAfford(cost){
+  return Object.keys(cost).every(k=>resources[k]>=(cost[k]||0));
+}
+
+function spendResources(cost){
+  Object.keys(cost).forEach(k=>{ resources[k]-=(cost[k]||0); });
+}
+
+function placeBlock(){
+  if(!isBuildMode) return;
+  const def=BLOCK_DEFS[buildType];
+  const mult=CLASSES[playerClass].resourceMult||1;
+  // Check cost (druid gets cheaper by 2x harvest so cost stays same)
+  if(!canAfford(def.cost)){ showFlash('Need more resources!'); return; }
+  const {gx,gz}=getBlockGridPos();
+  const key=gx+','+gz;
+  if(blocks.has(key)){ showFlash('Block exists!'); return; }
+  spendResources(def.cost);
+  blocks.set(key,{type:buildType});
+  rebuildBlockMesh();
+  updateResUI();
+}
+
+function removeBlock(){
+  if(!isBuildMode) return;
+  const {gx,gz}=getBlockGridPos();
+  const key=gx+','+gz;
+  if(!blocks.has(key)) return;
+  const blk=blocks.get(key);
+  const def=BLOCK_DEFS[blk.type];
+  // Refund half resources
+  Object.keys(def.cost).forEach(k=>{ resources[k]+=Math.floor(def.cost[k]/2); });
+  blocks.delete(key);
+  rebuildBlockMesh();
+  updateResUI();
+}
+
+function rebuildBlockMesh(){
+  let i=0;
+  for(const [key,blk] of blocks){
+    if(i>=1000) break;
+    const p=key.split(',');
+    const gx=parseInt(p[0]),gz=parseInt(p[1]);
+    _dummy.position.set(gx*2, 0.9, gz*2);
+    _dummy.updateMatrix();
+    blockInstMesh.setMatrixAt(i,_dummy.matrix);
+    _color.setHex(BLOCK_DEFS[blk.type].color);
+    blockInstMesh.setColorAt(i,_color);
+    i++;
+  }
+  blockInstMesh.count=i;
+  blockInstMesh.instanceMatrix.needsUpdate=true;
+  if(blockInstMesh.instanceColor) blockInstMesh.instanceColor.needsUpdate=true;
+}
+
+function checkBlockCollision(newPos){
+  for(const [key,blk] of blocks){
+    if(!BLOCK_DEFS[blk.type].solid) continue;
+    const p=key.split(',');
+    const bx=parseInt(p[0])*2, bz=parseInt(p[1])*2;
+    if(Math.abs(newPos.x-bx)<1.8&&Math.abs(newPos.z-bz)<1.8) return true;
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RESOURCES / MINING
+// ═══════════════════════════════════════════════════════════════
+function tryMineResource(){
+  if(!nearResourceNode) return;
+  const n=nearResourceNode;
+  const mult=CLASSES[playerClass].resourceMult||1;
+  resources.wood+=n.wood*mult;
+  resources.stone+=n.stone*mult;
+  resources.ore+=n.ore*mult;
+  scene.remove(n.mesh);
+  n.alive=false;
+  n.respawnTimer=30;
+  spawnHitFlash(n.mesh.position, 0x88ff44, 8);
+  updateResUI();
+  nearResourceNode=null;
+  document.getElementById('mine-hint').classList.remove('show');
+}
+
+function updateResourceNodes(dt){
+  nearResourceNode=null;
+  const pp=playerMesh.position;
+  resourceNodes.forEach(n=>{
+    if(!n.alive){
+      n.respawnTimer-=dt;
+      if(n.respawnTimer<=0){
+        n.alive=true;
+        scene.add(n.mesh);
+      }
+      return;
+    }
+    const d=pp.distanceTo(new THREE.Vector3(n.x,0,n.z));
+    if(d<4){
+      nearResourceNode=n;
+    }
+  });
+  const hint=document.getElementById('mine-hint');
+  if(nearResourceNode) hint.classList.add('show');
+  else hint.classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CRAFTING UI
+// ═══════════════════════════════════════════════════════════════
+function buildCraftUI(){
+  const list=document.getElementById('craft-list');
+  list.innerHTML='';
+  RECIPES.forEach(rec=>{
+    const costStr=Object.entries(rec.cost).map(([k,v])=>v+({'wood':'🪵','stone':'🪨','ore':'⚙️'}[k]||k)).join(' ');
+    const row=document.createElement('div');
+    row.className='craft-row';
+    row.innerHTML='<div class="craft-emoji">'+rec.emoji+'</div><div class="craft-info"><div class="craft-name">'+rec.name+'</div><div class="craft-cost">Costs: '+costStr+' → x'+rec.result.count+'</div></div><button class="craft-btn" id="cbtn-'+rec.id+'" onclick="craftItem(\''+rec.id+'\')">CRAFT</button>';
+    list.appendChild(row);
+  });
+}
+
+function toggleCraft(){
+  craftOpen=!craftOpen;
+  document.getElementById('craft-panel').style.display=craftOpen?'block':'none';
+  if(craftOpen) refreshCraftButtons();
+}
+
+function refreshCraftButtons(){
+  RECIPES.forEach(rec=>{
+    const btn=document.getElementById('cbtn-'+rec.id);
+    if(btn) btn.disabled=!canAfford(rec.cost);
+  });
+}
+
+function craftItem(recId){
+  const rec=RECIPES.find(r=>r.id===recId);
+  if(!rec||!canAfford(rec.cost)) return;
+  spendResources(rec.cost);
+  for(let i=0;i<rec.result.count;i++) addToHotbar(rec.result.item);
+  updateResUI();
+  refreshCraftButtons();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WEAPON SWITCH
+// ═══════════════════════════════════════════════════════════════
+function switchWeapon(id){
+  if(!WEAPONS[id].owned) return;
+  currentWeapon=WEAPONS[id];
+  playerMesh.remove(weaponMeshObj);
+  weaponMeshObj=buildWeaponMesh(id);
+  playerMesh.add(weaponMeshObj);
+  resetSkillCDs();
+  updateWeaponUI();
+  updateSkillUI();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DAY / NIGHT CYCLE
+// ═══════════════════════════════════════════════════════════════
+function updateDayNight(dt){
+  dayTimer+=dt;
+  const totalCycle=DAY_LEN+NIGHT_LEN;
+  const phase=dayTimer%totalCycle;
+
+  if(phase<DAY_LEN){
+    // Day
+    if(isNight){
+      isNight=false;
+      document.getElementById('night-overlay').style.background='rgba(0,5,25,0)';
+      document.getElementById('day-bar').style.background='linear-gradient(90deg,#ffcc44,#ff8800)';
+      document.getElementById('day-icon').textContent='☀️';
+      document.getElementById('raid-alert').classList.remove('show');
+      ambientLight.color.setHex(0xffffff);
+      ambientLight.intensity=0.6;
+      dirLight.intensity=1.2;
+      dayNumber++;
+      document.getElementById('day-num').textContent='Day '+dayNumber;
+      showFlash('DAWN — Day '+dayNumber);
+    }
+    const pct=(phase/DAY_LEN)*100;
+    document.getElementById('day-bar').style.width=pct+'%';
+  } else {
+    // Night
+    if(!isNight){
+      isNight=true;
+      nightRaidCount=Math.floor(dayNumber/2)+1;
+      document.getElementById('night-overlay').style.background='rgba(0,5,25,0.45)';
+      document.getElementById('day-bar').style.background='linear-gradient(90deg,#3344aa,#223388)';
+      document.getElementById('day-icon').textContent='🌙';
+      ambientLight.color.setHex(0x6688cc);
+      ambientLight.intensity=0.2;
+      dirLight.intensity=0.3;
+      showRaidAlert();
+      for(let i=0;i<3+nightRaidCount;i++) setTimeout(()=>{ if(!isGameOver) spawnEnemy(true); }, i*800+500);
+    }
+    // Additional raid waves during night
+    const nightPhase=(phase-DAY_LEN)%NIGHT_LEN;
+    if(nightPhase<dt&&!isGameOver){
+      // Spawn extra enemies mid-night
+      for(let i=0;i<2+nightRaidCount;i++) setTimeout(()=>{ if(!isGameOver) spawnEnemy(true); }, i*400);
+    }
+    const pct=((nightPhase)/NIGHT_LEN)*100;
+    document.getElementById('day-bar').style.width=(100-pct)+'%';
+  }
+}
+
+function showRaidAlert(){
+  const el=document.getElementById('raid-alert');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),6000);
+}
+
+function showFlash(txt){
+  const el=document.getElementById('wave-flash');
+  el.textContent=txt;
+  el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0',2200);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HEAL STATION
+// ═══════════════════════════════════════════════════════════════
+function checkHealStation(dt){
+  const pp=playerMesh.position;
+  const cls=CLASSES[playerClass];
+  for(const [key,blk] of blocks){
+    if(blk.type==='heal'||blk.type==='floor'){
+      const p=key.split(',');
+      const bx=parseInt(p[0])*2, bz=parseInt(p[1])*2;
+      const d=Math.sqrt((pp.x-bx)*(pp.x-bx)+(pp.z-bz)*(pp.z-bz));
+      if(d<4){
+        if(blk.type==='heal') hp=Math.min(maxHp,hp+5*dt);
+        if(blk.type==='floor'&&cls.regenNearFloor) hp=Math.min(maxHp,hp+2*dt);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATUS EFFECTS
+// ═══════════════════════════════════════════════════════════════
+function updateStatusEffects(dt){
+  Object.keys(statusEffects).forEach(k=>{
+    const se=statusEffects[k];
+    se.timer-=dt;
+    if(se.timer<=0) delete statusEffects[k];
+  });
+  // Update status UI
+  const bar=document.getElementById('status-bar');
+  bar.innerHTML='';
+  const icons={speed:'💨',rage:'🔴',invuln:'🛡️',berserker:'💢'};
+  const cls2={speed:'status-speed',rage:'status-rage',invuln:'status-invuln',berserker:'status-berserk'};
+  Object.keys(statusEffects).forEach(k=>{
+    const se=statusEffects[k];
+    const pill=document.createElement('div');
+    pill.className='status-pill '+(cls2[k]||'');
+    pill.innerHTML='<span class="s-icon">'+(icons[k]||'⭐')+'</span><span>'+k.toUpperCase()+'</span><span class="s-timer">'+Math.ceil(se.timer)+'s</span>';
+    bar.appendChild(pill);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYER MOVEMENT
+// ═══════════════════════════════════════════════════════════════
+function updatePlayer(dt){
+  if(isGameOver) return;
+  const baseSpeed = 12*(CLASSES[playerClass].speedMult||1);
+  const spd = baseSpeed * (statusEffects.speed ? statusEffects.speed.mult : 1);
+
+  let dx=0,dz=0;
+  if(keys['KeyW']||keys['ArrowUp'])    dz-=1;
+  if(keys['KeyS']||keys['ArrowDown'])  dz+=1;
+  if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
+  if(keys['KeyD']||keys['ArrowRight']) dx+=1;
+
+  if(dx!==0||dz!==0){
+    const len=Math.sqrt(dx*dx+dz*dz);
+    dx/=len; dz/=len;
+    const newX=playerMesh.position.x+dx*spd*dt;
+    const newZ=playerMesh.position.z+dz*spd*dt;
+    const newPos=new THREE.Vector3(newX,0,newZ);
+
+    // World bounds
+    if(Math.sqrt(newX*newX+newZ*newZ)<128){
+      if(!checkBlockCollision(newPos)){
+        playerMesh.position.x=newX;
+        playerMesh.position.z=newZ;
+      } else {
+        // Try sliding X only
+        const nx2=new THREE.Vector3(newX,0,playerMesh.position.z);
+        if(!checkBlockCollision(nx2)) playerMesh.position.x=newX;
+        // Try sliding Z only
+        const nz2=new THREE.Vector3(playerMesh.position.x,0,newZ);
+        if(!checkBlockCollision(nz2)) playerMesh.position.z=newZ;
+      }
+    }
+  }
+
+  // Face aim direction
+  const aimDir=getAimDir();
+  if(aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
+
+  // Camera follow
+  camera.position.x=playerMesh.position.x;
+  camera.position.z=playerMesh.position.z+22;
+  camera.position.y=28;
+  camera.lookAt(playerMesh.position);
+  dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
+
+  // Attack cooldown
+  attackCd=Math.max(0,attackCd-dt);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENEMY SPAWNING
+// ═══════════════════════════════════════════════════════════════
+function updateSpawning(dt){
+  const now=performance.now();
+  // Dynamic spawn interval (more enemies in harder biomes, during night)
+  const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
+  const biomeIdx=BIOMES.indexOf(biome);
+  let interval=spawnInterval - biomeIdx*200 - (dayNumber*50);
+  if(isNight) interval*=0.6;
+  interval=Math.max(800,interval);
+
+  if(now-lastSpawnTime>interval&&enemies.length<30){
+    spawnEnemy(false);
+    lastSpawnTime=now;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GHOST BLOCK UPDATE
+// ═══════════════════════════════════════════════════════════════
+function updateGhostBlock(){
+  if(!isBuildMode){ghostMesh.visible=false;return;}
+  const {wx,wz}=getBlockGridPos();
+  ghostMesh.position.set(wx,0.9,wz);
+  ghostMesh.visible=true;
+  const def=BLOCK_DEFS[buildType];
+  const canPlace=canAfford(def.cost)&&!blocks.has(Math.round(wx/2)+','+Math.round(wz/2));
+  ghostMesh.material.color.setHex(canPlace?0x44ffaa:0xff4444);
+  ghostMesh.material.opacity=canPlace?0.35:0.2;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MINIMAP
+// ═══════════════════════════════════════════════════════════════
+function updateMinimap(){
+  mmCtx.fillStyle='#0a0e14';
+  mmCtx.fillRect(0,0,120,120);
+  const cx=60,cy=60,scale=120/260;
+
+  // Draw biome rings
+  const biomeColors=['#2a4a1a','#1a2a10','#3a2020','#4a3010','#110022'];
+  BIOMES.forEach((b,i)=>{
+    const r=Math.min(b.maxD<999?b.maxD:130,130)*scale;
+    mmCtx.fillStyle=biomeColors[i];
+    mmCtx.beginPath(); mmCtx.arc(cx,cy,r,0,Math.PI*2); mmCtx.fill();
+  });
+
+  // Draw blocks
+  mmCtx.fillStyle='rgba(200,200,200,0.6)';
+  for(const [key] of blocks){
+    const p=key.split(',');
+    const mx=cx+parseInt(p[0])*2*scale;
+    const my=cy+parseInt(p[1])*2*scale;
+    mmCtx.fillRect(mx-1,my-1,3,3);
+  }
+
+  // Draw enemies
+  mmCtx.fillStyle='#ff4400';
+  enemies.forEach(e=>{
+    const mx=cx+e.mesh.position.x*scale;
+    const my=cy+e.mesh.position.z*scale;
+    mmCtx.fillRect(mx-1,my-1,2,2);
+  });
+
+  // Draw player
+  mmCtx.fillStyle='#4488ff';
+  const px=cx+playerMesh.position.x*scale;
+  const py=cy+playerMesh.position.z*scale;
+  mmCtx.beginPath(); mmCtx.arc(px,py,3,0,Math.PI*2); mmCtx.fill();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI UPDATES
+// ═══════════════════════════════════════════════════════════════
+function updateHUD(){
+  const hpPct=(hp/maxHp)*100;
+  document.getElementById('hp-fill').style.width=hpPct+'%';
+  document.getElementById('hp-val').textContent=Math.ceil(hp)+'/'+maxHp;
+  document.getElementById('score-val').textContent=String(score).padStart(4,'0');
+  const m=Math.floor(survivalTime/60),s=Math.floor(survivalTime%60);
+  document.getElementById('timer-val').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  const expPct=(exp/expToNext)*100;
+  document.getElementById('exp-fill').style.width=expPct+'%';
+  document.getElementById('level-val').textContent='Lv.'+level+' — '+exp+'/'+expToNext;
+
+  // Biome
+  const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
+  document.getElementById('biome-label').textContent=biome.name;
+
+  // Skill cooldowns
+  const slots=['Q','E','R','F'];
+  const ids=['sq','se','sr','sf'];
+  const skArr=getWeaponSkills();
+  slots.forEach((k,i)=>{
+    const cd=skillCds[k]||0;
+    const el=document.getElementById('skill-'+k.toLowerCase()+'-cd')||document.getElementById(ids[i]+'-cd');
+    const slot=document.getElementById('skill-'+['q','e','r','f'][i]);
+    if(el){
+      if(cd>0){el.classList.remove('hidden');el.textContent=Math.ceil(cd);slot&&slot.classList.replace('off-cd','on-cd');}
+      else{el.classList.add('hidden');slot&&slot.classList.replace('on-cd','off-cd');}
+    }
+  });
+}
+
+function updateWeaponUI(){
+  WEAPON_ORDER.forEach(id=>{
+    const el=document.getElementById('ws-'+id);
+    if(!el) return;
+    el.classList.toggle('owned',WEAPONS[id].owned);
+    el.classList.toggle('active',currentWeapon.id===id);
+    const ammoEl=document.getElementById('wa-'+id);
+    if(ammoEl&&WEAPONS[id].ammo!==Infinity) ammoEl.textContent=WEAPONS[id].ammo;
+  });
+}
+
+function updateSkillUI(){
+  const skArr=getWeaponSkills();
+  const slots=['q','e','r','f'];
+  slots.forEach((s,i)=>{
+    const sk=skArr[i];
+    if(!sk) return;
+    const icon=document.getElementById('s'+s+'-icon');
+    const name=document.getElementById('s'+s+'-name');
+    if(icon) icon.textContent=sk.icon;
+    if(name) name.textContent=sk.name;
+  });
+}
+
+function updateItemUI(){
+  for(let i=0;i<6;i++){
+    const slot=itemHotbar[i];
+    document.getElementById('isl-'+(i+1)).classList.toggle('filled',!!slot.id);
+    document.getElementById('ii-'+(i+1)).textContent=slot.icon||'';
+    document.getElementById('ic-'+(i+1)).textContent=slot.count>1?slot.count:'';
+  }
+}
+
+function updateResUI(){
+  document.getElementById('res-wood').textContent=Math.floor(resources.wood);
+  document.getElementById('res-stone').textContent=Math.floor(resources.stone);
+  document.getElementById('res-ore').textContent=Math.floor(resources.ore);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MINIGUN MODE
+// ═══════════════════════════════════════════════════════════════
+function updateMinigun(dt){
+  if(!minigunActive) return;
+  minigunTimer-=dt;
+  minigunFireTimer-=dt;
+  if(minigunFireTimer<=0){
+    minigunFireTimer=0.1;
+    const fw=getAimDir();
+    fireBullet(playerMesh.position.clone().add(new THREE.Vector3(0,1,0)),fw,{dmg:20,speed:2.2,color:0xffdd00});
+  }
+  if(minigunTimer<=0) minigunActive=false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════════════
+function animate(){
+  requestAnimationFrame(animate);
+  if(!gameStarted||isGameOver){ renderer.render(scene,camera); return; }
+
+  const dt=Math.min(clock.getDelta(),0.05);
+  survivalTime+=dt;
+
+  // Tick skill CDs
+  ['Q','E','R','F'].forEach(k=>{ if(skillCds[k]>0) skillCds[k]=Math.max(0,skillCds[k]-dt); });
+
+  updatePlayer(dt);
+  updateEnemies(dt);
+  updateBullets(dt);
+  updateParticles(dt);
+  updateWorldItems(dt);
+  updateStatusEffects(dt);
+  updateDayNight(dt);
+  updateSpawning(dt);
+  updateResourceNodes(dt);
+  checkHealStation(dt);
+  updateMinigun(dt);
+  updateGhostBlock();
+  updateHUD();
+  updateResUI();
+  updateMinimap();
+
+  renderer.render(scene,camera);
+}
+
+// initial UI call
+updateSkillUI();
+</script>
+</body>
+</html>
