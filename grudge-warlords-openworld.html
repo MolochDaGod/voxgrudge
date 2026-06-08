@@ -86,6 +86,39 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #instructions{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#252a36;pointer-events:none;white-space:nowrap}
 #mine-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,60px);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#44ffaa;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.3s}
 #mine-hint.show{opacity:1}
+
+/* ── Cast Bar ── */
+#cast-bar-wrap{position:absolute;bottom:168px;left:50%;transform:translateX(-50%);width:260px;z-index:15;pointer-events:none;opacity:0;transition:opacity 0.2s}
+#cast-bar-wrap.active{opacity:1}
+#cast-bar-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#ffcc44;text-align:center;margin-bottom:3px;text-shadow:0 0 8px rgba(255,200,0,0.5)}
+#cast-bar-track{width:100%;height:8px;background:#1a1e26;border-radius:4px;overflow:hidden;border:1px solid #333}
+#cast-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff8800,#ffcc00);transition:width 0.05s;box-shadow:inset 0 0 8px rgba(255,255,255,0.3)}
+
+/* ── Channel Bar ── */
+#channel-bar-wrap{position:absolute;bottom:168px;left:50%;transform:translateX(-50%);width:260px;z-index:15;pointer-events:none;opacity:0;transition:opacity 0.2s}
+#channel-bar-wrap.active{opacity:1}
+#channel-bar-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#44ddff;text-align:center;margin-bottom:3px;text-shadow:0 0 8px rgba(68,221,255,0.5)}
+#channel-bar-track{width:100%;height:8px;background:#1a1e26;border-radius:4px;overflow:hidden;border:1px solid #335}
+#channel-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#2288ff,#44ddff);transition:width 0.05s;box-shadow:inset 0 0 8px rgba(255,255,255,0.2)}
+
+/* ── Combo Counter ── */
+#combo-counter{position:absolute;top:40%;right:40px;z-index:15;pointer-events:none;opacity:0;transition:opacity 0.3s,transform 0.15s;transform:scale(0.8);text-align:center}
+#combo-counter.active{opacity:1;transform:scale(1)}
+#combo-num{font-size:52px;font-weight:900;color:#ff4400;text-shadow:0 0 20px rgba(255,68,0,0.6);line-height:1}
+#combo-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#ff8844}
+
+/* ── Damage Numbers ── */
+.dmg-num{position:absolute;pointer-events:none;z-index:25;font-weight:900;text-shadow:0 2px 4px rgba(0,0,0,0.8);transition:none;white-space:nowrap}
+
+/* ── Screen Shake ── */
+#game-canvas-wrap{position:absolute;inset:0}
+
+/* ── GCD Sweep ── */
+.skill-gcd-sweep{position:absolute;inset:0;background:rgba(0,0,0,0.5);pointer-events:none}
+.skill-gcd-sweep.hidden{display:none}
+
+/* ── Internal Clock ── */
+#game-clock{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:2px;color:#555;pointer-events:none;z-index:10;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -147,6 +180,8 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="weapon-bar">
   <div class="w-slot owned active" id="ws-sword"><div class="w-icon">⚔️</div><div class="w-name">Sword</div><div class="w-ammo">∞</div></div>
   <div class="w-slot" id="ws-axe"><div class="w-icon">🪓</div><div class="w-name">Axe</div><div class="w-ammo" id="wa-axe">∞</div></div>
+  <div class="w-slot" id="ws-greatsword"><div class="w-icon">🗡️</div><div class="w-name">Greatswd</div><div class="w-ammo">∞</div></div>
+  <div class="w-slot" id="ws-sword_shield"><div class="w-icon">🛡️</div><div class="w-name">S+Shield</div><div class="w-ammo">∞</div></div>
   <div class="w-slot" id="ws-bow"><div class="w-icon">🏹</div><div class="w-name">Bow</div><div class="w-ammo" id="wa-bow">0</div></div>
   <div class="w-slot" id="ws-staff"><div class="w-icon">🪄</div><div class="w-name">Staff</div><div class="w-ammo" id="wa-staff">0</div></div>
   <div class="w-slot" id="ws-gun"><div class="w-icon">🔫</div><div class="w-name">Gun</div><div class="w-ammo" id="wa-gun">0</div></div>
@@ -166,6 +201,11 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button id="craft-close" onclick="toggleCraft()">CLOSE [C]</button>
 </div>
 
+<div id="cast-bar-wrap"><div id="cast-bar-label">CASTING</div><div id="cast-bar-track"><div id="cast-bar-fill" style="width:0%"></div></div></div>
+<div id="channel-bar-wrap"><div id="channel-bar-label">CHANNELING</div><div id="channel-bar-track"><div id="channel-bar-fill" style="width:100%"></div></div></div>
+<div id="combo-counter"><div id="combo-num">0</div><div id="combo-label">COMBO</div></div>
+<div id="game-clock">00:00 — GCD READY</div>
+
 <div id="raid-alert">⚠ NIGHT RAID — DEFEND YOUR BASE</div>
 <div id="wave-flash"></div>
 <div id="night-overlay"></div>
@@ -179,9 +219,10 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button class="gw-btn" onclick="location.reload()">RESPAWN</button>
 </div>
 
-<div id="instructions">WASD:Move · Click:Attack · Q/E/R/F:Skills · B:Build · C:Craft · M:Mine · 1-6:Items · Scroll:Weapon</div>
+<div id="instructions">WASD:Move · Click:Attack · Q/E/R/F:Skills · B:Build · C:Craft · M:Mine · 1-6:Items · Scroll:Weapon · Hold RMB:Block(S+S)</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 'use strict';
 
@@ -206,8 +247,10 @@ const WEAPONS = {
   bow:  {id:'bow',  name:'Shadowflight',emoji:'🏹',type:'projectile',cd:0.22,speed:1.8,dmg:48,owned:false,ammo:30,maxAmmo:90,pickup:15,skills:['aimed_shot','multi_shot','piercing_arrow','rain_of_arrows'],color:0x2d5a1a},
   staff:{id:'staff',name:'Emberwrath', emoji:'🪄',type:'magic',cd:0.38,speed:0.9,dmg:62,owned:false,ammo:50,maxAmmo:150,pickup:25,skills:['fireball','chain_lightning','blink','emberwrath_nova'],color:0x6600cc},
   gun:  {id:'gun',  name:'Ironstorm',  emoji:'🔫',type:'auto',cd:0.07,speed:2.1,dmg:20,owned:false,ammo:60,maxAmmo:180,pickup:30,skills:['burst_fire','sniper_shot','explosive_round','ironstorm_minigun'],color:0x222222},
+  greatsword:{id:'greatsword',name:'Bonecleaver',emoji:'🗡️',type:'heavy_melee',cd:0.6,range:6.5,dmg:95,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,comboChain:['gs_slash1','gs_slash2','gs_overhead'],skills:['gs_whirlwind','gs_leapslam','gs_execute','gs_channel_fury'],color:0x554422},
+  sword_shield:{id:'sword_shield',name:'Bulwark',emoji:'🛡️',type:'melee',cd:0.32,range:4.5,dmg:38,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,canBlock:true,skills:['ss_shield_bash','ss_dash_strike','ss_heal_channel','ss_fortress'],color:0xccaa44},
 };
-const WEAPON_ORDER = ['sword','axe','bow','staff','gun'];
+const WEAPON_ORDER = ['sword','axe','greatsword','sword_shield','bow','staff','gun'];
 
 // ═══════════════════════════════════════════════════════════════
 // SKILLS
@@ -233,6 +276,18 @@ const SKILLS = {
   sniper_shot:      {name:'Sniper Shot',     key:'E',icon:'🎯',maxCd:10,cd:0,type:'power_shot',     mult:7, pierce:true},
   explosive_round:  {name:'Explosive Round', key:'R',icon:'💣',maxCd:8, cd:0,type:'explosive_proj', dmg:90, radius:5.5},
   ironstorm_minigun:{name:"Minigun",         key:'F',icon:'🔫',maxCd:50,cd:0,type:'minigun',        duration:5,dmg:20},
+  // Greatsword skills
+  gs_whirlwind:     {name:'Whirlwind',       key:'Q',icon:'🌀',maxCd:8, cd:0,type:'spin_aoe',       dmg:110,range:7.0},
+  gs_leapslam:      {name:'Leap Slam',       key:'E',icon:'💥',maxCd:12,cd:0,type:'leap_slam',      dmg:160,range:8.0,radius:6.5},
+  gs_execute:       {name:'Decapitate',      key:'R',icon:'💀',maxCd:14,cd:0,type:'execute',        dmg:220,range:5.5},
+  gs_channel_fury:  {name:'Fury Channel',    key:'F',icon:'🔥',maxCd:30,cd:0,type:'channel_aoe',    dmg:55,radius:9,duration:4,ticks:8},
+  // Sword+Shield skills
+  ss_shield_bash:   {name:'Shield Bash',     key:'Q',icon:'🛡️',maxCd:6, cd:0,type:'melee_stun',     dmg:50,range:4,stunDur:1.5},
+  ss_dash_strike:   {name:'Dash Strike',     key:'E',icon:'⚡',maxCd:8, cd:0,type:'dash_strike',    dmg:70,range:6},
+  ss_heal_channel:  {name:'Holy Mend',       key:'R',icon:'💚',maxCd:18,cd:0,type:'channel_heal',   healPerTick:25,duration:3,ticks:6},
+  ss_fortress:      {name:'Fortress',        key:'F',icon:'🏰',maxCd:25,cd:0,type:'channel_form',   duration:5,dmgReduction:0.5,speedMult:0.6},
+  // Enhanced shadow strike (replaces old one for sword)
+  shadow_strike_enhanced:{name:'Shadow Strike',key:'E',icon:'🌑',maxCd:10,cd:0,type:'shadow_strike',dmg:75,range:6,afterImages:3},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -350,6 +405,31 @@ let ambientLight, dirLight;
 let worldPlane;
 let attackCd = 0;
 
+// ── New Systems State ──
+let gcd = 0, GCD_DURATION = 0.4; // global cooldown
+let gameClock = 0; // internal clock in seconds
+// Cast system
+let casting = null; // {skillId, elapsed, duration, label}
+// Channel system
+let channeling = null; // {skillId, elapsed, duration, tickInterval, tickTimer, label, effect}
+// Combo system
+let comboCount = 0, comboTimer = 0, COMBO_TIMEOUT = 2.5, comboChainIdx = 0;
+// Screen shake
+let shakeIntensity = 0, shakeDuration = 0, shakeTimer = 0;
+const shakeOffset = new THREE.Vector3();
+// Damage numbers
+let dmgNumbers = []; // {x,y,z, text, color, life, vy}
+// Blocking
+let isBlocking = false, blockDmgReduction = 0.6;
+// Spline trail system
+let trailSystems = []; // {points[], mesh, color, life, width}
+// Scatter VFX
+let scatterSystems = []; // {particles[], life}
+// Form/state buffs
+let formBuff = null; // {name, timer, dmgReduction, speedMult}
+// Impact deceleration on enemies
+// (stored per enemy as e.knockbackVel)
+
 // ═══════════════════════════════════════════════════════════════
 // CLASS SELECT UI
 // ═══════════════════════════════════════════════════════════════
@@ -377,7 +457,8 @@ let attackCd = 0;
 function startGame(){
   if(!playerClass) return;
   document.getElementById('class-screen').style.display='none';
-  init();
+  // Preload GLB models then init
+  preloadModels(function(){ init(); });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -450,8 +531,15 @@ function init(){
   ghostMesh.visible = false;
   scene.add(ghostMesh);
 
-  // Player
-  playerMesh = buildVoxChar(0x5588cc, 0x224466);
+  // Player - try GLB model, fallback to vox boxes
+  const classLetter = CLASS_MODEL_MAP[playerClass]||'a';
+  const glbModel = cloneModel(classLetter);
+  if(glbModel){
+    playerMesh = glbModel;
+    playerSkelParts = getSkeletonParts(playerMesh);
+  } else {
+    playerMesh = buildVoxChar(0x5588cc, 0x224466);
+  }
   playerMesh.position.set(0, 0, 0);
   scene.add(playerMesh);
   weaponMeshObj = buildWeaponMesh('sword');
@@ -500,7 +588,11 @@ function init(){
       if(e.button===2) removeBlock();
     } else {
       if(e.button===0) tryAttack();
+      if(e.button===2 && currentWeapon.canBlock) isBlocking=true;
     }
+  });
+  window.addEventListener('mouseup', e=>{
+    if(e.button===2) isBlocking=false;
   });
   window.addEventListener('wheel', e=>{
     if(craftOpen || isBuildMode) return;
@@ -673,6 +765,27 @@ function buildWeaponMesh(id){
     const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.12,0.12),new THREE.MeshStandardMaterial({color:0x222222,metalness:0.9}));
     barrel.position.set(1.3,1.48,0);
     g.add(body); g.add(barrel);
+  } else if(id==='greatsword'){
+    // Large two-handed blade
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.18,2.4,0.08),new THREE.MeshStandardMaterial({color:0xaaaaaa,metalness:0.95,roughness:0.15}));
+    blade.position.set(0.9,1.6,0);
+    const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.15,0.15),new THREE.MeshStandardMaterial({color:0x553311}));
+    hilt.position.set(0.9,0.3,0);
+    const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.12,6,6),new THREE.MeshStandardMaterial({color:0x8b0000,emissive:0x330000,emissiveIntensity:0.5}));
+    pommel.position.set(0.9,0.1,0);
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.04,2.2,0.12),new THREE.MeshStandardMaterial({color:0xddddff,emissive:0x222244,emissiveIntensity:0.3}));
+    edge.position.set(1.0,1.6,0);
+    g.add(blade); g.add(hilt); g.add(pommel); g.add(edge);
+  } else if(id==='sword_shield'){
+    // Sword in right hand
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1,1.3,0.05),new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.9,roughness:0.2}));
+    blade.position.set(0.9,1.2,0);
+    // Shield in left hand
+    const shield = new THREE.Mesh(new THREE.BoxGeometry(0.1,1.0,0.8),new THREE.MeshStandardMaterial({color:0xccaa44,metalness:0.6,roughness:0.4}));
+    shield.position.set(-0.9,1.0,0);
+    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.15,6,6),new THREE.MeshStandardMaterial({color:0xffdd44,emissive:0x443300,emissiveIntensity:0.4}));
+    boss.position.set(-0.9,1.0,0.45);
+    g.add(blade); g.add(shield); g.add(boss);
   }
   return g;
 }
@@ -783,6 +896,63 @@ function activateSkill(slotIdx){
     }
   } else if(sk.type==='minigun'){
     minigunActive = true; minigunTimer = sk.duration||5; minigunFireTimer = 0;
+  } else if(sk.type==='leap_slam'){
+    // Jump to aim target, AoE on landing
+    const target = getAimTarget();
+    const startPos = pp.clone();
+    target.y = 0;
+    const dist = pp.distanceTo(target);
+    if(dist>sk.range) target.copy(pp.clone().add(fw.clone().multiplyScalar(sk.range)));
+    target.y = 0;
+    spawnTrail(startPos.clone().add(new THREE.Vector3(0,1,0)), target.clone().add(new THREE.Vector3(0,1,0)), 0xff8800, 0.6);
+    playerMesh.position.copy(target);
+    aoeAttack(target, sk.radius||6, sk.dmg||120, 0xff4400, 2);
+    triggerShake(0.8, 0.35);
+    spawnScatterBurst(target, 0xff6600, 20, sk.radius||6, 0.6);
+  } else if(sk.type==='melee_stun'){
+    // Shield bash: damage + stun nearby
+    enemies.forEach(e=>{
+      const d = pp.distanceTo(e.mesh.position);
+      if(d<(sk.range||4)){
+        damageEnemy(e, sk.dmg||50, fw);
+        e.stunTimer = sk.stunDur||1.5;
+        spawnHitFlash(e.mesh.position, 0xffdd00, 6);
+      }
+    });
+    triggerShake(0.4, 0.2);
+    spawnScatterBurst(pp, 0xffdd44, 12, 3, 0.4);
+  } else if(sk.type==='channel_aoe'){
+    startChannel(sk.name, sk.duration||4, sk.ticks||8, sk.name, {type:'aoe'});
+    // Remap skillId for channel ticks
+    if(channeling) channeling.skillId = Object.keys(SKILLS).find(k=>SKILLS[k]===sk);
+  } else if(sk.type==='channel_heal'){
+    startChannel(sk.name, sk.duration||3, sk.ticks||6, sk.name, {type:'heal'});
+    if(channeling) channeling.skillId = Object.keys(SKILLS).find(k=>SKILLS[k]===sk);
+  } else if(sk.type==='channel_form'){
+    startChannel(sk.name, sk.duration||5, 1, sk.name, {type:'form'});
+    if(channeling) channeling.skillId = Object.keys(SKILLS).find(k=>SKILLS[k]===sk);
+    formBuff={name:'Fortress',timer:sk.duration||5,dmgReduction:sk.dmgReduction||0.5,speedMult:sk.speedMult||0.6};
+    statusEffects.fortress={timer:sk.duration||5};
+  } else if(sk.type==='shadow_strike'){
+    // Dash with after-images
+    const startPos = pp.clone();
+    const nd = pp.clone().add(fw.clone().multiplyScalar(sk.range||6));
+    nd.y = 0;
+    // Spawn after-image ghosts
+    for(let i=1;i<=(sk.afterImages||3);i++){
+      const t=i/(sk.afterImages+1);
+      const ghostPos=new THREE.Vector3().lerpVectors(startPos,nd,t);
+      ghostPos.y=0;
+      const ghost=buildVoxChar(0x220044,0x110022,0.9);
+      ghost.position.copy(ghostPos);
+      ghost.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.material.transparent=true;c.material.opacity=0.4;}});
+      scene.add(ghost);
+      setTimeout(()=>scene.remove(ghost), 400+i*100);
+    }
+    spawnTrail(startPos.clone().add(new THREE.Vector3(0,1,0)), nd.clone().add(new THREE.Vector3(0,1,0)), 0x8800ff, 0.5);
+    playerMesh.position.copy(nd);
+    aoeAttack(nd, 4, sk.dmg||75, 0x8800ff);
+    triggerShake(0.3, 0.15);
   }
 }
 
@@ -838,13 +1008,31 @@ function tryAttack(){
   dmg *= (1 + (level-1)*0.1);
   dmg = Math.round(dmg);
 
+  // Trigger GCD
+  gcd = GCD_DURATION;
+  playerAttackPhase = 1.0;
+
   if(currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee'){
     aoeAttack(pp, currentWeapon.range||4, dmg, 0xffffff, 0);
     spawnHitFlash(pp.clone().add(fw.clone().multiplyScalar(2)), 0xcccccc, 4);
+    // Melee hit VFX: spawn spline arc
+    const arcEnd = pp.clone().add(fw.clone().multiplyScalar(currentWeapon.range||4));
+    const arcMid = pp.clone().add(fw.clone().multiplyScalar((currentWeapon.range||4)*0.5)).add(new THREE.Vector3(0,2,0));
+    spawnTrail(pp.clone().add(new THREE.Vector3(0,1.5,0)), arcEnd.clone().add(new THREE.Vector3(0,0.5,0)), currentWeapon.id==='greatsword'?0xff4400:0xcccccc, 0.3);
   } else {
     if(currentWeapon.ammo <= 0) return;
     currentWeapon.ammo--;
-    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg, speed:currentWeapon.speed||1.8, color:currentWeapon.type==='magic'?0xcc44ff:0xffff44});
+    const bulletColor = currentWeapon.type==='magic'?0xcc44ff:currentWeapon.type==='auto'?0xffdd00:0xffff44;
+    fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg, speed:currentWeapon.speed||1.8, color:bulletColor});
+    // Muzzle flash for gun
+    if(currentWeapon.type==='auto'){
+      spawnHitFlash(pp.clone().add(fw.clone().multiplyScalar(1.5)).add(new THREE.Vector3(0,1.4,0)), 0xffaa00, 3);
+    }
+    // Arrow trail for bow
+    if(currentWeapon.type==='projectile'){
+      const trailEnd = pp.clone().add(fw.clone().multiplyScalar(8)).add(new THREE.Vector3(0,1,0));
+      spawnTrail(pp.clone().add(new THREE.Vector3(0,1,0)), trailEnd, 0x88ff44, 0.4);
+    }
   }
   updateWeaponUI();
 }
@@ -864,6 +1052,9 @@ function damageEnemy(e, dmg, dir){
   e.flashTimer = 0.1;
   if(dir) { e.mesh.position.add(dir.clone().multiplyScalar(0.5)); }
   spawnHitFlash(e.mesh.position, 0xff3300, 4);
+  spawnDmgNumber(e.mesh.position.clone().add(new THREE.Vector3(0,3,0)), Math.round(dmg), dmg>100?'#ff0':'#f40');
+  registerComboHit();
+  if(dmg>80) triggerShake(0.2, 0.1);
   if(e.hp<=0) killEnemy(e);
 }
 
@@ -906,8 +1097,11 @@ function raiseMinion(deadEnemy){
 
 function damagePlayer(dmg){
   if(statusEffects.invuln) return;
+  if(isBlocking && currentWeapon.canBlock) dmg *= blockDmgReduction;
+  if(formBuff) dmg *= (1-formBuff.dmgReduction);
   if(statusEffects.berserker) dmg *= statusEffects.berserker.defMult||0.7;
   hp -= dmg;
+  triggerShake(0.3,0.15);
   if(hp<=0){
     hp=0;
     triggerGameOver();
@@ -955,7 +1149,17 @@ function spawnEnemy(isRaid){
     sz = pp.z+Math.sin(angle)*d;
   }
 
-  const mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
+  // Try GLB model for humanoid enemies, fallback to vox boxes
+  let mesh;
+  const isHumanoid = def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
+  const eLetter = ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
+  const enemyGlb = isHumanoid ? cloneModel(eLetter, def.sc||1) : null;
+  if(enemyGlb){
+    mesh = enemyGlb;
+    tintModel(mesh, def.body);
+  } else {
+    mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
+  }
   mesh.position.set(sx, 0, sz);
   const lbl = makeEmojiSprite(def.emoji, 1.5);
   lbl.position.set(0, 4.5*(def.sc||1), 0);
@@ -1001,6 +1205,9 @@ function updateEnemies(dt){
         else e.bleed.timer=1;
       }
     }
+
+    // Stun check
+    if(e.stunTimer&&e.stunTimer>0){e.stunTimer-=dt;return;}
 
     // Attack cooldown
     e.attackCd = Math.max(0, e.attackCd-dt);
@@ -1719,6 +1926,361 @@ function updateMinigun(dt){
 }
 
 // ═══════════════════════════════════════════════════════════════
+// GLB MODEL CACHE & LOADER
+// ═══════════════════════════════════════════════════════════════
+const MODEL_CACHE = {}; // letter -> THREE.Group template
+const CLASS_MODEL_MAP = {swordsman:'a',archer:'b',mage:'c',druid:'d',paladin:'e',necromancer:'f'};
+const ENEMY_MODEL_POOL = ['g','h','i','j'];
+let glbLoader = null;
+let modelsLoaded = false;
+
+function preloadModels(callback){
+  if(typeof THREE.GLTFLoader==='undefined'){modelsLoaded=false;callback();return;}
+  glbLoader = new THREE.GLTFLoader();
+  const letters = Object.values(CLASS_MODEL_MAP).concat(ENEMY_MODEL_POOL);
+  let loaded = 0;
+  letters.forEach(letter=>{
+    glbLoader.load('models/kenney/character-'+letter+'.glb',
+      function(gltf){
+        const model = gltf.scene;
+        model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+        MODEL_CACHE[letter] = model;
+        loaded++;
+        if(loaded>=letters.length){modelsLoaded=true;callback();}
+      },
+      undefined,
+      function(err){loaded++;if(loaded>=letters.length){modelsLoaded=true;callback();}}
+    );
+  });
+}
+
+function cloneModel(letter, scale){
+  scale = scale||1;
+  const template = MODEL_CACHE[letter];
+  if(!template) return null;
+  const clone = template.clone();
+  clone.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+  const sc = 1.4*scale; // Kenney models are ~1.9 units tall, we want ~2.8
+  clone.scale.set(sc,sc,sc);
+  return clone;
+}
+
+function tintModel(group, color){
+  if(!group) return;
+  const c = new THREE.Color(color);
+  group.traverse(child=>{if(child.isMesh&&child.material){child.material.color.multiply(c);}});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SKELETON CONTROLLER (procedural animation via named groups)
+// ═══════════════════════════════════════════════════════════════
+function getSkeletonParts(group){
+  const parts = {legLeft:null,legRight:null,armLeft:null,armRight:null,torso:null,head:null};
+  group.traverse(c=>{
+    const n = (c.name||'').toLowerCase().replace(/[^a-z-]/g,'');
+    if(n.includes('leg')&&n.includes('left'))  parts.legLeft = c;
+    if(n.includes('leg')&&n.includes('right')) parts.legRight = c;
+    if(n.includes('arm')&&n.includes('left'))  parts.armLeft = c;
+    if(n.includes('arm')&&n.includes('right')) parts.armRight = c;
+    if(n.includes('torso'))                     parts.torso = c;
+    if(n.includes('head'))                      parts.head = c;
+  });
+  return parts;
+}
+
+function animateWalk(parts, t, speed){
+  if(!parts.legLeft) return;
+  const swing = Math.sin(t*speed*8)*0.45;
+  if(parts.legLeft)  parts.legLeft.rotation.x  =  swing;
+  if(parts.legRight) parts.legRight.rotation.x = -swing;
+  if(parts.armLeft)  parts.armLeft.rotation.x  = -swing*0.6;
+  if(parts.armRight) parts.armRight.rotation.x =  swing*0.6;
+  if(parts.torso)    parts.torso.rotation.y    =  Math.sin(t*speed*8)*0.05;
+}
+
+function animateIdle(parts, t){
+  if(!parts.legLeft) return;
+  const bob = Math.sin(t*2)*0.03;
+  if(parts.legLeft)  parts.legLeft.rotation.x  = 0;
+  if(parts.legRight) parts.legRight.rotation.x = 0;
+  if(parts.armLeft)  parts.armLeft.rotation.x  = bob;
+  if(parts.armRight) parts.armRight.rotation.x = -bob;
+  if(parts.torso)    parts.torso.rotation.y    = 0;
+}
+
+function animateAttack(parts, t, phase){
+  if(!parts.armRight) return;
+  const sw = Math.sin(phase*Math.PI)*1.8;
+  parts.armRight.rotation.x = -sw;
+  if(parts.torso) parts.torso.rotation.y = Math.sin(phase*Math.PI)*0.2;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREEN SHAKE
+// ═══════════════════════════════════════════════════════════════
+function triggerShake(intensity, duration){
+  shakeIntensity = intensity;
+  shakeDuration = duration;
+  shakeTimer = duration;
+}
+
+function updateScreenShake(dt){
+  if(shakeTimer>0){
+    shakeTimer-=dt;
+    const pct = shakeTimer/shakeDuration;
+    const amp = shakeIntensity*pct;
+    shakeOffset.set((Math.random()-0.5)*amp*2, (Math.random()-0.5)*amp, 0);
+  } else {
+    shakeOffset.set(0,0,0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FLOATING DAMAGE NUMBERS
+// ═══════════════════════════════════════════════════════════════
+function spawnDmgNumber(worldPos, text, color){
+  const proj = worldPos.clone().project(camera);
+  const sx = (proj.x*0.5+0.5)*innerWidth;
+  const sy = (-proj.y*0.5+0.5)*innerHeight;
+  dmgNumbers.push({x:sx,y:sy,text:String(text),color:color||'#ff4400',life:1.2,maxLife:1.2,vy:-60});
+}
+
+function updateDmgNumbers(dt){
+  dmgNumbers.forEach(d=>{
+    d.life-=dt;
+    d.y+=d.vy*dt;
+    d.vy*=0.95;
+  });
+  // Render to DOM
+  const existing = document.querySelectorAll('.dmg-num');
+  existing.forEach(el=>el.remove());
+  dmgNumbers.filter(d=>d.life>0).forEach(d=>{
+    const el = document.createElement('div');
+    el.className='dmg-num';
+    el.style.left=d.x+'px';
+    el.style.top=d.y+'px';
+    el.style.color=d.color;
+    el.style.fontSize=(14+Math.abs(parseInt(d.text))/10)+'px';
+    el.style.opacity=Math.max(0,d.life/d.maxLife);
+    el.textContent=d.text;
+    document.body.appendChild(el);
+  });
+  dmgNumbers=dmgNumbers.filter(d=>d.life>0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GCD & INTERNAL CLOCK
+// ═══════════════════════════════════════════════════════════════
+function updateGCD(dt){
+  if(gcd>0) gcd=Math.max(0,gcd-dt);
+  gameClock+=dt;
+  const m=Math.floor(gameClock/60),s=Math.floor(gameClock%60);
+  const gcdText=gcd>0?'GCD '+gcd.toFixed(1)+'s':'GCD READY';
+  const el=document.getElementById('game-clock');
+  if(el) el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' — '+gcdText;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CAST BAR SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function startCast(skillId, duration, label){
+  casting = {skillId, elapsed:0, duration, label:label||'CASTING'};
+  const wrap=document.getElementById('cast-bar-wrap');
+  const lbl=document.getElementById('cast-bar-label');
+  if(wrap) wrap.classList.add('active');
+  if(lbl) lbl.textContent=label||'CASTING';
+}
+
+function updateCasting(dt){
+  if(!casting) return;
+  casting.elapsed+=dt;
+  const pct=(casting.elapsed/casting.duration)*100;
+  const fill=document.getElementById('cast-bar-fill');
+  if(fill) fill.style.width=Math.min(100,pct)+'%';
+  // Movement cancels cast
+  if(keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']){
+    cancelCast();
+    return;
+  }
+  if(casting.elapsed>=casting.duration){
+    finishCast(casting.skillId);
+    casting=null;
+    const wrap=document.getElementById('cast-bar-wrap');
+    if(wrap) wrap.classList.remove('active');
+  }
+}
+
+function cancelCast(){
+  casting=null;
+  const wrap=document.getElementById('cast-bar-wrap');
+  if(wrap) wrap.classList.remove('active');
+}
+
+function finishCast(skillId){
+  // Resolve the cast effect
+  const sk = SKILLS[skillId];
+  if(!sk) return;
+  const pp=playerMesh.position;
+  if(sk.type==='channel_aoe'){
+    aoeAttack(pp, sk.radius||8, sk.dmg*2, 0xff4400, 0);
+    triggerShake(0.5,0.3);
+    spawnAoeRing(pp, sk.radius||8, 0xff6600, 24);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHANNEL BAR SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function startChannel(skillId, duration, ticks, label, effect){
+  channeling={skillId,elapsed:0,duration,tickInterval:duration/ticks,tickTimer:0,label:label||'CHANNELING',effect:effect||{}};
+  const wrap=document.getElementById('channel-bar-wrap');
+  const lbl=document.getElementById('channel-bar-label');
+  if(wrap) wrap.classList.add('active');
+  if(lbl) lbl.textContent=label||'CHANNELING';
+}
+
+function updateChanneling(dt){
+  if(!channeling) return;
+  channeling.elapsed+=dt;
+  channeling.tickTimer+=dt;
+  const pct=((channeling.duration-channeling.elapsed)/channeling.duration)*100;
+  const fill=document.getElementById('channel-bar-fill');
+  if(fill) fill.style.width=Math.max(0,pct)+'%';
+  // Movement cancels
+  if(keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']){cancelChannel();return;}
+  // Tick effects
+  if(channeling.tickTimer>=channeling.tickInterval){
+    channeling.tickTimer=0;
+    applyChannelTick(channeling);
+  }
+  if(channeling.elapsed>=channeling.duration){
+    cancelChannel();
+  }
+}
+
+function applyChannelTick(ch){
+  const sk=SKILLS[ch.skillId];
+  if(!sk) return;
+  const pp=playerMesh.position;
+  if(sk.type==='channel_aoe'){
+    aoeAttack(pp, sk.radius||8, sk.dmg||40, 0xff6600, 0);
+    spawnAoeRing(pp, sk.radius||6, 0xff4400, 10);
+  } else if(sk.type==='channel_heal'){
+    hp=Math.min(maxHp,hp+(sk.healPerTick||20));
+    spawnAoeRing(pp, 3, 0x44ff88, 8);
+  } else if(sk.type==='channel_form'){
+    if(!formBuff){
+      formBuff={name:'Fortress',timer:sk.duration||5,dmgReduction:sk.dmgReduction||0.5,speedMult:sk.speedMult||0.6};
+      statusEffects.fortress={timer:sk.duration||5};
+    }
+  }
+}
+
+function cancelChannel(){
+  channeling=null;
+  const wrap=document.getElementById('channel-bar-wrap');
+  if(wrap) wrap.classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMBO SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function registerComboHit(){
+  comboCount++;
+  comboTimer=COMBO_TIMEOUT;
+  const el=document.getElementById('combo-counter');
+  const num=document.getElementById('combo-num');
+  if(el) el.classList.add('active');
+  if(num) num.textContent=comboCount;
+  if(comboCount%5===0) triggerShake(0.3,0.15);
+}
+
+function updateCombo(dt){
+  if(comboTimer>0){
+    comboTimer-=dt;
+    if(comboTimer<=0){
+      comboCount=0;
+      comboChainIdx=0;
+      const el=document.getElementById('combo-counter');
+      if(el) el.classList.remove('active');
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FORM BUFF SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function updateFormBuff(dt){
+  if(!formBuff) return;
+  formBuff.timer-=dt;
+  if(formBuff.timer<=0) formBuff=null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPLINE TRAIL VFX
+// ═══════════════════════════════════════════════════════════════
+function spawnTrail(startPos, endPos, color, duration){
+  const pts = [];
+  const segments = 12;
+  for(let i=0;i<=segments;i++){
+    const t=i/segments;
+    pts.push(new THREE.Vector3().lerpVectors(startPos,endPos,t).add(new THREE.Vector3(0,Math.sin(t*Math.PI)*1.5,0)));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const geo = new THREE.TubeGeometry(curve,segments,0.08,4,false);
+  const mat = new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.8});
+  const mesh = new THREE.Mesh(geo,mat);
+  scene.add(mesh);
+  trailSystems.push({mesh,life:duration||0.5,maxLife:duration||0.5});
+}
+
+function updateTrails(dt){
+  trailSystems.forEach(t=>{
+    t.life-=dt;
+    t.mesh.material.opacity=Math.max(0,t.life/t.maxLife)*0.8;
+  });
+  const dead=trailSystems.filter(t=>t.life<=0);
+  dead.forEach(t=>scene.remove(t.mesh));
+  trailSystems=trailSystems.filter(t=>t.life>0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCATTER VFX (radial particle burst)
+// ═══════════════════════════════════════════════════════════════
+function spawnScatterBurst(pos, color, count, radius, life){
+  count=count||16;
+  for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2+Math.random()*0.3;
+    const r=radius*(0.3+Math.random()*0.7);
+    const vel=new THREE.Vector3(Math.cos(a)*r*2, 2+Math.random()*3, Math.sin(a)*r*2);
+    spawnParticle(pos.clone().add(new THREE.Vector3(0,0.5,0)),vel,color,0.15+Math.random()*0.1,life||0.8);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SKELETON ANIMATION UPDATE (player + enemies)
+// ═══════════════════════════════════════════════════════════════
+let playerSkelParts = null;
+let playerAnimTime = 0;
+let playerAttackPhase = 0;
+
+function updateSkeletonAnims(dt){
+  playerAnimTime+=dt;
+  // Player animation
+  if(playerSkelParts && playerSkelParts.legLeft){
+    const moving=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD'];
+    if(playerAttackPhase>0){
+      animateAttack(playerSkelParts, playerAnimTime, playerAttackPhase);
+      playerAttackPhase=Math.max(0,playerAttackPhase-dt*3);
+    } else if(moving){
+      animateWalk(playerSkelParts, playerAnimTime, 1);
+    } else {
+      animateIdle(playerSkelParts, playerAnimTime);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN LOOP
 // ═══════════════════════════════════════════════════════════════
 function animate(){
@@ -1743,6 +2305,22 @@ function animate(){
   checkHealStation(dt);
   updateMinigun(dt);
   updateGhostBlock();
+
+  // New systems
+  updateGCD(dt);
+  updateCasting(dt);
+  updateChanneling(dt);
+  updateCombo(dt);
+  updateFormBuff(dt);
+  updateScreenShake(dt);
+  updateDmgNumbers(dt);
+  updateTrails(dt);
+  updateSkeletonAnims(dt);
+
+  // Apply screen shake to camera
+  camera.position.x+=shakeOffset.x;
+  camera.position.y+=shakeOffset.y;
+
   updateHUD();
   updateResUI();
   updateMinimap();
