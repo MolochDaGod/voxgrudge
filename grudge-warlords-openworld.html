@@ -52,7 +52,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .item-slot.filled{border-color:#555}
 .i-num{position:absolute;top:2px;left:5px;font-size:9px;color:#555;font-weight:700}
 .i-icon{font-size:18px}.i-count{font-size:9px;color:#aaa;position:absolute;bottom:2px;right:4px}
-#weapon-bar{position:absolute;bottom:16px;right:16px;display:flex;gap:8px;z-index:10;pointer-events:none}
+#weapon-bar{position:absolute;bottom:16px;right:16px;display:flex;gap:5px;z-index:10;pointer-events:none;flex-wrap:wrap-reverse;max-width:460px;justify-content:flex-end}
 .w-slot{width:60px;height:60px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0.4;transition:all 0.15s}
 .w-slot.owned{opacity:0.8;border-color:#555}.w-slot.active{opacity:1;border-color:#e63d3d;background:rgba(230,61,61,0.15);transform:scale(1.08)}
 .w-icon{font-size:20px}.w-name{font-size:7px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px}.w-ammo{font-size:9px;font-weight:700;color:#4af}
@@ -119,6 +119,13 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 
 /* ── Internal Clock ── */
 #game-clock{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:2px;color:#555;pointer-events:none;z-index:10;text-transform:uppercase}
+
+/* ── Stamina Bar ── */
+#stamina-wrap{position:absolute;bottom:155px;left:50%;transform:translateX(-50%);width:180px;z-index:15;pointer-events:none}
+#stamina-track{width:100%;height:5px;background:#1a1e26;border-radius:3px;overflow:hidden;border:1px solid #333}
+#stamina-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#44cc44,#88ff88);transition:width 0.1s}
+#traversal-state{position:absolute;bottom:164px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#44cc44;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.3s}
+#traversal-state.active{opacity:1}
 </style>
 </head>
 <body>
@@ -185,6 +192,13 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <div class="w-slot" id="ws-bow"><div class="w-icon">🏹</div><div class="w-name">Bow</div><div class="w-ammo" id="wa-bow">0</div></div>
   <div class="w-slot" id="ws-staff"><div class="w-icon">🪄</div><div class="w-name">Staff</div><div class="w-ammo" id="wa-staff">0</div></div>
   <div class="w-slot" id="ws-gun"><div class="w-icon">🔫</div><div class="w-name">Gun</div><div class="w-ammo" id="wa-gun">0</div></div>
+  <div class="w-slot" id="ws-hammer"><div class="w-icon">🔨</div><div class="w-name">Hammer</div><div class="w-ammo">∞</div></div>
+  <div class="w-slot" id="ws-mace"><div class="w-icon">🏏</div><div class="w-name">Mace</div><div class="w-ammo">∞</div></div>
+  <div class="w-slot" id="ws-dagger"><div class="w-icon">🗡️</div><div class="w-name">Dagger</div><div class="w-ammo">∞</div></div>
+  <div class="w-slot" id="ws-crossbow"><div class="w-icon">🎯</div><div class="w-name">Xbow</div><div class="w-ammo" id="wa-crossbow">0</div></div>
+  <div class="w-slot" id="ws-spear"><div class="w-icon">🔱</div><div class="w-name">Spear</div><div class="w-ammo">∞</div></div>
+  <div class="w-slot" id="ws-wand"><div class="w-icon">✨</div><div class="w-name">Wand</div><div class="w-ammo" id="wa-wand">0</div></div>
+  <div class="w-slot" id="ws-tome"><div class="w-icon">📖</div><div class="w-name">Tome</div><div class="w-ammo" id="wa-tome">0</div></div>
 </div>
 
 <div id="build-indicator">🔨 BUILD MODE — LClick:Place RClick:Remove</div>
@@ -219,7 +233,10 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button class="gw-btn" onclick="location.reload()">RESPAWN</button>
 </div>
 
-<div id="instructions">WASD:Move · Click:Attack · Q/E/R/F:Skills · B:Build · C:Craft · M:Mine · 1-6:Items · Scroll:Weapon · Hold RMB:Block(S+S)</div>
+<div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
+<div id="traversal-state">GROUND</div>
+
+<div id="instructions">WASD:Move · Click:Attack · Q/E/R/F:Skills · Space:Jump/Dodge · Shift:Dash · B:Build · C:Craft · M:Mine · 1-6:Items · Scroll:Weapon · RMB:Block</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -249,8 +266,15 @@ const WEAPONS = {
   gun:  {id:'gun',  name:'Ironstorm',  emoji:'🔫',type:'auto',cd:0.07,speed:2.1,dmg:20,owned:false,ammo:60,maxAmmo:180,pickup:30,skills:['burst_fire','sniper_shot','explosive_round','ironstorm_minigun'],color:0x222222},
   greatsword:{id:'greatsword',name:'Bonecleaver',emoji:'🗡️',type:'heavy_melee',cd:0.6,range:6.5,dmg:95,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,comboChain:['gs_slash1','gs_slash2','gs_overhead'],skills:['gs_whirlwind','gs_leapslam','gs_execute','gs_channel_fury'],color:0x554422},
   sword_shield:{id:'sword_shield',name:'Bulwark',emoji:'🛡️',type:'melee',cd:0.32,range:4.5,dmg:38,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,canBlock:true,skills:['ss_shield_bash','ss_dash_strike','ss_heal_channel','ss_fortress'],color:0xccaa44},
+  hammer:{id:'hammer',name:'Warcrusher',emoji:'🔨',type:'heavy_melee',cd:0.7,range:5.5,dmg:105,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,skills:['hm_overhead','hm_groundslam','hm_warshout','hm_earthshatter'],color:0x665544},
+  mace:{id:'mace',name:'Faithbreaker',emoji:'🏏',type:'melee',cd:0.35,range:4.2,dmg:52,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,skills:['mc_smite','mc_holyslam','mc_judgement','mc_consecrate'],color:0x999966},
+  dagger:{id:'dagger',name:'Whisper',emoji:'🗡️',type:'melee',cd:0.15,range:3.0,dmg:28,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,skills:['dg_backstab','dg_fanofknives','dg_shadowstep','dg_deathmark'],color:0x445566},
+  crossbow:{id:'crossbow',name:'Dreadbolt',emoji:'🎯',type:'projectile',cd:0.5,speed:2.4,dmg:72,owned:false,ammo:20,maxAmmo:60,pickup:10,skills:['xb_powershot','xb_explosive','xb_triplebolt','xb_siegemode'],color:0x553322},
+  spear:{id:'spear',name:'Voidpiercer',emoji:'🔱',type:'melee',cd:0.3,range:6.5,dmg:55,owned:false,ammo:Infinity,maxAmmo:Infinity,pickup:0,skills:['sp_thrust','sp_sweep','sp_impale','sp_cyclone'],color:0x336655},
+  wand:{id:'wand',name:'Sparkweaver',emoji:'✨',type:'magic',cd:0.18,speed:1.5,dmg:35,owned:false,ammo:80,maxAmmo:200,pickup:30,skills:['wn_arcaneblast','wn_frostbolt','wn_blinkstrike','wn_arcanebarrage'],color:0x8866cc},
+  tome:{id:'tome',name:'Grimoire',emoji:'📖',type:'magic',cd:0.45,speed:0.8,dmg:48,owned:false,ammo:60,maxAmmo:120,pickup:20,skills:['tm_soulfire','tm_lifedrain','tm_darkpact','tm_doomchannel'],color:0x442244},
 };
-const WEAPON_ORDER = ['sword','axe','greatsword','sword_shield','bow','staff','gun'];
+const WEAPON_ORDER = ['sword','axe','greatsword','sword_shield','hammer','mace','dagger','spear','bow','crossbow','gun','staff','wand','tome'];
 
 // ═══════════════════════════════════════════════════════════════
 // SKILLS
@@ -288,6 +312,41 @@ const SKILLS = {
   ss_fortress:      {name:'Fortress',        key:'F',icon:'🏰',maxCd:25,cd:0,type:'channel_form',   duration:5,dmgReduction:0.5,speedMult:0.6},
   // Enhanced shadow strike (replaces old one for sword)
   shadow_strike_enhanced:{name:'Shadow Strike',key:'E',icon:'🌑',maxCd:10,cd:0,type:'shadow_strike',dmg:75,range:6,afterImages:3},
+  // Hammer skills
+  hm_overhead:     {name:'Overhead Crush',key:'Q',icon:'🔨',maxCd:8,cd:0,type:'melee_aoe',dmg:120,range:6.0},
+  hm_groundslam:   {name:'Ground Slam',  key:'E',icon:'💥',maxCd:12,cd:0,type:'leap_slam',dmg:150,range:7.0,radius:7.0},
+  hm_warshout:     {name:'War Shout',    key:'R',icon:'📢',maxCd:15,cd:0,type:'buff_speed',duration:8},
+  hm_earthshatter: {name:'Earthshatter', key:'F',icon:'🌋',maxCd:45,cd:0,type:'massive_aoe',dmg:200,range:12},
+  // Mace skills
+  mc_smite:      {name:'Smite',          key:'Q',icon:'✝️',maxCd:5,cd:0,type:'melee_aoe',dmg:65,range:5.0},
+  mc_holyslam:   {name:'Holy Slam',      key:'E',icon:'💫',maxCd:10,cd:0,type:'melee_stun',dmg:80,range:4.5,stunDur:2.0},
+  mc_judgement:  {name:'Judgement',       key:'R',icon:'⚖️',maxCd:12,cd:0,type:'execute',dmg:180,range:5.0},
+  mc_consecrate: {name:'Consecrate',     key:'F',icon:'🌟',maxCd:25,cd:0,type:'channel_aoe',dmg:45,radius:8,duration:4,ticks:8},
+  // Dagger skills
+  dg_backstab:    {name:'Backstab',      key:'Q',icon:'🗡️',maxCd:4,cd:0,type:'dash_strike',dmg:85,range:5.0},
+  dg_fanofknives: {name:'Fan of Knives', key:'E',icon:'🌀',maxCd:8,cd:0,type:'spread_shot',count:8,spread:0.4},
+  dg_shadowstep:  {name:'Shadow Step',   key:'R',icon:'👤',maxCd:10,cd:0,type:'shadow_strike',dmg:65,range:7,afterImages:4},
+  dg_deathmark:   {name:'Death Mark',    key:'F',icon:'💀',maxCd:18,cd:0,type:'bleed',dmg:40,dotDmg:15,dotDur:8},
+  // Crossbow skills
+  xb_powershot:  {name:'Heavy Bolt',     key:'Q',icon:'🎯',maxCd:3,cd:0,type:'power_shot',mult:3.0},
+  xb_explosive:  {name:'Explosive Bolt', key:'E',icon:'💣',maxCd:8,cd:0,type:'explosive_proj',dmg:100,radius:6},
+  xb_triplebolt: {name:'Triple Bolt',    key:'R',icon:'🏹',maxCd:6,cd:0,type:'spread_shot',count:3,spread:0.15},
+  xb_siegemode:  {name:'Siege Mode',     key:'F',icon:'⚙️',maxCd:40,cd:0,type:'minigun',duration:4,dmg:35},
+  // Spear skills
+  sp_thrust:  {name:'Piercing Thrust',   key:'Q',icon:'🔱',maxCd:5,cd:0,type:'melee_aoe',dmg:75,range:7.5},
+  sp_sweep:   {name:'Crescent Sweep',    key:'E',icon:'🌙',maxCd:8,cd:0,type:'spin_aoe',dmg:70,range:6.5},
+  sp_impale:  {name:'Impale',            key:'R',icon:'📌',maxCd:10,cd:0,type:'melee_stun',dmg:90,range:6.0,stunDur:2.0},
+  sp_cyclone: {name:'Cyclone',           key:'F',icon:'🌪️',maxCd:20,cd:0,type:'spin_aoe_kb',dmg:85,range:8.0,knockback:6},
+  // Wand skills
+  wn_arcaneblast:  {name:'Arcane Blast',  key:'Q',icon:'💜',maxCd:3,cd:0,type:'burst',count:4,dmg:38},
+  wn_frostbolt:    {name:'Frost Bolt',    key:'E',icon:'❄️',maxCd:6,cd:0,type:'explosive_proj',dmg:60,radius:4},
+  wn_blinkstrike:  {name:'Blink Strike',  key:'R',icon:'✨',maxCd:8,cd:0,type:'teleport',range:12},
+  wn_arcanebarrage:{name:'Arcane Barrage', key:'F',icon:'🌠',maxCd:14,cd:0,type:'rain',dmg:35,count:18,radius:10},
+  // Tome skills
+  tm_soulfire:    {name:'Soul Fire',     key:'Q',icon:'🔥',maxCd:6,cd:0,type:'explosive_proj',dmg:90,radius:5},
+  tm_lifedrain:   {name:'Life Drain',    key:'E',icon:'💚',maxCd:12,cd:0,type:'channel_heal',healPerTick:30,duration:3,ticks:6},
+  tm_darkpact:    {name:'Dark Pact',     key:'R',icon:'💔',maxCd:20,cd:0,type:'buff_speed',duration:10},
+  tm_doomchannel: {name:'Doom Channel',  key:'F',icon:'☠️',maxCd:35,cd:0,type:'channel_aoe',dmg:70,radius:10,duration:5,ticks:10},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -429,6 +488,21 @@ let scatterSystems = []; // {particles[], life}
 let formBuff = null; // {name, timer, dmgReduction, speedMult}
 // Impact deceleration on enemies
 // (stored per enemy as e.knockbackVel)
+
+// ── Traversal State Machine ──
+let playerState = 'ground'; // ground, jumping, falling, swimming, dodging, dashing, climbing
+let playerVelY = 0;
+let stamina = 100, maxStamina = 100, staminaRegen = 25;
+let dodgeCd = 0, DODGE_CD = 0.8, DODGE_DIST = 8, DODGE_DUR = 0.25;
+let dodgeTimer = 0, dodgeDir = new THREE.Vector3();
+let dashCd = 0, DASH_CD = 1.5, DASH_DIST = 12, DASH_DUR = 0.2;
+let dashTimer = 0, dashDir = new THREE.Vector3();
+let jumpForce = 14, gravityForce = 35;
+let climbSpeed = 6;
+let swimSpeedMult = 0.6;
+let isInWater = false;
+let iFrames = false, iFrameTimer = 0;
+const WATER_LEVEL = -0.5;
 
 // ═══════════════════════════════════════════════════════════════
 // CLASS SELECT UI
@@ -575,6 +649,8 @@ function init(){
     if(e.code==='Digit5') useItem(4);
     if(e.code==='Digit6') useItem(5);
     if(e.code==='Escape') { if(craftOpen) toggleCraft(); else if(isBuildMode) toggleBuildMode(); }
+    if(e.code==='Space') { e.preventDefault(); tryJump(); }
+    if(e.code==='ShiftLeft'||e.code==='ShiftRight') tryDash();
   });
   window.addEventListener('keyup', e=>{ keys[e.code]=false; });
   window.addEventListener('mousemove', e=>{
@@ -598,8 +674,8 @@ function init(){
     if(craftOpen || isBuildMode) return;
     const dir = e.deltaY > 0 ? 1 : -1;
     let idx = WEAPON_ORDER.indexOf(currentWeapon.id);
-    for(let i=0;i<5;i++){
-      idx = (idx+dir+5)%5;
+    for(let i=0;i<WEAPON_ORDER.length;i++){
+      idx = (idx+dir+WEAPON_ORDER.length)%WEAPON_ORDER.length;
       if(WEAPONS[WEAPON_ORDER[idx]].owned){ switchWeapon(WEAPON_ORDER[idx]); break; }
     }
   });
@@ -826,6 +902,50 @@ function buildWeaponMesh(id){
     const boss = new THREE.Mesh(new THREE.SphereGeometry(0.15,6,6),new THREE.MeshStandardMaterial({color:0xffdd44,emissive:0x443300,emissiveIntensity:0.4}));
     boss.position.set(-0.9,1.0,0.45);
     g.add(blade); g.add(shield); g.add(boss);
+  } else if(id==='hammer'){
+    const handle=new THREE.Mesh(new THREE.BoxGeometry(0.12,1.8,0.12),new THREE.MeshStandardMaterial({color:0x6a3a1a}));
+    handle.position.set(0.9,1.4,0);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.5,0.3),new THREE.MeshStandardMaterial({color:0x777777,metalness:0.8,roughness:0.3}));
+    head.position.set(0.9,2.4,0);
+    g.add(handle);g.add(head);
+  } else if(id==='mace'){
+    const rod=new THREE.Mesh(new THREE.BoxGeometry(0.1,1.5,0.1),new THREE.MeshStandardMaterial({color:0x5a3a1a}));
+    rod.position.set(0.9,1.2,0);
+    const ball=new THREE.Mesh(new THREE.SphereGeometry(0.25,8,8),new THREE.MeshStandardMaterial({color:0x999999,metalness:0.9}));
+    ball.position.set(0.9,2.1,0);
+    g.add(rod);g.add(ball);
+  } else if(id==='dagger'){
+    const blade=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.8,0.04),new THREE.MeshStandardMaterial({color:0xbbbbbb,metalness:0.9,roughness:0.15}));
+    blade.position.set(0.9,1.0,0);
+    const hilt=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.12,0.08),new THREE.MeshStandardMaterial({color:0x332211}));
+    hilt.position.set(0.9,0.55,0);
+    g.add(blade);g.add(hilt);
+  } else if(id==='crossbow'){
+    const stock=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.15,0.12),new THREE.MeshStandardMaterial({color:0x5a3a1a}));
+    stock.position.set(0.9,1.3,0);
+    const limb=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.8,0.08),new THREE.MeshStandardMaterial({color:0x444444,metalness:0.7}));
+    limb.position.set(1.2,1.3,0);
+    g.add(stock);g.add(limb);
+  } else if(id==='spear'){
+    const shaft=new THREE.Mesh(new THREE.BoxGeometry(0.08,2.6,0.08),new THREE.MeshStandardMaterial({color:0x5a3a1a}));
+    shaft.position.set(0.9,1.8,0);
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.4,0.15),new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.9}));
+    tip.position.set(0.9,3.2,0);
+    g.add(shaft);g.add(tip);
+  } else if(id==='wand'){
+    const stick=new THREE.Mesh(new THREE.BoxGeometry(0.06,1.0,0.06),new THREE.MeshStandardMaterial({color:0x553388}));
+    stick.position.set(0.9,1.2,0);
+    const gem=new THREE.Mesh(new THREE.SphereGeometry(0.15,6,6),new THREE.MeshStandardMaterial({color:0xcc88ff,emissive:0x8844cc,emissiveIntensity:1.2}));
+    gem.position.set(0.9,1.8,0);
+    g.add(stick);g.add(gem);
+  } else if(id==='tome'){
+    const book=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.8,0.15),new THREE.MeshStandardMaterial({color:0x442244}));
+    book.position.set(-0.8,1.2,0);
+    const spine=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.85,0.18),new THREE.MeshStandardMaterial({color:0x221122}));
+    spine.position.set(-0.5,1.2,0);
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(0.1,4,4),new THREE.MeshStandardMaterial({color:0xff44ff,emissive:0x880088,emissiveIntensity:1.5}));
+    glow.position.set(-0.8,1.7,0);
+    g.add(book);g.add(spine);g.add(glow);
   }
   return g;
 }
@@ -854,6 +974,7 @@ function getWeaponSkills(){
 
 function activateSkill(slotIdx){
   if(isGameOver||craftOpen||!gameStarted) return;
+  if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing') return;
   const sk = getWeaponSkills()[slotIdx];
   if(!sk) return;
   const key = ['Q','E','R','F'][slotIdx];
@@ -1029,6 +1150,7 @@ function getAimTarget(){
 
 function tryAttack(){
   if(isGameOver||!gameStarted||attackCd>0) return;
+  if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing') return;
   attackCd = currentWeapon.cd||0.3;
   const cls = CLASSES[playerClass];
   const pp = playerMesh.position;
@@ -1199,6 +1321,7 @@ function raiseMinion(deadEnemy){
 
 function damagePlayer(dmg){
   if(statusEffects.invuln) return;
+  if(iFrames) return;
   if(isBlocking && currentWeapon.canBlock) dmg *= blockDmgReduction;
   if(formBuff) dmg *= (1-formBuff.dmgReduction);
   if(statusEffects.berserker) dmg *= statusEffects.berserker.defMult||0.7;
@@ -1999,8 +2122,20 @@ function updateStatusEffects(dt){
 // ═══════════════════════════════════════════════════════════════
 function updatePlayer(dt){
   if(isGameOver) return;
+  // Skip normal movement during traversal actions
+  if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing'){
+    camera.position.x=playerMesh.position.x;
+    camera.position.z=playerMesh.position.z+22;
+    camera.position.y=28;
+    camera.lookAt(playerMesh.position);
+    dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
+    attackCd=Math.max(0,attackCd-dt);
+    return;
+  }
   const baseSpeed = 12*(CLASSES[playerClass].speedMult||1);
-  const spd = baseSpeed * (statusEffects.speed ? statusEffects.speed.mult : 1);
+  let spd = baseSpeed * (statusEffects.speed ? statusEffects.speed.mult : 1);
+  if(playerState==='swimming') spd*=swimSpeedMult;
+  if(formBuff) spd*=(formBuff.speedMult||1);
 
   let dx=0,dz=0;
   if(keys['KeyW']||keys['ArrowUp'])    dz-=1;
@@ -2551,18 +2686,218 @@ let playerAttackPhase = 0;
 
 function updateSkeletonAnims(dt){
   playerAnimTime+=dt;
-  // Player animation
   if(playerSkelParts && playerSkelParts.legLeft){
-    const moving=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD'];
-    if(playerAttackPhase>0){
+    if(playerState==='dodging'){
+      animateDodge(playerSkelParts, 1-dodgeTimer/DODGE_DUR);
+    } else if(playerState==='dashing'){
+      animateDash(playerSkelParts, 1-dashTimer/DASH_DUR);
+    } else if(playerState==='swimming'){
+      animateSwim(playerSkelParts, playerAnimTime);
+    } else if(playerState==='climbing'){
+      animateClimb(playerSkelParts, playerAnimTime);
+    } else if(playerState==='jumping'||playerState==='falling'){
+      animateJump(playerSkelParts, playerVelY);
+    } else if(playerAttackPhase>0){
       animateAttack(playerSkelParts, playerAnimTime, playerAttackPhase);
       playerAttackPhase=Math.max(0,playerAttackPhase-dt*3);
-    } else if(moving){
-      animateWalk(playerSkelParts, playerAnimTime, 1);
     } else {
-      animateIdle(playerSkelParts, playerAnimTime);
+      const moving=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD'];
+      if(moving) animateWalk(playerSkelParts, playerAnimTime, 1);
+      else animateIdle(playerSkelParts, playerAnimTime);
     }
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRAVERSAL PROCEDURAL ANIMATIONS
+// ═══════════════════════════════════════════════════════════════
+function animateDodge(parts, phase){
+  if(!parts.legLeft) return;
+  const roll=Math.sin(phase*Math.PI)*1.2;
+  if(parts.torso){parts.torso.rotation.x=roll;parts.torso.rotation.z=Math.sin(phase*Math.PI*2)*0.3;}
+  if(parts.legLeft)parts.legLeft.rotation.x=roll*0.5;
+  if(parts.legRight)parts.legRight.rotation.x=-roll*0.5;
+  if(parts.armLeft)parts.armLeft.rotation.x=roll*0.8;
+  if(parts.armRight)parts.armRight.rotation.x=roll*0.8;
+}
+
+function animateSwim(parts, t){
+  if(!parts.armLeft) return;
+  const stroke=Math.sin(t*3);
+  if(parts.armLeft)parts.armLeft.rotation.x=-1.2+stroke*0.6;
+  if(parts.armRight)parts.armRight.rotation.x=-1.2-stroke*0.6;
+  if(parts.legLeft)parts.legLeft.rotation.x=Math.sin(t*4)*0.3;
+  if(parts.legRight)parts.legRight.rotation.x=-Math.sin(t*4)*0.3;
+  if(parts.torso)parts.torso.rotation.x=-0.3;
+}
+
+function animateClimb(parts, t){
+  if(!parts.armLeft) return;
+  const reach=Math.sin(t*4);
+  if(parts.armLeft){parts.armLeft.rotation.x=-2.0+reach*0.5;parts.armLeft.rotation.z=0.3;}
+  if(parts.armRight){parts.armRight.rotation.x=-2.0-reach*0.5;parts.armRight.rotation.z=-0.3;}
+  if(parts.legLeft)parts.legLeft.rotation.x=-reach*0.4;
+  if(parts.legRight)parts.legRight.rotation.x=reach*0.4;
+}
+
+function animateJump(parts, velY){
+  if(!parts.legLeft) return;
+  const tuck=velY>0?-0.3:0.4;
+  if(parts.legLeft)parts.legLeft.rotation.x=tuck;
+  if(parts.legRight)parts.legRight.rotation.x=tuck;
+  if(parts.armLeft)parts.armLeft.rotation.x=velY>0?-1.0:-0.3;
+  if(parts.armRight)parts.armRight.rotation.x=velY>0?-1.0:-0.3;
+}
+
+function animateDash(parts, phase){
+  if(!parts.torso) return;
+  parts.torso.rotation.x=-0.4;
+  if(parts.armLeft)parts.armLeft.rotation.x=-0.8;
+  if(parts.armRight)parts.armRight.rotation.x=-0.8;
+  if(parts.legLeft)parts.legLeft.rotation.x=-0.5+Math.sin(phase*Math.PI)*0.3;
+  if(parts.legRight)parts.legRight.rotation.x=0.5-Math.sin(phase*Math.PI)*0.3;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRAVERSAL STATE MACHINE
+// ═══════════════════════════════════════════════════════════════
+function updateTraversal(dt){
+  // Stamina regen on ground states
+  if(playerState==='ground'||playerState==='jumping'||playerState==='falling'){
+    stamina=Math.min(maxStamina,stamina+staminaRegen*dt);
+  }
+  dodgeCd=Math.max(0,dodgeCd-dt);
+  dashCd=Math.max(0,dashCd-dt);
+  if(iFrameTimer>0){iFrameTimer-=dt;if(iFrameTimer<=0)iFrames=false;}
+
+  // Water detection: beyond world border
+  const pp=playerMesh.position;
+  const distFC=Math.sqrt(pp.x*pp.x+pp.z*pp.z);
+  isInWater=distFC>130||pp.y<WATER_LEVEL;
+
+  switch(playerState){
+    case 'ground':
+      if(isInWater&&distFC>130){playerState='swimming';}
+      pp.y=0;
+      break;
+    case 'jumping':
+      playerVelY-=gravityForce*dt;
+      pp.y+=playerVelY*dt;
+      if(pp.y<=0){
+        pp.y=0;playerVelY=0;
+        playerState='ground';
+        triggerShake(0.08,0.04);
+      }
+      break;
+    case 'falling':
+      playerVelY-=gravityForce*dt;
+      pp.y+=playerVelY*dt;
+      if(pp.y<=0){pp.y=0;playerVelY=0;playerState='ground';}
+      break;
+    case 'dodging':
+      dodgeTimer-=dt;
+      pp.add(dodgeDir.clone().multiplyScalar((DODGE_DIST/DODGE_DUR)*dt));
+      pp.y=0;
+      if(dodgeTimer<=0){playerState='ground';iFrames=false;}
+      break;
+    case 'dashing':
+      dashTimer-=dt;
+      pp.add(dashDir.clone().multiplyScalar((DASH_DIST/DASH_DUR)*dt));
+      pp.y=0;
+      if(dashTimer<=0){playerState='ground';}
+      break;
+    case 'swimming':
+      pp.y=WATER_LEVEL+Math.sin(gameClock*2)*0.15;
+      if(!isInWater||distFC<=128){playerState='ground';pp.y=0;}
+      break;
+    case 'climbing':
+      if(keys['KeyW']||keys['Space'])pp.y+=climbSpeed*dt;
+      if(keys['KeyS'])pp.y=Math.max(0,pp.y-climbSpeed*dt);
+      if(pp.y>6){playerState='falling';playerVelY=0;}
+      if(!isNearClimbable()&&pp.y>0.5){playerState='falling';playerVelY=0;}
+      break;
+  }
+
+  // Update stamina UI
+  const sfill=document.getElementById('stamina-fill');
+  if(sfill)sfill.style.width=(stamina/maxStamina*100)+'%';
+
+  // Update traversal state indicator
+  const stateEl=document.getElementById('traversal-state');
+  if(stateEl){
+    if(playerState!=='ground'){stateEl.textContent=playerState.toUpperCase();stateEl.classList.add('active');}
+    else{stateEl.classList.remove('active');}
+  }
+}
+
+function tryJump(){
+  if(isGameOver||!gameStarted) return;
+  if(playerState==='ground'){
+    const moving=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD'];
+    // Dodge roll if moving + space, with sufficient stamina
+    if(moving&&dodgeCd<=0&&stamina>=20){
+      let dx=0,dz=0;
+      if(keys['KeyW'])dz-=1;if(keys['KeyS'])dz+=1;
+      if(keys['KeyA'])dx-=1;if(keys['KeyD'])dx+=1;
+      const len=Math.sqrt(dx*dx+dz*dz)||1;
+      dodgeDir.set(dx/len,0,dz/len);
+      dodgeTimer=DODGE_DUR;
+      dodgeCd=DODGE_CD;
+      stamina-=20;
+      playerState='dodging';
+      iFrames=true;iFrameTimer=DODGE_DUR;
+      spawnScatterBurst(playerMesh.position,0x88ffaa,8,2,0.3);
+      return;
+    }
+    // Regular jump
+    if(stamina>=10){
+      playerVelY=jumpForce;
+      playerState='jumping';
+      stamina-=10;
+    }
+  } else if(playerState==='jumping'||playerState==='falling'){
+    // Wall climb if near climbable surface
+    if(isNearClimbable()&&stamina>=15){
+      playerState='climbing';
+      stamina-=15;
+    }
+  } else if(playerState==='swimming'){
+    playerVelY=jumpForce*0.7;
+    playerState='jumping';
+  }
+}
+
+function tryDash(){
+  if(isGameOver||!gameStarted) return;
+  if((playerState==='ground'||playerState==='jumping')&&dashCd<=0&&stamina>=30){
+    const fw=getAimDir();
+    dashDir.set(fw.x,0,fw.z).normalize();
+    dashTimer=DASH_DUR;
+    dashCd=DASH_CD;
+    stamina-=30;
+    playerState='dashing';
+    spawnTrail(
+      playerMesh.position.clone().add(new THREE.Vector3(0,1,0)),
+      playerMesh.position.clone().add(dashDir.clone().multiplyScalar(DASH_DIST)).add(new THREE.Vector3(0,1,0)),
+      0x44ddff,0.4
+    );
+  }
+}
+
+function isNearClimbable(){
+  const pp=playerMesh.position;
+  for(const [key,blk] of blocks){
+    if(!BLOCK_DEFS[blk.type].solid) continue;
+    const p=key.split(',');
+    const bx=parseInt(p[0])*2,bz=parseInt(p[1])*2;
+    if(Math.abs(pp.x-bx)<2.5&&Math.abs(pp.z-bz)<2.5) return true;
+  }
+  for(const n of resourceNodes){
+    if(!n.alive||n.type!=='tree') continue;
+    const dx=pp.x-n.x,dz=pp.z-n.z;
+    if(Math.sqrt(dx*dx+dz*dz)<3) return true;
+  }
+  return false;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2601,6 +2936,7 @@ function animate(){
   updateDmgNumbers(dt);
   updateTrails(dt);
   updateSlashArcs(dt);
+  updateTraversal(dt);
   updateSkeletonAnims(dt);
 
   // Animate water plane
