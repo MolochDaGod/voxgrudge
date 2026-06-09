@@ -1,6 +1,7 @@
 *.zip
 *.psd
-*.fbx
+# *.fbx — needed for Mixamo animations
+three-js-basic-character-customisation/*.fbx
 three-js-basic-character-customisation/
 bosslogo.png
 Grudge Warlords - Ultimate Character Builder_files/
