@@ -515,6 +515,15 @@ const VFX_DEFS = {
   bone_burst_1:{path:'vfx/bones/vnbv_',indices:[0,3,6,9,12,15,18,21,24,27],fps:20,scale:3.5,dur:0.55},
   bone_burst_2:{path:'vfx/bones/vnbvx_',indices:[1,4,7,10,13,16,19,22,25,29],fps:20,scale:3.5,dur:0.55},
   bone_burst_3:{path:'vfx/bones/vnbvq_',indices:[0,3,6,9,12,15,18,21,24,27],fps:20,scale:3.5,dur:0.55},
+  // Procedural types (generated from Godot shader palettes at startup)
+  flame_core:   {procedural:true,fps:12,scale:2.5,dur:0.4},
+  flame_burst:  {procedural:true,fps:10,scale:4.0,dur:0.6},
+  magic_cast:   {procedural:true,fps:14,scale:3.0,dur:0.35},
+  magic_proj:   {procedural:true,fps:16,scale:1.8,dur:0.3},
+  beam_flash:   {procedural:true,fps:12,scale:2.8,dur:0.25},
+  frost_crystal:{procedural:true,fps:10,scale:3.0,dur:0.45},
+  holy_radiance:{procedural:true,fps:10,scale:3.5,dur:0.5},
+  nature_bloom: {procedural:true,fps:8,scale:3.0,dur:0.55},
 };
 
 // ── FBX Skeleton Animation State ──
@@ -1084,11 +1093,15 @@ function activateSkill(slotIdx){
   } else if(sk.type==='teleport'){
     const tp = getAimTarget();
     tp.y = 0;
+    spawnVFXSprite('beam_flash',playerMesh.position.clone().add(new THREE.Vector3(0,1,0)),{scale:3.0,duration:0.3});
     playerMesh.position.copy(tp);
     spawnAoeRing(tp, 3, 0xcc44ff, 12);
+    spawnVFXSprite('magic_cast',tp.clone().add(new THREE.Vector3(0,1,0)),{scale:3.5,duration:0.35});
   } else if(sk.type==='nova'){
     aoeAttack(pp, sk.radius||12, sk.dmg||200, 0xff00ff, 0);
     spawnAoeRing(pp, sk.radius||12, 0xcc00ff, 40);
+    spawnVFXSprite('flame_burst',pp.clone().add(new THREE.Vector3(0,1,0)),{scale:8.0,duration:0.7});
+    spawnVFXSprite('magic_cast',pp.clone().add(new THREE.Vector3(0,2,0)),{scale:5.0,duration:0.5});
   } else if(sk.type==='burst'){
     for(let i=0;i<(sk.count||3);i++){
       setTimeout(()=>{ if(!isGameOver) fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg:sk.dmg||40, speed:2.2, color:0xffcc00}); }, i*80);
@@ -1127,6 +1140,7 @@ function activateSkill(slotIdx){
   } else if(sk.type==='channel_heal'){
     startChannel(sk.name, sk.duration||3, sk.ticks||6, sk.name, {type:'heal'});
     if(channeling) channeling.skillId = Object.keys(SKILLS).find(k=>SKILLS[k]===sk);
+    spawnVFXSprite('holy_radiance',pp.clone().add(new THREE.Vector3(0,1.5,0)),{scale:4.0,duration:0.6});
   } else if(sk.type==='channel_form'){
     startChannel(sk.name, sk.duration||5, 1, sk.name, {type:'form'});
     if(channeling) channeling.skillId = Object.keys(SKILLS).find(k=>SKILLS[k]===sk);
@@ -1246,7 +1260,8 @@ function tryAttack(){
         gravity:4, knockback:2.5, impactType:'spark', impactColor:0xddff44
       });
     } else if(currentWeapon.type==='magic'){
-      // Magic: slight homing, fire/frost impact
+      // Magic: slight homing, fire/frost impact + cast flare
+      spawnVFXSprite('magic_cast',weaponTip.clone(),{scale:2.2,duration:0.25});
       fireBullet(weaponTip, fw, {
         dmg, speed:currentWeapon.speed||0.9, color:0xcc44ff,
         homing:3, knockback:1, impactType:'fire', impactColor:0xcc44ff
@@ -1700,7 +1715,8 @@ function spawnImpact(pos, type, color, dir){
     trailSystems.push({mesh:ring,life:0.5,maxLife:0.5,_expandRing:true,_ringScale:1});
     triggerShake(0.6,0.25);
   } else if(type==='frost'){
-    spawnVFXSprite('bone_burst_3',pos,{scale:2.5,tint:0x88ccff,duration:0.4});
+    spawnVFXSprite('frost_crystal',pos,{scale:3.0,duration:0.45});
+    spawnVFXSprite('beam_flash',pos,{scale:1.5,duration:0.2});
     for(let i=0;i<6;i++){
       const a=Math.random()*Math.PI*2;
       const vel=new THREE.Vector3(Math.cos(a)*2,1+Math.random()*2,Math.sin(a)*2);
@@ -1708,8 +1724,9 @@ function spawnImpact(pos, type, color, dir){
     }
     spawnAoeRing(pos, 3, 0x4488ff, 10);
   } else if(type==='fire'){
-    spawnVFXSprite('bone_burst_2',pos,{scale:3.0,tint:0xff6600,duration:0.45});
-    for(let i=0;i<8;i++){
+    spawnVFXSprite('flame_burst',pos,{scale:3.5,duration:0.5});
+    spawnVFXSprite('flame_core',pos.clone().add(new THREE.Vector3(0,0.3,0)),{scale:2.0,duration:0.35});
+    for(let i=0;i<6;i++){
       const vel=new THREE.Vector3((Math.random()-0.5)*3,2+Math.random()*4,(Math.random()-0.5)*3);
       spawnParticle(pos,vel,Math.random()>0.5?0xff4400:0xff8800,0.1+Math.random()*0.08,0.4+Math.random()*0.4);
     }
@@ -3027,6 +3044,7 @@ function preloadVFXTextures(){
   Object.keys(VFX_DEFS).forEach(type=>{
     const def=VFX_DEFS[type];
     vfxTexCache[type]=[];
+    if(def.procedural) return; // generated below
     if(def.indices){
       def.indices.forEach(idx=>{
         loader.load(def.path+idx+'.png',tex=>{vfxTexCache[type].push(tex);},undefined,()=>{});
@@ -3038,6 +3056,75 @@ function preloadVFXTextures(){
       }
     }
   });
+  // Generate procedural VFX textures from Godot shader palettes
+  generateProceduralVFX();
+}
+
+function genRadialGradientTex(size,stops,frames){
+  // Generate array of textures with animated noise variation
+  const textures=[];
+  for(let f=0;f<frames;f++){
+    const c=document.createElement('canvas');c.width=size;c.height=size;
+    const ctx=c.getContext('2d');
+    const cx=size/2,cy=size/2;
+    // Radial gradient
+    const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,size/2);
+    stops.forEach(s=>grad.addColorStop(s[0],s[1]));
+    ctx.fillStyle=grad;ctx.fillRect(0,0,size,size);
+    // Animated noise per frame
+    const seed=f*137;
+    for(let i=0;i<(size*size)/20;i++){
+      const x=((seed+i*73)%size),y=((seed+i*131)%size);
+      const d=Math.sqrt((x-cx)*(x-cx)+(y-cy)*(y-cy))/(size/2);
+      if(d>0.9)continue;
+      const a=Math.max(0,(1-d)*0.3*(0.5+Math.sin(seed+i)*0.5));
+      ctx.fillStyle='rgba(255,255,255,'+a+')';
+      ctx.fillRect(x,y,2,2);
+    }
+    textures.push(new THREE.CanvasTexture(c));
+  }
+  return textures;
+}
+
+function generateProceduralVFX(){
+  // FlameFX: primary(1.0,0.72,0.29) secondary(0.69,0,0.18)
+  vfxTexCache['flame_core']=genRadialGradientTex(64,[
+    [0,'rgba(255,255,220,1)'],[0.2,'rgba(255,183,74,0.95)'],
+    [0.5,'rgba(255,120,30,0.7)'],[0.8,'rgba(176,0,46,0.3)'],[1,'rgba(80,0,20,0)']
+  ],8);
+  vfxTexCache['flame_burst']=genRadialGradientTex(96,[
+    [0,'rgba(255,220,140,1)'],[0.15,'rgba(255,160,50,0.9)'],
+    [0.4,'rgba(255,80,10,0.6)'],[0.7,'rgba(176,0,46,0.25)'],[1,'rgba(0,0,0,0)']
+  ],6);
+  // ElementalMagicFX: primary(1.0,0.8,0.2) secondary(1.0,0.4,0.1) tertiary(0.6,0.1,0.05)
+  vfxTexCache['magic_cast']=genRadialGradientTex(80,[
+    [0,'rgba(255,255,200,1)'],[0.15,'rgba(255,204,51,0.95)'],
+    [0.4,'rgba(255,102,26,0.6)'],[0.7,'rgba(153,26,13,0.2)'],[1,'rgba(0,0,0,0)']
+  ],8);
+  vfxTexCache['magic_proj']=genRadialGradientTex(48,[
+    [0,'rgba(255,240,180,1)'],[0.25,'rgba(255,180,40,0.9)'],
+    [0.6,'rgba(255,100,25,0.5)'],[1,'rgba(0,0,0,0)']
+  ],6);
+  // GodotBeamVFX: bright beam flash
+  vfxTexCache['beam_flash']=genRadialGradientTex(64,[
+    [0,'rgba(255,255,255,1)'],[0.1,'rgba(200,220,255,0.9)'],
+    [0.3,'rgba(100,150,255,0.6)'],[0.6,'rgba(50,80,200,0.2)'],[1,'rgba(0,0,50,0)']
+  ],6);
+  // Frost crystal (ice blue palette)
+  vfxTexCache['frost_crystal']=genRadialGradientTex(64,[
+    [0,'rgba(220,240,255,1)'],[0.2,'rgba(136,204,255,0.85)'],
+    [0.5,'rgba(68,136,255,0.5)'],[0.8,'rgba(30,60,180,0.15)'],[1,'rgba(0,0,40,0)']
+  ],6);
+  // Holy radiance (paladin gold)
+  vfxTexCache['holy_radiance']=genRadialGradientTex(80,[
+    [0,'rgba(255,255,230,1)'],[0.15,'rgba(255,238,120,0.9)'],
+    [0.4,'rgba(255,200,60,0.5)'],[0.7,'rgba(200,160,30,0.15)'],[1,'rgba(0,0,0,0)']
+  ],6);
+  // Nature bloom (druid green)
+  vfxTexCache['nature_bloom']=genRadialGradientTex(64,[
+    [0,'rgba(200,255,200,1)'],[0.2,'rgba(100,220,80,0.85)'],
+    [0.5,'rgba(40,180,40,0.5)'],[0.8,'rgba(20,100,20,0.15)'],[1,'rgba(0,30,0,0)']
+  ],6);
 }
 
 function spawnVFXSprite(type, worldPos, opts){
