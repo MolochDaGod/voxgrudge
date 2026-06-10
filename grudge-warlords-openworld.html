@@ -119,6 +119,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 
 /* ── Internal Clock ── */
 #game-clock{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:2px;color:#555;pointer-events:none;z-index:10;text-transform:uppercase}
+#fps-counter{position:absolute;top:4px;right:16px;font-size:10px;letter-spacing:1px;color:#444;pointer-events:none;z-index:10;font-family:monospace}
 
 /* ── Stamina Bar ── */
 #stamina-wrap{position:absolute;bottom:155px;left:50%;transform:translateX(-50%);width:180px;z-index:15;pointer-events:none}
@@ -233,6 +234,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button class="gw-btn" onclick="location.reload()">RESPAWN</button>
 </div>
 
+<div id="fps-counter">FPS: --</div>
 <div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
 <div id="traversal-state">GROUND</div>
 
@@ -505,6 +507,9 @@ let isInWater = false;
 let iFrames = false, iFrameTimer = 0;
 const WATER_LEVEL = -0.5;
 
+// ── FPS Counter ──
+let fpsFrameCount = 0, fpsLastTime = performance.now(), fpsDisplay = 0;
+
 // ── VFX Sprite Engine State ──
 const vfxTexCache = {};
 let vfxSprites = [];
@@ -612,6 +617,7 @@ function init(){
   renderer = new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(devicePixelRatio);
+  renderer.preserveDrawingBuffer = true; // needed for screenshots
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
@@ -698,6 +704,7 @@ function init(){
     if(e.code==='Escape') { if(craftOpen) toggleCraft(); else if(isBuildMode) toggleBuildMode(); }
     if(e.code==='Space') { e.preventDefault(); tryJump(); }
     if(e.code==='ShiftLeft'||e.code==='ShiftRight') tryDash();
+    if(e.code==='F12') { e.preventDefault(); takeScreenshot(); }
   });
   window.addEventListener('keyup', e=>{ keys[e.code]=false; });
   window.addEventListener('mousemove', e=>{
@@ -705,6 +712,8 @@ function init(){
     mouse.y = -(e.clientY/innerHeight)*2+1;
   });
   window.addEventListener('mousedown', e=>{
+    if(e.button===0) keys['MouseButton0']=true;
+    if(e.button===2) keys['MouseButton2']=true;
     if(craftOpen) return;
     if(isBuildMode){
       if(e.button===0) placeBlock();
@@ -715,7 +724,8 @@ function init(){
     }
   });
   window.addEventListener('mouseup', e=>{
-    if(e.button===2) isBlocking=false;
+    if(e.button===0) keys['MouseButton0']=false;
+    if(e.button===2){ keys['MouseButton2']=false; isBlocking=false; }
   });
   window.addEventListener('wheel', e=>{
     if(craftOpen || isBuildMode) return;
@@ -2497,9 +2507,49 @@ function animateIdle(parts, t){
 
 function animateAttack(parts, t, phase){
   if(!parts.armRight) return;
-  const sw = Math.sin(phase*Math.PI)*1.8;
-  parts.armRight.rotation.x = -sw;
-  if(parts.torso) parts.torso.rotation.y = Math.sin(phase*Math.PI)*0.2;
+  const wt=currentWeapon?currentWeapon.type:'';
+  const wid=currentWeapon?currentWeapon.id:'';
+  if(wt==='heavy_melee'){
+    // Overhead slam: arm goes up then crashes down
+    const up=phase>0.5?-Math.PI*0.8*(phase-0.5)*4:-Math.PI*0.4+Math.sin((1-phase)*12)*1.5;
+    parts.armRight.rotation.x=up;
+    if(parts.armLeft)parts.armLeft.rotation.x=up*0.4;
+    if(parts.torso){parts.torso.rotation.x=phase>0.5?-0.15:0.2;parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.25;}
+  } else if(wid==='spear'){
+    // Forward thrust
+    const thrust=-Math.PI*0.5*phase;
+    parts.armRight.rotation.x=thrust;
+    if(parts.torso)parts.torso.rotation.x=-0.15*phase;
+  } else if(wid==='dagger'){
+    // Rapid double slash
+    const slash=Math.sin(phase*Math.PI*4)*1.2;
+    parts.armRight.rotation.x=-slash;
+    if(parts.torso)parts.torso.rotation.y=Math.sin(phase*Math.PI*4)*0.15;
+  } else if(wid==='sword_shield'){
+    // Sword swing + shield brace
+    const sw=Math.sin(phase*Math.PI)*1.8;
+    parts.armRight.rotation.x=-sw;
+    if(parts.armLeft)parts.armLeft.rotation.x=-0.4-phase*0.3;
+    if(parts.torso)parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.2;
+  } else if(wt==='auto'){
+    // Gun recoil kick
+    parts.armRight.rotation.x=-Math.PI*0.45+Math.sin(phase*Math.PI*6)*0.3;
+    if(parts.torso)parts.torso.rotation.x=-0.05;
+  } else if(wt==='projectile'){
+    // Bow draw and release
+    const draw=phase>0.6?-Math.PI*0.55:-Math.PI*0.3;
+    parts.armRight.rotation.x=draw;
+    if(parts.armLeft)parts.armLeft.rotation.x=draw*0.8;
+  } else if(wt==='magic'){
+    // Cast channel: arm extends up with flair
+    parts.armRight.rotation.x=-Math.PI*0.6+Math.sin(phase*Math.PI*3)*0.4;
+    if(parts.torso)parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.1;
+  } else {
+    // Default sword swing
+    const sw=Math.sin(phase*Math.PI)*1.8;
+    parts.armRight.rotation.x=-sw;
+    if(parts.torso)parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.2;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2771,7 +2821,9 @@ function updateSkeletonAnims(dt){
       animateJump(playerSkelParts, playerVelY);
     } else if(playerAttackPhase>0){
       animateAttack(playerSkelParts, playerAnimTime, playerAttackPhase);
-      playerAttackPhase=Math.max(0,playerAttackPhase-dt*3);
+      // Weapon-specific decay speed: fast weapons recover faster
+      const decayRate=currentWeapon.type==='auto'?8:(currentWeapon.id==='dagger'?6:(currentWeapon.type==='heavy_melee'?2:3));
+      playerAttackPhase=Math.max(0,playerAttackPhase-dt*decayRate);
     } else {
       const moving=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD'];
       if(moving) animateWalk(playerSkelParts, playerAnimTime, 1);
@@ -2986,6 +3038,13 @@ function animate(){
   ['Q','E','R','F'].forEach(k=>{ if(skillCds[k]>0) skillCds[k]=Math.max(0,skillCds[k]-dt); });
 
   updatePlayer(dt);
+
+  // Hold-to-fire: auto-attack while mouse held for auto/gun weapons
+  if(keys['MouseButton0']&&!isBuildMode&&!craftOpen&&!isGameOver&&attackCd<=0){
+    const wt=currentWeapon.type;
+    if(wt==='auto'||wt==='projectile'||wt==='magic') tryAttack();
+  }
+
   updateEnemies(dt);
   updateBullets(dt);
   updateParticles(dt);
@@ -3033,7 +3092,29 @@ function animate(){
   updateResUI();
   updateMinimap();
 
+  // FPS counter
+  fpsFrameCount++;
+  const fpsNow=performance.now();
+  if(fpsNow-fpsLastTime>=1000){
+    fpsDisplay=Math.round(fpsFrameCount*1000/(fpsNow-fpsLastTime));
+    fpsFrameCount=0;fpsLastTime=fpsNow;
+    const fpsEl=document.getElementById('fps-counter');
+    if(fpsEl)fpsEl.textContent='FPS: '+fpsDisplay;
+  }
+
   renderer.render(scene,camera);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREENSHOT
+// ═══════════════════════════════════════════════════════════════
+function takeScreenshot(){
+  renderer.render(scene,camera);
+  const img=renderer.domElement.toDataURL('image/png');
+  const a=document.createElement('a');
+  a.href=img;a.download='grudge-warlords-'+Date.now()+'.png';
+  a.click();
+  showFlash('SCREENSHOT SAVED');
 }
 
 // ═══════════════════════════════════════════════════════════════
