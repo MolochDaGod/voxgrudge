@@ -134,6 +134,14 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #stamina-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#44cc44,#88ff88);transition:width 0.1s}
 #traversal-state{position:absolute;bottom:164px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#44cc44;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.3s}
 #traversal-state.active{opacity:1}
+
+/* ── Cube Energy Bar ── */
+#energy-wrap{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);width:200px;z-index:15;pointer-events:none;text-align:center}
+#energy-track{width:100%;height:6px;background:#1a1e26;border-radius:3px;overflow:hidden;border:1px solid #224}
+#energy-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#4488ff,#88ccff);transition:width 0.15s;box-shadow:0 0 6px rgba(68,136,255,0.4)}
+#energy-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#4488ff;margin-bottom:2px}
+#energy-val{font-size:9px;color:#88ccff;font-weight:700;margin-top:1px}
+#parry-flash{position:absolute;inset:0;pointer-events:none;z-index:6;background:rgba(68,136,255,0);transition:background 0.1s}
 </style>
 </head>
 <body>
@@ -243,7 +251,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="wave-flash"></div>
 <div id="night-overlay"></div>
 <div id="minimap"><canvas id="mm-canvas" width="120" height="120"></canvas></div>
-<div id="mine-hint">Press M to harvest</div>
+<div id="mine-hint">RMB to harvest</div>
 
 <div class="screen-overlay hidden" id="game-over">
   <h1>FALLEN</h1>
@@ -252,11 +260,13 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button class="gw-btn" onclick="location.reload()">RESPAWN</button>
 </div>
 
+<div id="parry-flash"></div>
 <div id="fps-counter">FPS: --</div>
+<div id="energy-wrap"><div id="energy-label">Cube Energy</div><div id="energy-track"><div id="energy-fill" style="width:0%"></div></div><div id="energy-val">0 / 100</div></div>
 <div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
 <div id="traversal-state">GROUND</div>
 
-<div id="instructions">WASD:Move · Click:Attack · Q/E/R/F:Skills · Space:Jump/Dodge · Shift:Dash · B:Build · C:Craft · M:Mine · 1-6:Items · Scroll:Weapon · RMB:Block</div>
+<div id="instructions">WASD:Move · LMB:Attack · RMB:Mine/Parry/Block · Q/E/R/F:Skills · Space:Jump/Dodge · Shift:Dash · B:Build · C:Craft · 1-6:Items · Scroll:Weapon · F12:Screenshot</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -525,6 +535,19 @@ let isInWater = false;
 let iFrames = false, iFrameTimer = 0;
 const WATER_LEVEL = -0.5;
 
+// ── Asset Base URL (switch to R2 CDN for production) ──
+const ASSET_BASE = ''; // Set to 'https://assets.grudge-studio.com/' for R2
+
+// ── Cube Energy System ──
+let cubeEnergy = 0, maxCubeEnergy = 100;
+let energyOrbs = []; // {mesh, vel, phase, life, value}
+const energyOrbGeo = new THREE.BoxGeometry(0.15,0.15,0.15);
+const energyOrbMat = new THREE.MeshStandardMaterial({color:0x4488ff,emissive:0x2244ff,emissiveIntensity:1.5,transparent:true,opacity:0.9});
+
+// ── Parry System ──
+let isParrying = false, parryTimer = 0, parryCd = 0;
+const PARRY_WINDOW = 0.25, PARRY_CD = 1.0, PARRY_REDUCTION = 0.1;
+
 // ── FPS Counter ──
 let fpsFrameCount = 0, fpsLastTime = performance.now(), fpsDisplay = 0;
 
@@ -738,12 +761,12 @@ function init(){
       if(e.button===2) removeBlock();
     } else {
       if(e.button===0) tryAttack();
-      if(e.button===2 && currentWeapon.canBlock) isBlocking=true;
+      if(e.button===2) handleRMB();
     }
   });
   window.addEventListener('mouseup', e=>{
     if(e.button===0) keys['MouseButton0']=false;
-    if(e.button===2){ keys['MouseButton2']=false; isBlocking=false; }
+    if(e.button===2){ keys['MouseButton2']=false; isBlocking=false; isParrying=false; }
   });
   window.addEventListener('wheel', e=>{
     if(craftOpen || isBuildMode) return;
@@ -1376,6 +1399,16 @@ function killEnemy(e){
   // Death VFX burst
   spawnVFXSprite('bone_burst_1',e.mesh.position.clone().add(new THREE.Vector3(0,1.5,0)),{scale:4.0,duration:0.6});
 
+  // Spawn Cube Energy orbs from dead enemy
+  const orbCount = 3+Math.floor((e.def.score||25)/30);
+  for(let i=0;i<orbCount;i++){
+    const orb=new THREE.Mesh(energyOrbGeo,energyOrbMat.clone());
+    orb.position.copy(e.mesh.position).add(new THREE.Vector3(0,1.5,0));
+    scene.add(orb);
+    const scatter=new THREE.Vector3((Math.random()-0.5)*6,2+Math.random()*4,(Math.random()-0.5)*6);
+    energyOrbs.push({mesh:orb,vel:scatter,phase:'scatter',life:0.3+Math.random()*0.2,value:Math.ceil((e.def.score||25)/orbCount)});
+  }
+
   // Soul harvest (necromancer)
   if(CLASSES[playerClass].soulHarvest){ hp = Math.min(maxHp, hp+15); }
 
@@ -1410,6 +1443,17 @@ function raiseMinion(deadEnemy){
 function damagePlayer(dmg){
   if(statusEffects.invuln) return;
   if(iFrames) return;
+  // Parry: near-zero damage + stun attacker
+  if(isParrying && parryTimer>0){
+    dmg *= PARRY_REDUCTION;
+    triggerShake(0.4,0.15);
+    spawnVFXSprite('beam_flash',playerMesh.position.clone().add(new THREE.Vector3(0,1.5,0)),{scale:3.0,duration:0.2});
+    document.getElementById('parry-flash').style.background='rgba(68,136,255,0.3)';
+    setTimeout(()=>document.getElementById('parry-flash').style.background='rgba(68,136,255,0)',150);
+    // Stun nearby attackers
+    enemies.forEach(e=>{if(e.alive&&playerMesh.position.distanceTo(e.mesh.position)<3)e.stunTimer=1.0;});
+    return;
+  }
   if(isBlocking && currentWeapon.canBlock) dmg *= blockDmgReduction;
   if(formBuff) dmg *= (1-formBuff.dmgReduction);
   if(statusEffects.berserker) dmg *= statusEffects.berserker.defMult||0.7;
@@ -3128,6 +3172,8 @@ function animate(){
   updateTraversal(dt);
   updateSkeletonAnims(dt);
   updateVFXSprites(dt);
+  updateEnergyOrbs(dt);
+  updateParry(dt);
   if(playerMixer) playerMixer.update(dt);
 
   // Animate water plane
@@ -3166,6 +3212,84 @@ function animate(){
 // ═══════════════════════════════════════════════════════════════
 // SCREENSHOT
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// CUBE ENERGY SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function updateEnergyOrbs(dt){
+  const pp=playerMesh.position;
+  for(let i=energyOrbs.length-1;i>=0;i--){
+    const o=energyOrbs[i];
+    if(o.phase==='scatter'){
+      // Scatter outward briefly
+      o.mesh.position.add(o.vel.clone().multiplyScalar(dt));
+      o.vel.y-=15*dt; // gravity
+      o.life-=dt;
+      o.mesh.rotation.x+=dt*8;o.mesh.rotation.y+=dt*12;
+      if(o.life<=0) o.phase='home';
+    } else {
+      // Home toward player
+      const toP=pp.clone().add(new THREE.Vector3(0,1,0)).sub(o.mesh.position);
+      const dist=toP.length();
+      if(dist<1.0){
+        // Collected!
+        cubeEnergy=Math.min(maxCubeEnergy,cubeEnergy+o.value);
+        updateEnergyUI();
+        scene.remove(o.mesh);
+        energyOrbs.splice(i,1);
+        continue;
+      }
+      // Accelerate toward player
+      const homeSpeed=Math.min(40, 8+((3-Math.min(3,dist))*15));
+      o.mesh.position.add(toP.normalize().multiplyScalar(homeSpeed*dt));
+      o.mesh.rotation.x+=dt*15;o.mesh.rotation.y+=dt*20;
+      // Scale pulse
+      const pulse=0.8+Math.sin(performance.now()*0.01)*0.3;
+      o.mesh.scale.setScalar(pulse);
+      // Fade if stuck too long
+      o.life=(o.life||5)-dt;
+      if(o.life<0){scene.remove(o.mesh);energyOrbs.splice(i,1);}
+    }
+  }
+}
+
+function updateEnergyUI(){
+  const fill=document.getElementById('energy-fill');
+  const val=document.getElementById('energy-val');
+  if(fill)fill.style.width=(cubeEnergy/maxCubeEnergy*100)+'%';
+  if(val)val.textContent=Math.floor(cubeEnergy)+' / '+maxCubeEnergy;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RMB CONTEXTUAL ACTION + PARRY
+// ═══════════════════════════════════════════════════════════════
+function handleRMB(){
+  if(isGameOver||!gameStarted) return;
+  // Priority 1: Near resource → mine
+  if(nearResourceNode){
+    tryMineResource();
+    return;
+  }
+  // Priority 2: Shield weapon → full block
+  if(currentWeapon.canBlock){
+    isBlocking=true;
+    return;
+  }
+  // Priority 3: Parry attempt (any weapon)
+  if(parryCd<=0){
+    isParrying=true;
+    parryTimer=PARRY_WINDOW;
+    parryCd=PARRY_CD;
+    // Visual feedback
+    document.getElementById('parry-flash').style.background='rgba(68,136,255,0.15)';
+    setTimeout(()=>{if(!isParrying)document.getElementById('parry-flash').style.background='rgba(68,136,255,0)';},PARRY_WINDOW*1000);
+  }
+}
+
+function updateParry(dt){
+  if(parryTimer>0){parryTimer-=dt;if(parryTimer<=0){isParrying=false;document.getElementById('parry-flash').style.background='rgba(68,136,255,0)';}}
+  if(parryCd>0)parryCd-=dt;
+}
+
 function takeScreenshot(){
   renderer.render(scene,camera);
   const img=renderer.domElement.toDataURL('image/png');
