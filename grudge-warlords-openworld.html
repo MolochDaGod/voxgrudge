@@ -4,12 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Grudge Warlords — Open World Voxel Edition</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230a0e14'/%3E%3Cpath d='M10 6l6 10-6 10M22 6l-6 10 6 10' stroke='%23e63d3d' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e63d3d'/%3E%3C/svg%3E">
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
-#class-screen{position:absolute;inset:0;z-index:50;background:radial-gradient(ellipse at center,#0d1520 0%,#04080f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center}
-#class-screen h1{color:#e63d3d;font-size:42px;margin:0 0 4px;letter-spacing:-2px}
-#class-screen .sub{color:#555;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:36px}
+#class-screen{position:absolute;inset:0;z-index:50;background:radial-gradient(ellipse at center,#0d1520 0%,#04080f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+#class-screen::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30h60M30 0v60' stroke='%23ffffff08' stroke-width='1'/%3E%3C/svg%3E");opacity:0.5;animation:gridPulse 4s ease-in-out infinite}
+@keyframes gridPulse{0%,100%{opacity:0.3}50%{opacity:0.6}}
+#class-screen h1{color:#e63d3d;font-size:52px;margin:0 0 4px;letter-spacing:-2px;text-shadow:0 0 40px rgba(230,61,61,0.4);position:relative}
+#class-screen .sub{color:#666;font-size:11px;letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;position:relative}
+#class-screen .version{color:#333;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;position:relative}
+#creature-showcase{display:flex;gap:8px;margin-bottom:20px;position:relative}
+.creature-thumb{width:48px;height:48px;background:rgba(10,14,20,0.8);border:1px solid #2a2e3a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all 0.3s}
+.creature-thumb:hover{border-color:#e63d3d;transform:scale(1.15);box-shadow:0 0 12px rgba(230,61,61,0.3)}
 .class-grid{display:grid;grid-template-columns:repeat(3,190px);gap:14px}
 .class-card{background:rgba(10,14,20,0.9);border:2px solid #2a2e3a;border-radius:8px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center}
 .class-card:hover,.class-card.sel{border-color:var(--cc);box-shadow:0 0 20px rgba(255,255,255,0.08)}
@@ -133,7 +140,18 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 
 <div id="class-screen">
   <h1>⚔ GRUDGE WARLORDS</h1>
-  <div class="sub">Open World · Voxel Edit · Survival Edition</div>
+  <div class="sub">Open World · Voxel Combat · Survival Edition</div>
+  <div class="version">v0.8 — 13 Creatures · 14 Weapons · 7 Biomes · VFX Engine</div>
+  <div id="creature-showcase">
+    <div class="creature-thumb" title="Werewolf">🐺</div>
+    <div class="creature-thumb" title="Dragon">🐉</div>
+    <div class="creature-thumb" title="Skeleton Warrior">💀</div>
+    <div class="creature-thumb" title="Iron Golem">🦾</div>
+    <div class="creature-thumb" title="Drake">🐲</div>
+    <div class="creature-thumb" title="Rhinoceros">🦏</div>
+    <div class="creature-thumb" title="Cheetah">🐆</div>
+    <div class="creature-thumb" title="Karate Boss">🥋</div>
+  </div>
   <div class="class-grid" id="class-grid"></div>
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">BEGIN SURVIVAL</button>
 </div>
@@ -1444,16 +1462,26 @@ function spawnEnemy(isRaid){
     sz = pp.z+Math.sin(angle)*d;
   }
 
-  // Try GLB model for humanoid enemies, fallback to vox boxes
+  // Try creature GLB first, then Kenney humanoid, then vox fallback
   let mesh;
-  const isHumanoid = def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
-  const eLetter = ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
-  const enemyGlb = isHumanoid ? cloneModel(eLetter, def.sc||1) : null;
-  if(enemyGlb){
-    mesh = enemyGlb;
+  const creatureName = CREATURE_MODEL_MAP[typeId];
+  const creatureTemplate = creatureName ? CREATURE_CACHE[creatureName] : null;
+  if(creatureTemplate){
+    mesh = creatureTemplate.clone();
+    mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+    const csc = (CREATURE_SCALE_MAP[creatureName]||1.5) * (def.sc||1) * 0.5;
+    mesh.scale.set(csc,csc,csc);
     tintModel(mesh, def.body);
   } else {
-    mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
+    const isHumanoid = def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
+    const eLetter = ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
+    const enemyGlb = isHumanoid ? cloneModel(eLetter, def.sc||1) : null;
+    if(enemyGlb){
+      mesh = enemyGlb;
+      tintModel(mesh, def.body);
+    } else {
+      mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
+    }
   }
   mesh.position.set(sx, 0, sz);
   // Canvas health bar (replaces emoji)
@@ -2431,11 +2459,28 @@ const ENEMY_MODEL_POOL = ['g','h','i','j'];
 let glbLoader = null;
 let modelsLoaded = false;
 
+// Creature GLB models (Blockbench voxel creatures)
+const CREATURE_CACHE = {}; // name -> THREE.Group
+const CREATURE_MODEL_MAP = {
+  dire_wolf:'cheetah',cave_bat:'owl',green_spider:'crocodile',orc_scout:'skeleton-warrior',
+  cave_troll:'iron-golem',velociraptor:'cheetah',orc_warrior:'skeleton-warrior',
+  battle_spider:'crocodile',rhino_charger:'rhinoceros',orc_berserker:'karate-boss',
+  fire_phantom:'mini-dragon',ghost_tiger:'werewolf',minotaur_guard:'iron-golem',
+  fire_drake:'drake',frost_wyrm:'ender-dragon',juggernaut:'iron-golem',
+  shadow_dragon:'ender-dragon',creature_titan:'karate-boss'
+};
+const CREATURE_SCALE_MAP = {
+  cheetah:1.8,owl:1.2,crocodile:1.5,rhinoceros:2.2,werewolf:2.0,
+  'skeleton-warrior':1.6,'iron-golem':2.5,'mini-dragon':1.4,drake:2.8,
+  'ender-dragon':3.5,'karate-boss':2.0
+};
+
 function preloadModels(callback){
   if(typeof THREE.GLTFLoader==='undefined'){modelsLoaded=false;callback();return;}
   glbLoader = new THREE.GLTFLoader();
   const letters = Object.values(CLASS_MODEL_MAP).concat(ENEMY_MODEL_POOL);
   let loaded = 0;
+  const totalKenney = letters.length;
   letters.forEach(letter=>{
     glbLoader.load('models/kenney/character-'+letter+'.glb',
       function(gltf){
@@ -2443,10 +2488,23 @@ function preloadModels(callback){
         model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
         MODEL_CACHE[letter] = model;
         loaded++;
-        if(loaded>=letters.length){modelsLoaded=true;callback();}
+        if(loaded>=totalKenney){modelsLoaded=true;callback();}
       },
       undefined,
-      function(err){loaded++;if(loaded>=letters.length){modelsLoaded=true;callback();}}
+      function(err){loaded++;if(loaded>=totalKenney){modelsLoaded=true;callback();}}
+    );
+  });
+  // Preload creature GLBs in background (non-blocking)
+  const creatureNames = [...new Set(Object.values(CREATURE_MODEL_MAP))];
+  creatureNames.forEach(name=>{
+    glbLoader.load('models/creatures/'+name+'.glb',
+      function(gltf){
+        const model = gltf.scene;
+        model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+        CREATURE_CACHE[name] = model;
+      },
+      undefined,
+      function(){} // Silent fail — fallback to vox
     );
   });
 }
