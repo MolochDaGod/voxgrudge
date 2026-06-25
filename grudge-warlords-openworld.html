@@ -374,7 +374,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="js/grudge-scale.js"></script>
 <script src="js/world-engine.js"></script>
 <script src="js/grudge-codex-icons.js"></script>
-<script src="js/mine-loader-icons.js"></script>
+<script src="js/grudge-game-hud.js"></script>
 <script src="js/grudge-hud-icons.js"></script>
 <script src="js/grudge-items-loader.js"></script>
 <script>
@@ -536,7 +536,7 @@ const ITEM_DEFS = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// HUD ASSETS — Mine-Loader gold icons (primary) + GrudgeCodex fallback
+// HUD ASSETS — grudge-game ObjectStore icons + CraftPix kit (GrudgeCodex fallback)
 // ═══════════════════════════════════════════════════════════════
 function skillIconUrl(id){
   if(window.GrudgeHudIcons) return GrudgeHudIcons.skillIconUrl(id);
@@ -555,18 +555,16 @@ function setHudIcon(el,url,fallback){
   if(window.GrudgeHudIcons) return GrudgeHudIcons.setHudIcon(el,url,fallback);
 }
 function initResourceIcons(){
-  const m=window.MineLoaderIcons;
-  if(!m) return;
-  setHudIcon(document.getElementById('res-wood-icon'),m.resourceIconUrl('wood'),'🪵');
-  setHudIcon(document.getElementById('res-stone-icon'),m.resourceIconUrl('stone'),'🪨');
-  setHudIcon(document.getElementById('res-ore-icon'),m.resourceIconUrl('ore'),'⚙️');
+  if(!window.GrudgeHudIcons) return;
+  setHudIcon(document.getElementById('res-wood-icon'),GrudgeHudIcons.resourceIconUrl('wood'),'🪵');
+  setHudIcon(document.getElementById('res-stone-icon'),GrudgeHudIcons.resourceIconUrl('stone'),'🪨');
+  setHudIcon(document.getElementById('res-ore-icon'),GrudgeHudIcons.resourceIconUrl('ore'),'⚙️');
 }
 function initBuildIcons(){
-  const m=window.MineLoaderIcons;
-  if(!m) return;
+  if(!window.GrudgeHudIcons) return;
   ['wood','stone','floor','heal'].forEach(function(bid){
     const el=document.querySelector('#bs-'+bid+' .b-icon');
-    setHudIcon(el,m.buildIconUrl(bid),bid==='wood'?'🪵':bid==='stone'?'🪨':bid==='floor'?'🟫':'💚');
+    setHudIcon(el,GrudgeHudIcons.buildIconUrl(bid),bid==='wood'?'🪵':bid==='stone'?'🪨':bid==='floor'?'🟫':'💚');
   });
 }
 

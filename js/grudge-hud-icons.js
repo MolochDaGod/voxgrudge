@@ -1,27 +1,27 @@
 /**
- * Grudge HUD icons — Mine-Loader gold-framed assets (primary).
- * Falls back to GrudgeCodex CDN only when Mine-Loader has no mapping.
+ * Grudge HUD icons — grudge-game ObjectStore + CraftPix kit (primary).
+ * Falls back to GrudgeCodex CDN when ObjectStore has no mapping.
  */
 (function (global) {
   'use strict';
 
-  function ml() {
-    return global.MineLoaderIcons;
+  function gg() {
+    return global.GrudgeGameHud;
   }
 
   function skillIconUrl(id) {
-    var m = ml();
-    if (m) {
-      var u = m.skillIconUrl(id);
+    var g = gg();
+    if (g) {
+      var u = g.skillIconUrl(id);
       if (u) return u;
     }
     return null;
   }
 
   function weaponIconUrl(id) {
-    var m = ml();
-    if (m) {
-      var u = m.weaponIconUrl(id);
+    var g = gg();
+    if (g) {
+      var u = g.weaponIconUrl(id);
       if (u) return u;
     }
     if (global.GrudgeCodex) return GrudgeCodex.weaponIconUrl(id);
@@ -29,27 +29,39 @@
   }
 
   function classIconUrl(id) {
-    var m = ml();
-    if (m) {
-      var u = m.classIconUrl(id);
+    var g = gg();
+    if (g) {
+      var u = g.classIconUrl(id);
       if (u) return u;
     }
     return null;
   }
 
   function itemIconUrl(id, def) {
-    var m = ml();
-    if (m) {
-      var u = m.itemIconUrl(id, def);
+    var g = gg();
+    if (g) {
+      var u = g.itemIconUrl(id, def);
       if (u) return u;
     }
     if (global.GrudgeCodex) return GrudgeCodex.itemIconUrl(id, def);
     return null;
   }
 
+  function resourceIconUrl(res) {
+    var g = gg();
+    if (g) return g.resourceIconUrl(res);
+    return null;
+  }
+
+  function buildIconUrl(blockId) {
+    var g = gg();
+    if (g) return g.buildIconUrl(blockId);
+    return null;
+  }
+
   function setHudIcon(el, url, fallback) {
-    var m = ml();
-    if (m) return m.setHudIcon(el, url, fallback);
+    var g = gg();
+    if (g) return g.setHudIcon(el, url, fallback);
     if (global.GrudgeCodex) return GrudgeCodex.setHudIcon(el, url, fallback);
   }
 
@@ -58,6 +70,8 @@
     weaponIconUrl: weaponIconUrl,
     classIconUrl: classIconUrl,
     itemIconUrl: itemIconUrl,
+    resourceIconUrl: resourceIconUrl,
+    buildIconUrl: buildIconUrl,
     setHudIcon: setHudIcon,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
