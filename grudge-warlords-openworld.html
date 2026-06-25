@@ -97,6 +97,44 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .craft-btn{background:#e63d3d;border:none;color:#fff;padding:5px 12px;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;pointer-events:auto}
 .craft-btn:disabled{background:#222;color:#444;cursor:not-allowed}
 #craft-close{margin-top:14px;background:transparent;border:1px solid #333;color:#555;padding:7px 20px;font-size:9px;letter-spacing:2px;border-radius:3px;cursor:pointer;pointer-events:auto;text-transform:uppercase}
+.studio-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:45;display:none;pointer-events:auto;background:rgba(4,8,18,0.98);border:1px solid #2a3550;border-radius:10px;box-shadow:0 0 50px rgba(68,136,255,0.15);backdrop-filter:blur(12px)}
+.studio-panel.open{display:flex;flex-direction:column}
+.studio-panel h2{margin:0;padding:14px 18px 10px;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#88bbff;border-bottom:1px solid #1a2438}
+.studio-panel .panel-body{padding:12px 16px 16px;overflow:auto;max-height:min(70vh,520px)}
+.studio-panel .panel-close{margin:0 16px 14px;background:transparent;border:1px solid #334;color:#667;padding:7px 16px;font-size:9px;letter-spacing:2px;border-radius:4px;cursor:pointer;text-transform:uppercase;align-self:flex-start}
+.studio-tabs{display:flex;gap:6px;padding:0 16px 10px;border-bottom:1px solid #1a2438}
+.studio-tab{flex:1;background:#0c1220;border:1px solid #243048;color:#667;padding:6px 4px;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:4px;cursor:pointer}
+.studio-tab.sel{border-color:#4488ff;color:#aaccff;background:rgba(68,136,255,0.12)}
+#craft-panel{width:min(92vw,480px)}
+#inventory-panel{width:min(92vw,420px)}
+#equip-panel{width:min(92vw,360px);top:42%;left:auto;right:24px;transform:none}
+.inv-grid{display:grid;grid-template-columns:repeat(6,52px);gap:6px;justify-content:center}
+.inv-slot{width:52px;height:52px;background:rgba(8,12,22,0.95);border:2px solid #2a3550;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.15s}
+.inv-slot:hover{border-color:#6688aa}
+.inv-slot.filled{border-color:#556677}
+.inv-slot.sel{border-color:#e63d3d;box-shadow:0 0 10px rgba(230,61,61,0.3)}
+.inv-slot .is-icon{font-size:18px}
+.inv-slot .is-count{font-size:8px;color:#aaa;position:absolute;bottom:2px;right:4px;font-weight:700}
+.equip-grid{display:grid;grid-template-columns:repeat(3,72px);gap:10px;justify-content:center}
+.equip-slot{width:72px;height:72px;background:rgba(8,12,22,0.95);border:2px dashed #334466;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:#556;text-transform:uppercase;letter-spacing:1px}
+.equip-slot.filled{border-style:solid;border-color:#4488ff;color:#aac}
+.equip-slot .es-icon{font-size:22px;margin-bottom:2px}
+.craft-row{transition:background 0.15s;border-radius:4px}
+.craft-row:hover{background:rgba(68,136,255,0.06)}
+.craft-row.can-afford .craft-name{color:#ddd}
+#ally-roster{position:absolute;top:120px;right:16px;z-index:12;pointer-events:auto;min-width:140px;max-width:180px}
+#ally-roster h3{margin:0 0 6px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#44cc88}
+.ally-card{background:rgba(6,12,18,0.9);border:1px solid #2a4a3a;border-radius:6px;padding:6px 8px;margin-bottom:5px;font-size:9px;cursor:pointer}
+.ally-card:hover{border-color:#44cc88}
+.ally-card .an{font-weight:800;color:#8fd}
+.ally-card .ab{height:3px;background:#133;margin-top:4px;border-radius:2px;overflow:hidden}
+.ally-card .abf{height:100%;background:#44cc88}
+#grudox-pill{position:absolute;top:70px;right:16px;z-index:12;pointer-events:none;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:12px;border:1px solid #334;background:rgba(6,10,18,0.85);color:#556}
+#grudox-pill.live{border-color:#44cc88;color:#8fd}
+#grudox-pill.offline{border-color:#553;color:#866}
+#hud-actions{position:absolute;bottom:90px;left:16px;display:flex;gap:6px;z-index:12;pointer-events:auto}
+.hud-action-btn{background:rgba(6,10,18,0.9);border:1px solid #334;color:#889;padding:6px 10px;font-size:8px;font-weight:700;letter-spacing:1px;border-radius:4px;cursor:pointer;text-transform:uppercase}
+.hud-action-btn:hover{border-color:#e63d3d;color:#fff}
 #raid-alert{position:absolute;top:80px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:800;letter-spacing:4px;color:#ff4400;text-transform:uppercase;pointer-events:none;z-index:20;opacity:0;transition:opacity 0.5s;text-shadow:0 0 20px rgba(255,68,0,0.8)}
 #raid-alert.show{opacity:1}
 #wave-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:#e63d3d;pointer-events:none;z-index:30;opacity:0;transition:opacity 0.3s;text-shadow:0 0 40px rgba(230,61,61,0.8)}
@@ -167,7 +205,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="class-screen">
   <h1>⚔ GRUDGE WARLORDS</h1>
   <div class="sub">Open World · Voxel Combat · Survival Edition</div>
-  <div class="version">v0.8 — Kenney Voxel Skins · 14 Weapons · 7 Biomes · VFX Engine</div>
+  <div class="version">v0.9 — Grudge Vox Studio · Fantasy Allies · GRUDOX Live · 14 Weapons</div>
   <div id="skin-picker">
     <div class="skin-picker-label">Voxel Body</div>
     <div id="skin-body-row"></div>
@@ -256,10 +294,38 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <div class="build-slot" id="bs-heal" onclick="selectBuild('heal')"><div class="b-icon">💚</div><div class="b-name">Heal Station</div><div class="b-cost">4🪵+2⚙️</div></div>
 </div>
 
-<div id="craft-panel">
-  <h2>⚒ Crafting Table</h2>
-  <div id="craft-list"></div>
-  <button id="craft-close" onclick="toggleCraft()">CLOSE [C]</button>
+<div id="hud-actions">
+  <button class="hud-action-btn" onclick="toggleInventory()">Bag [I]</button>
+  <button class="hud-action-btn" onclick="toggleEquip()">Gear [G]</button>
+  <button class="hud-action-btn" onclick="toggleCraft()">Craft [C]</button>
+  <button class="hud-action-btn" onclick="summonAllyMenu()">Allies [T]</button>
+</div>
+
+<div id="grudox-pill" class="offline">GRUDOX · offline</div>
+<div id="ally-roster"><h3>Allies</h3><div id="ally-list"></div></div>
+
+<div id="craft-panel" class="studio-panel">
+  <h2>⚒ Vox Forge — Crafting</h2>
+  <div class="studio-tabs" id="craft-tabs">
+    <button class="studio-tab sel" data-tab="consumables" onclick="setCraftTab('consumables')">Potions</button>
+    <button class="studio-tab" data-tab="explosives" onclick="setCraftTab('explosives')">Explosives</button>
+    <button class="studio-tab" data-tab="gear" onclick="setCraftTab('gear')">Gear</button>
+    <button class="studio-tab" data-tab="allies" onclick="setCraftTab('allies')">Allies</button>
+  </div>
+  <div class="panel-body"><div id="craft-list"></div></div>
+  <button class="panel-close" onclick="toggleCraft()">Close [C]</button>
+</div>
+
+<div id="inventory-panel" class="studio-panel">
+  <h2>🎒 Inventory</h2>
+  <div class="panel-body"><div class="inv-grid" id="inv-grid"></div></div>
+  <button class="panel-close" onclick="toggleInventory()">Close [I]</button>
+</div>
+
+<div id="equip-panel" class="studio-panel">
+  <h2>🛡 Equipment</h2>
+  <div class="panel-body"><div class="equip-grid" id="equip-grid"></div></div>
+  <button class="panel-close" onclick="toggleEquip()">Close [G]</button>
 </div>
 
 <div id="cast-bar-wrap"><div id="cast-bar-label">CASTING</div><div id="cast-bar-track"><div id="cast-bar-fill" style="width:0%"></div></div></div>
@@ -424,6 +490,11 @@ const ENEMY_TYPES = {
   juggernaut:    {name:'Juggernaut',     emoji:'🦾',tier:6,hp:3000,dmg:110,speed:3.0,score:750, sc:2.9,body:0x444444,beh:'tank'},
   shadow_dragon: {name:'Shadow Dragon',  emoji:'🐉',tier:7,hp:3500,dmg:120,speed:4.5,score:1000,sc:2.6,body:0x220033,beh:'spitter',emit:true},
   creature_titan:{name:'Creature Titan', emoji:'⚡',tier:7,hp:4000,dmg:130,speed:2.5,score:1200,sc:3.3,body:0x113355,beh:'titan',emit:true},
+  voxel_spider:  {name:'Voxel Spider',   emoji:'🕸️',tier:2,hp:280, dmg:22, speed:6.2,score:45,  sc:1.1,body:0x1a1a2a,beh:'spitter',fantasy:'minecraft_spider'},
+  sand_serpent:    {name:'Sand Serpent',   emoji:'🐍',tier:3,hp:380, dmg:28, speed:5.8,score:70,  sc:1.0,body:0x8a7a44,beh:'poison',fantasy:'voxel_snake'},
+  doom_crow:       {name:'Doom Crow',      emoji:'🐦‍⬛',tier:3,hp:220, dmg:18, speed:8.5,score:55,  sc:0.8,body:0x222222,beh:'swoop',fantasy:'crow'},
+  giganto_beast:   {name:'Giganto',        emoji:'👹',tier:6,hp:2800,dmg:100,speed:3.2,score:800, sc:2.5,body:0x664422,beh:'tank',fantasy:'giganto'},
+  demise_revenant: {name:'Demise',         emoji:'☠️',tier:7,hp:3200,dmg:115,speed:4.0,score:950, sc:1.8,body:0x440066,beh:'berserker',fantasy:'demise',emit:true},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -437,6 +508,13 @@ const ITEM_DEFS = {
   frag_grenade: {name:'Frag Grenade',     icon:'💣', color:0x888800,effect:'explosive',dmg:200,radius:8},
   berserker:    {name:'Berserker Elixir', icon:'💢', color:0xff0066,effect:'berserker',duration:15,dmgMult:1.6,defMult:0.7},
   invuln_potion:{name:'Invulnerability',  icon:'🛡️', color:0xffdd00,effect:'invuln',   duration:5},
+  iron_helm:    {name:'Iron Helm',        icon:'⛑️', color:0x888899,effect:'equip',    slot:'head',armor:8},
+  leather_vest: {name:'Leather Vest',     icon:'🦺', color:0x8b5a2b,effect:'equip',    slot:'chest',armor:12},
+  boots:        {name:'Trail Boots',      icon:'👢', color:0x554433,effect:'equip',    slot:'feet',speed:1.08},
+  power_charm:  {name:'Power Charm',      icon:'🔮', color:0xaa44ff,effect:'equip',    slot:'trinket',dmg:1.12},
+  ally_crow:    {name:'Scout Crow',       icon:'🐦‍⬛',color:0x333333,effect:'summon',  ally:'crow'},
+  ally_spider:  {name:'Brood Spider',     icon:'🕷️',color:0x1a4a10,effect:'summon',  ally:'spider'},
+  ally_snake:   {name:'Venom Snake',      icon:'🐍', color:0x8a7a44,effect:'summon',  ally:'snake'},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -462,12 +540,12 @@ const BIOMES = [
 
 const TIER_POOLS = {
   1:['dire_wolf','cave_bat','green_spider','orc_scout'],
-  2:['cave_troll','dire_wolf','orc_scout'],
-  3:['velociraptor','orc_warrior','battle_spider','cave_troll'],
-  4:['rhino_charger','orc_berserker','fire_phantom'],
-  5:['ghost_tiger','minotaur_guard','fire_drake'],
-  6:['frost_wyrm','juggernaut'],
-  7:['shadow_dragon','creature_titan'],
+  2:['cave_troll','dire_wolf','orc_scout','voxel_spider'],
+  3:['velociraptor','orc_warrior','battle_spider','sand_serpent','doom_crow'],
+  4:['rhino_charger','orc_berserker','fire_phantom','voxel_spider'],
+  5:['ghost_tiger','minotaur_guard','fire_drake','doom_crow'],
+  6:['frost_wyrm','juggernaut','giganto_beast'],
+  7:['shadow_dragon','creature_titan','demise_revenant'],
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -480,7 +558,14 @@ const RECIPES = [
   {id:'rage_potion',  name:'Rage Potion',    emoji:'🔴', cost:{ore:2},             result:{item:'rage_potion',count:1}},
   {id:'frag_grenade', name:'Frag Grenade',   emoji:'💣', cost:{stone:3,ore:1},     result:{item:'frag_grenade',count:1}},
   {id:'berserker',    name:'Berserker Elixir',emoji:'💢',cost:{ore:3,wood:2},      result:{item:'berserker',count:1}},
-  {id:'invuln_potion',name:'Invuln Potion',  emoji:'🛡️', cost:{ore:4,stone:2},     result:{item:'invuln_potion',count:1}},
+  {id:'invuln_potion',name:'Invuln Potion',  emoji:'🛡️', cost:{ore:4,stone:2},     result:{item:'invuln_potion',count:1},tab:'consumables'},
+  {id:'iron_helm',    name:'Iron Helm',      emoji:'⛑️', cost:{ore:3,stone:2},     result:{item:'iron_helm',count:1},tab:'gear',slot:'head'},
+  {id:'leather_vest', name:'Leather Vest',   emoji:'🦺', cost:{wood:4,stone:1},   result:{item:'leather_vest',count:1},tab:'gear',slot:'chest'},
+  {id:'boots',        name:'Trail Boots',    emoji:'👢', cost:{wood:3},          result:{item:'boots',count:1},tab:'gear',slot:'feet'},
+  {id:'power_charm',  name:'Power Charm',    emoji:'🔮', cost:{ore:2,wood:2},    result:{item:'power_charm',count:1},tab:'gear',slot:'trinket'},
+  {id:'ally_crow',    name:'Scout Crow',     emoji:'🐦‍⬛',cost:{wood:2,ore:1},    result:{item:'ally_crow',count:1},tab:'allies'},
+  {id:'ally_spider',  name:'Brood Spider',   emoji:'🕷️',cost:{stone:2,ore:2},   result:{item:'ally_spider',count:1},tab:'allies'},
+  {id:'ally_snake',   name:'Venom Snake',    emoji:'🐍', cost:{wood:3,stone:1},   result:{item:'ally_snake',count:1},tab:'allies'},
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -508,7 +593,11 @@ let level = 1, exp = 0, expToNext = 500;
 let minigunActive = false, minigunTimer = 0, minigunFireTimer = 0;
 let lastSpawnTime = 0, spawnInterval = 2200;
 let nearResourceNode = null;
-let craftOpen = false;
+let craftOpen = false, inventoryOpen = false, equipOpen = false, craftTab = 'consumables';
+let inventoryGrid = new Array(24).fill(null);
+let equipment = {head:null,chest:null,feet:null,trinket:null};
+let remotePlayers = new Map();
+let grudoxSocket = null, grudoxConnected = false, grudoxIntentTimer = 0;
 const keys = {};
 const mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
@@ -594,7 +683,23 @@ const VFX_DEFS = {
   frost_crystal:{procedural:true,fps:10,scale:3.0,dur:0.45},
   holy_radiance:{procedural:true,fps:10,scale:3.5,dur:0.5},
   nature_bloom: {procedural:true,fps:8,scale:3.0,dur:0.55},
+  zombie_burst: {path:'vfx/zombie/Character_Zombie3',count:1,pad:0,fps:12,scale:3.0,dur:0.4,single:true},
+  bone_melee:   {path:'vfx/zombie/Weapon_Melee',count:1,pad:0,fps:14,scale:2.2,dur:0.25,single:true},
 };
+const FANTASY_MODEL_MAP = {
+  minecraft_spider:'models/fantasy/minecraft_spider_monster.glb',
+  voxel_snake:'models/fantasy/voxel_snake.glb',
+  crow:'models/fantasy/crow.glb',
+  giganto:'models/fantasy/giganto_sonic_frontiers.glb',
+  demise:'models/fantasy/demise.glb',
+};
+const FANTASY_SCALE = {minecraft_spider:1.2,voxel_snake:1.0,crow:0.9,giganto:2.2,demise:1.6};
+const ALLY_DEFS = {
+  crow:  {name:'Scout Crow', emoji:'🐦‍⬛',hp:120,dmg:14,speed:7.5,range:12,model:'crow',beh:'fly'},
+  spider:{name:'Brood Spider',emoji:'🕷️',hp:180,dmg:22,speed:5.5,range:2, model:'minecraft_spider',beh:'melee'},
+  snake: {name:'Venom Snake', emoji:'🐍', hp:150,dmg:18,speed:6,  range:2.5,model:'voxel_snake',beh:'poison'},
+};
+const FANTASY_CACHE = {};
 
 // ── FBX Skeleton Animation State ──
 let fbxLoader = null;
@@ -697,7 +802,9 @@ function startGame(){
   preloadVFXTextures();
   preloadKenneyTextures(function(){
     preloadModels(function(){
-      initFBXSkeleton(function(){ init(); });
+      preloadFantasyModels(function(){
+        initFBXSkeleton(function(){ init(); connectGrudox(); });
+      });
     });
   });
 }
@@ -791,8 +898,9 @@ function init(){
   mmCanvas = document.getElementById('mm-canvas');
   mmCtx = mmCanvas.getContext('2d');
 
-  // Build craft UI
   buildCraftUI();
+  buildInventoryUI();
+  buildEquipUI();
 
   // Skill CDs
   resetSkillCDs();
@@ -806,6 +914,9 @@ function init(){
     keys[e.code] = true;
     if(e.code==='KeyB') toggleBuildMode();
     if(e.code==='KeyC') { e.preventDefault(); toggleCraft(); }
+    if(e.code==='KeyI') { e.preventDefault(); toggleInventory(); }
+    if(e.code==='KeyG') { e.preventDefault(); toggleEquip(); }
+    if(e.code==='KeyT') { e.preventDefault(); summonAllyMenu(); }
     if(e.code==='KeyM') tryMineResource();
     if(e.code==='KeyQ') activateSkill(0);
     if(e.code==='KeyE') activateSkill(1);
@@ -817,7 +928,10 @@ function init(){
     if(e.code==='Digit4') useItem(3);
     if(e.code==='Digit5') useItem(4);
     if(e.code==='Digit6') useItem(5);
-    if(e.code==='Escape') { if(craftOpen) toggleCraft(); else if(isBuildMode) toggleBuildMode(); }
+    if(e.code==='Escape') {
+      if(craftOpen||inventoryOpen||equipOpen) closeStudioPanels();
+      else if(isBuildMode) toggleBuildMode();
+    }
     if(e.code==='Space') { e.preventDefault(); tryJump(); }
     if(e.code==='ShiftLeft'||e.code==='ShiftRight') tryDash();
     if(e.code==='F12') { e.preventDefault(); takeScreenshot(); }
@@ -1382,20 +1496,20 @@ function tryAttack(){
     if(currentWeapon.type==='projectile'){
       // Arrow: gravity arc, directional knockback
       fireBullet(weaponTip, fw, {
-        dmg, speed:currentWeapon.speed||1.8, color:0xddff44,
+        dmg, speed:currentWeapon.speed||1.8, color:0xddff44, kind:'arrow',
         gravity:4, knockback:2.5, impactType:'spark', impactColor:0xddff44
       });
     } else if(currentWeapon.type==='magic'){
       // Magic: slight homing, fire/frost impact + cast flare
       spawnVFXSprite('magic_cast',weaponTip.clone(),{scale:2.2,duration:0.25});
       fireBullet(weaponTip, fw, {
-        dmg, speed:currentWeapon.speed||0.9, color:0xcc44ff,
+        dmg, speed:currentWeapon.speed||0.9, color:0xcc44ff, kind:'shard',
         homing:3, knockback:1, impactType:'fire', impactColor:0xcc44ff
       });
     } else if(currentWeapon.type==='auto'){
       // Gun: fast, spark impact, muzzle flash
       fireBullet(weaponTip, fw, {
-        dmg, speed:currentWeapon.speed||2.1, color:0xffdd00,
+        dmg, speed:currentWeapon.speed||2.1, color:0xffdd00, kind:'bolt',
         knockback:0.5, impactType:'spark', impactColor:0xffaa00
       });
       spawnHitFlash(weaponTip, 0xffaa00, 4);
@@ -1407,37 +1521,68 @@ function tryAttack(){
   updateWeaponUI();
 }
 
+function buildProjectileMesh(kind, col){
+  const g = new THREE.Group();
+  let core;
+  if(kind==='arrow'){
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.7), new THREE.MeshStandardMaterial({color:0x8b6914}));
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.22,4), new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.6}));
+    tip.position.z=0.42; tip.rotation.x=Math.PI/2;
+    g.add(shaft); g.add(tip); core = shaft;
+  } else if(kind==='bolt'){
+    core = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.5), new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.8}));
+    g.add(core);
+  } else if(kind==='shard'){
+    core = new THREE.Mesh(new THREE.OctahedronGeometry(0.2,0), new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.2,transparent:true,opacity:0.9}));
+    g.add(core);
+  } else if(kind==='glob'){
+    core = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,8), new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.0,transparent:true,opacity:0.85}));
+    g.add(core);
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.38,6,6), new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.2}));
+    g.add(halo);
+  } else {
+    core = new THREE.Mesh(new THREE.SphereGeometry(0.18,8,8), new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.5,transparent:true,opacity:0.95}));
+    g.add(core);
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.35,6,6), new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.25})));
+  }
+  return {group:g, core};
+}
+
+function inferProjectileKind(opts){
+  if(opts.kind) return opts.kind;
+  if(opts.gravity) return 'arrow';
+  if(opts.homing) return 'shard';
+  if(opts.explosive) return 'glob';
+  if(opts.impactType==='frost') return 'shard';
+  if(opts.impactType==='poison') return 'glob';
+  if((opts.speed||0)>2.1) return 'bolt';
+  return 'orb';
+}
+
 function fireBullet(pos, dir, opts){
   const col = opts.color||0xffff44;
-  const g = new THREE.Group();
-  // Core projectile mesh
-  const coreGeo = new THREE.SphereGeometry(0.18,8,8);
-  const coreMat = new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.5,transparent:true,opacity:0.95});
-  const core = new THREE.Mesh(coreGeo, coreMat);
-  g.add(core);
-  // Glow halo
-  const haloGeo = new THREE.SphereGeometry(0.35,6,6);
-  const haloMat = new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.25});
-  g.add(new THREE.Mesh(haloGeo, haloMat));
+  const kind = inferProjectileKind(opts);
+  const built = buildProjectileMesh(kind, col);
+  const g = built.group;
   g.position.copy(pos);
   scene.add(g);
 
   const vel = dir.clone().multiplyScalar(opts.speed||2.0);
-  // Gravity for arrows, slight arc for magic
-  const gravity = opts.gravity||0;
+  const gravity = opts.gravity||(kind==='arrow'?6:0);
   const homing = opts.homing||0;
 
   bullets.push({
-    mesh:g, core, dir:dir.clone(), vel, speed:opts.speed||2.0,
-    dmg:opts.dmg||30, life:3.5, pierce:opts.pierce||false,
+    mesh:g, core:built.core, kind, dir:dir.clone(), vel, speed:opts.speed||2.0,
+    dmg:opts.dmg||30, life:opts.life||(kind==='arrow'?4.5:3.5), pierce:opts.pierce||false,
     explosive:opts.explosive||false, expRadius:opts.expRadius||0,
     hit:false, gravity, homing,
-    trailTimer:0, trailInterval:0.03,
+    trailTimer:0, trailInterval:kind==='arrow'?0.05:0.04,
     knockback:opts.knockback||1.5,
-    impactType:opts.impactType||'spark', // spark, explosion, frost, fire, poison
+    impactType:opts.impactType||(kind==='glob'?'poison':kind==='shard'?'frost':'spark'),
     impactColor:opts.impactColor||col,
-    prevPositions:[] // for spline trail
+    prevPositions:[], trailUpdate:0
   });
+  if(grudoxConnected) sendGrudox({type:'projectile',projectile:{x:pos.x,z:pos.z,dx:dir.x,dz:dir.z,kind,color:col}});
 }
 
 function damageEnemy(e, dmg, dir){
@@ -1507,12 +1652,8 @@ function killEnemy(e){
 }
 
 function raiseMinion(deadEnemy){
-  const mesh = buildVoxChar(0x443366, 0x221133, 0.75);
-  mesh.position.copy(deadEnemy.mesh.position);
-  scene.add(mesh);
-  // Necro raise VFX
-  spawnVFXSprite('bone_burst_2',deadEnemy.mesh.position.clone().add(new THREE.Vector3(0,1,0)),{scale:3.5,duration:0.5,tint:0x8844aa});
-  minions.push({mesh, hp:200, maxHp:200, dmg:20, speed:4, target:null, attackTimer:0});
+  spawnAlly('spider', deadEnemy.mesh.position, {hp:200,dmg:20,speed:4,fromNecro:true});
+  spawnVFXSprite('zombie_burst',deadEnemy.mesh.position.clone().add(new THREE.Vector3(0,1,0)),{scale:3.5,duration:0.5,tint:0x8844aa});
 }
 
 function damagePlayer(dmg){
@@ -1581,8 +1722,17 @@ function spawnEnemy(isRaid){
     sz = pp.z+Math.sin(angle)*d;
   }
 
-  // Try creature GLB first, then Kenney humanoid, then vox fallback
+  // Fantasy GLB → creature GLB → Kenney humanoid → vox fallback
   let mesh;
+  const fantasyKey = def.fantasy;
+  const fantasyTemplate = fantasyKey ? FANTASY_CACHE[fantasyKey] : null;
+  if(fantasyTemplate){
+    mesh = fantasyTemplate.clone();
+    mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+    const fsc = (FANTASY_SCALE[fantasyKey]||1.2)*(def.sc||1)*0.55;
+    mesh.scale.set(fsc,fsc,fsc);
+    tintModel(mesh, def.body);
+  } else {
   const creatureName = CREATURE_MODEL_MAP[typeId];
   const creatureTemplate = creatureName ? CREATURE_CACHE[creatureName] : null;
   if(creatureTemplate){
@@ -1601,6 +1751,7 @@ function spawnEnemy(isRaid){
     } else {
       mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
     }
+  }
   }
   mesh.position.set(sx, 0, sz);
   // Canvas health bar (replaces emoji)
@@ -1750,24 +1901,39 @@ function updateEnemies(dt){
 function updateMinions(dt){
   minions.forEach(m=>{
     if(!m.mesh) return;
-    // Find nearest enemy
     let nearest=null, nearDist=999;
     enemies.forEach(e=>{
       const d=m.mesh.position.distanceTo(e.mesh.position);
       if(d<nearDist){nearDist=d;nearest=e;}
     });
-    if(nearest){
+    const followDist = m.beh==='fly' ? 6 : 4;
+    const atkRange = m.range||2;
+    if(nearest && nearDist < (m.beh==='fly' ? 18 : 12)){
       const dir=nearest.mesh.position.clone().sub(m.mesh.position).normalize();
       m.mesh.position.add(dir.clone().multiplyScalar(m.speed*dt));
       m.attackTimer=Math.max(0,m.attackTimer-dt);
-      if(nearDist<2&&m.attackTimer<=0){m.attackTimer=1.5;damageEnemy(nearest,m.dmg,dir);}
+      if(m.beh==='fly' && nearDist>atkRange && m.attackTimer<=0){
+        m.attackTimer=1.2;
+        const aim=dir.clone();
+        fireBullet(m.mesh.position.clone().add(new THREE.Vector3(0,0.8,0)), aim, {dmg:m.dmg*0.7,speed:2.0,color:0x88aacc,kind:'bolt'});
+      } else if(m.beh==='poison' && nearDist<atkRange && m.attackTimer<=0){
+        m.attackTimer=1.8;
+        damageEnemy(nearest,m.dmg,dir);
+        spawnImpact(nearest.mesh.position,'poison',0x44ff44,dir);
+      } else if(nearDist<atkRange && m.attackTimer<=0){
+        m.attackTimer=1.4;
+        damageEnemy(nearest,m.dmg,dir);
+        spawnVFXSprite('bone_melee',nearest.mesh.position.clone().add(new THREE.Vector3(0,1,0)),{scale:2.0,duration:0.2});
+      }
     } else {
-      // Follow player
       const dir=playerMesh.position.clone().sub(m.mesh.position).normalize();
-      if(m.mesh.position.distanceTo(playerMesh.position)>4) m.mesh.position.add(dir.clone().multiplyScalar(m.speed*dt));
+      if(m.mesh.position.distanceTo(playerMesh.position)>followDist) m.mesh.position.add(dir.clone().multiplyScalar(m.speed*dt));
     }
-    m.mesh.position.y=0;
+    m.mesh.position.y = m.beh==='fly' ? 1.2+Math.sin(survivalTime*3+(m._phase||0))*0.15 : 0;
+    if(m.hp<=0 && m.mesh.parent){scene.remove(m.mesh);m.mesh=null;}
   });
+  minions=minions.filter(m=>m.mesh);
+  updateAllyRosterUI();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1801,14 +1967,23 @@ function updateBullets(dt){
       if(b.prevPositions.length>12) b.prevPositions.shift();
     }
 
-    // Draw live spline trail
-    if(b.prevPositions.length>=3){
-      if(b._trailMesh) scene.remove(b._trailMesh);
-      const curve=new THREE.CatmullRomCurve3(b.prevPositions);
-      const tGeo=new THREE.TubeGeometry(curve,b.prevPositions.length,0.06,4,false);
-      const tMat=new THREE.MeshBasicMaterial({color:b.impactColor,transparent:true,opacity:0.5});
-      b._trailMesh=new THREE.Mesh(tGeo,tMat);
-      scene.add(b._trailMesh);
+    // Spline trail (throttled — avoids per-frame TubeGeometry alloc)
+    b.trailUpdate+=dt;
+    if(b.prevPositions.length>=2 && b.trailUpdate>=0.08){
+      b.trailUpdate=0;
+      if(b._trailLine){scene.remove(b._trailLine);b._trailLine.geometry.dispose();}
+      const pts=b.prevPositions;
+      const geo=new THREE.BufferGeometry().setFromPoints(pts);
+      const mat=new THREE.LineBasicMaterial({color:b.impactColor,transparent:true,opacity:0.55});
+      b._trailLine=new THREE.Line(geo,mat);
+      scene.add(b._trailLine);
+      if(pts.length>=3 && !b._trailMesh){
+        const curve=new THREE.CatmullRomCurve3(pts);
+        const tGeo=new THREE.TubeGeometry(curve,Math.max(pts.length,4),b.kind==='arrow'?0.03:0.06,4,false);
+        const tMat=new THREE.MeshBasicMaterial({color:b.impactColor,transparent:true,opacity:0.28});
+        b._trailMesh=new THREE.Mesh(tGeo,tMat);
+        scene.add(b._trailMesh);
+      }
     }
 
     // Rotate projectile to face travel direction
@@ -1840,7 +2015,8 @@ function updateBullets(dt){
 
 function projectileCleanup(b){
   scene.remove(b.mesh);
-  if(b._trailMesh) scene.remove(b._trailMesh);
+  if(b._trailMesh){scene.remove(b._trailMesh);b._trailMesh.geometry.dispose();}
+  if(b._trailLine){scene.remove(b._trailLine);b._trailLine.geometry.dispose();}
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1889,11 +2065,104 @@ function spawnImpact(pos, type, color, dir){
     }
     triggerShake(0.15,0.08);
   } else if(type==='poison'){
+    spawnVFXSprite('zombie_burst',pos,{scale:2.2,tint:0x44ff44,duration:0.35});
     for(let i=0;i<6;i++){
       const vel=new THREE.Vector3((Math.random()-0.5)*1.5,0.5+Math.random()*1.5,(Math.random()-0.5)*1.5);
       spawnParticle(pos,vel,0x44ff00,0.14,0.6+Math.random()*0.5);
     }
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GRUDOX LIVE ROOM (Carrier co-op sync)
+// ═══════════════════════════════════════════════════════════════
+const GRUDOX_WS_PATH = '/api/grudox';
+let grudoxPlayerId = null;
+
+function grudoxWsUrl(){
+  const proto = location.protocol==='https:'?'wss:':'ws:';
+  return proto+'//'+location.host+GRUDOX_WS_PATH;
+}
+
+function connectGrudox(){
+  if(typeof WebSocket==='undefined') return;
+  try {
+    grudoxSocket = new WebSocket(grudoxWsUrl());
+  } catch(e){ setGrudoxPill(false); return; }
+  grudoxSocket.onopen = ()=>{ grudoxConnected=true; setGrudoxPill(true); };
+  grudoxSocket.onclose = ()=>{ grudoxConnected=false; setGrudoxPill(false); setTimeout(connectGrudox,5000); };
+  grudoxSocket.onerror = ()=>{ grudoxConnected=false; setGrudoxPill(false); };
+  grudoxSocket.onmessage = (ev)=>{
+    let msg; try{msg=JSON.parse(ev.data);}catch{return;}
+    if(msg.type==='welcome') grudoxPlayerId=msg.id;
+    if(msg.type==='state') applyGrudoxState(msg);
+    if(msg.type==='join'&&msg.player) upsertRemotePlayer(msg.player);
+    if(msg.type==='leave'&&msg.id) removeRemotePlayer(msg.id);
+    if(msg.type==='intent'&&msg.id) upsertRemotePlayer(msg);
+    if(msg.type==='ally_spawn'&&msg.ally) spawnRemoteAllyGhost(msg.ally);
+    if(msg.type==='chat'&&msg.text) showFlash(msg.name+': '+msg.text);
+  };
+}
+
+function setGrudoxPill(live){
+  const el=document.getElementById('grudox-pill');
+  if(!el) return;
+  el.classList.toggle('live',live);
+  el.classList.toggle('offline',!live);
+  el.textContent = live ? 'GRUDOX · live room' : 'GRUDOX · offline';
+}
+
+function sendGrudox(payload){
+  if(!grudoxConnected||!grudoxSocket||grudoxSocket.readyState!==1) return;
+  grudoxSocket.send(JSON.stringify(payload));
+}
+
+function updateGrudox(dt){
+  if(!grudoxConnected||!playerMesh) return;
+  grudoxIntentTimer+=dt;
+  if(grudoxIntentTimer<0.12) return;
+  grudoxIntentTimer=0;
+  sendGrudox({
+    type:'intent',
+    x:playerMesh.position.x,
+    z:playerMesh.position.z,
+    rot:playerMesh.rotation.y,
+    hp:hp,
+    name:CLASSES[playerClass]?.name||'Survivor',
+    class:playerClass||'swordsman'
+  });
+}
+
+function upsertRemotePlayer(p){
+  if(!p.id||p.id===grudoxPlayerId) return;
+  let rp=remotePlayers.get(p.id);
+  if(!rp){
+    const mesh=cloneModel('g',0.9,'h')||buildVoxChar(0x336688,0x112233,0.85);
+    scene.add(mesh);
+    rp={id:p.id,mesh,targetX:0,targetZ:0};
+    remotePlayers.set(p.id,rp);
+  }
+  rp.targetX=p.x||0; rp.targetZ=p.z||0;
+  if(rp.mesh){
+    rp.mesh.position.x+=(rp.targetX-rp.mesh.position.x)*0.2;
+    rp.mesh.position.z+=(rp.targetZ-rp.mesh.position.z)*0.2;
+    if(typeof p.rot==='number') rp.mesh.rotation.y=p.rot;
+  }
+}
+
+function removeRemotePlayer(id){
+  const rp=remotePlayers.get(id);
+  if(rp&&rp.mesh) scene.remove(rp.mesh);
+  remotePlayers.delete(id);
+}
+
+function applyGrudoxState(msg){
+  (msg.players||[]).forEach(p=>upsertRemotePlayer(p));
+}
+
+function spawnRemoteAllyGhost(ally){
+  if(!ally||!ally.x) return;
+  spawnVFXSprite('nature_bloom',new THREE.Vector3(ally.x,1,ally.z),{scale:2,duration:0.5});
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2028,7 +2297,21 @@ function updateWorldItems(dt){
   worldItems=worldItems.filter(w=>!w.picked);
 }
 
+function addToInventory(id, count){
+  count = count||1;
+  const def=ITEM_DEFS[id];
+  if(!def) return;
+  for(let i=0;i<inventoryGrid.length;i++){
+    const s=inventoryGrid[i];
+    if(s&&s.id===id){s.count+=count;updateInventoryUI();return;}
+  }
+  for(let i=0;i<inventoryGrid.length;i++){
+    if(!inventoryGrid[i]){inventoryGrid[i]={id,icon:def.icon,count};updateInventoryUI();return;}
+  }
+}
+
 function addToHotbar(id){
+  addToInventory(id,1);
   const def=ITEM_DEFS[id];
   for(let i=0;i<6;i++){
     if(itemHotbar[i].id===id){itemHotbar[i].count++;updateItemUI();return;}
@@ -2055,6 +2338,66 @@ function applyItem(def){
   else if(def.effect==='explosive'){ aoeAttack(playerMesh.position,def.radius||8,def.dmg||150,0xff8800); }
   else if(def.effect==='berserker'){ statusEffects.berserker={timer:def.duration||10,dmgMult:def.dmgMult||1.6,defMult:def.defMult||0.7}; }
   else if(def.effect==='invuln'){ statusEffects.invuln={timer:def.duration||5}; }
+  else if(def.effect==='equip'){ equipItem(def.slot, def); }
+  else if(def.effect==='summon'){ summonAlly(def.ally); }
+}
+
+function equipItem(slot, def){
+  equipment[slot]={id:def.name,icon:def.icon,def};
+  if(def.armor) maxHp=Math.round(100*(CLASSES[playerClass].hpMult||1))+getEquipBonus('armor');
+  if(def.speed) statusEffects.equipSpeed={timer:999,mult:def.speed};
+  updateEquipUI();
+  showFlash('Equipped '+def.name);
+}
+
+function getEquipBonus(stat){
+  let b=0;
+  Object.values(equipment).forEach(e=>{
+    if(!e||!e.def) return;
+    if(stat==='armor') b+=e.def.armor||0;
+    if(stat==='dmg') b*=e.def.dmg||1;
+  });
+  return b;
+}
+
+function spawnAlly(kind, pos, overrides){
+  const def=ALLY_DEFS[kind];
+  if(!def) return null;
+  const maxAllies = (CLASSES[playerClass].minionMax||0)+4;
+  if(minions.length>=maxAllies){showFlash('Ally roster full');return null;}
+  let mesh;
+  const tmpl=FANTASY_CACHE[def.model];
+  if(tmpl){
+    mesh=tmpl.clone();
+    mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+    const sc=(FANTASY_SCALE[def.model]||1)*0.5;
+    mesh.scale.set(sc,sc,sc);
+  } else {
+    mesh=buildVoxChar(0x336655,0x112233,0.7);
+  }
+  mesh.position.copy(pos||playerMesh.position);
+  scene.add(mesh);
+  const ally={
+    mesh, kind, name:def.name, emoji:def.emoji,
+    hp:overrides?.hp||def.hp, maxHp:overrides?.hp||def.hp,
+    dmg:overrides?.dmg||def.dmg, speed:overrides?.speed||def.speed,
+    range:def.range, beh:def.beh, attackTimer:0,
+    _phase:Math.random()*6
+  };
+  minions.push(ally);
+  spawnVFXSprite('nature_bloom',mesh.position.clone().add(new THREE.Vector3(0,1,0)),{scale:2.5,duration:0.4});
+  updateAllyRosterUI();
+  if(grudoxConnected) sendGrudox({type:'ally_spawn',ally:{kind,x:mesh.position.x,z:mesh.position.z}});
+  return ally;
+}
+
+function summonAlly(kind){
+  return spawnAlly(kind, playerMesh.position.clone().add(new THREE.Vector3((Math.random()-0.5)*3,0,(Math.random()-0.5)*3)));
+}
+
+function summonAllyMenu(){
+  if(minions.length>0){showFlash(minions.length+' allies active');return;}
+  summonAlly('crow');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2191,24 +2534,125 @@ function updateResourceNodes(dt){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CRAFTING UI
+// INVENTORY / EQUIPMENT / CRAFTING UI
 // ═══════════════════════════════════════════════════════════════
+function closeStudioPanels(except){
+  if(except!=='craft'){craftOpen=false;document.getElementById('craft-panel').classList.remove('open');}
+  if(except!=='inv'){inventoryOpen=false;document.getElementById('inventory-panel').classList.remove('open');}
+  if(except!=='equip'){equipOpen=false;document.getElementById('equip-panel').classList.remove('open');}
+}
+
+function buildInventoryUI(){
+  const grid=document.getElementById('inv-grid');
+  grid.innerHTML='';
+  for(let i=0;i<24;i++){
+    const el=document.createElement('div');
+    el.className='inv-slot';
+    el.dataset.idx=i;
+    el.onclick=()=>selectInvSlot(i);
+    el.innerHTML='<div class="is-icon" id="inv-i-'+i+'"></div><div class="is-count" id="inv-c-'+i+'"></div>';
+    grid.appendChild(el);
+  }
+  updateInventoryUI();
+}
+
+function updateInventoryUI(){
+  for(let i=0;i<24;i++){
+    const slot=inventoryGrid[i];
+    const el=document.getElementById('inv-i-'+i);
+    const ct=document.getElementById('inv-c-'+i);
+    const cell=document.querySelector('.inv-slot[data-idx="'+i+'"]');
+    if(el) el.textContent=slot?slot.icon:'';
+    if(ct) ct.textContent=slot&&slot.count>1?slot.count:'';
+    if(cell) cell.classList.toggle('filled',!!slot);
+  }
+}
+
+function selectInvSlot(idx){
+  const slot=inventoryGrid[idx];
+  if(!slot) return;
+  const def=ITEM_DEFS[slot.id];
+  if(def&&def.effect==='equip'){equipItem(def.slot,def);slot.count--;if(slot.count<=0)inventoryGrid[idx]=null;updateInventoryUI();}
+  else if(def&&def.effect==='summon'){summonAlly(def.ally);slot.count--;if(slot.count<=0)inventoryGrid[idx]=null;updateInventoryUI();}
+  else {
+    for(let i=0;i<6;i++){if(!itemHotbar[i].id){itemHotbar[i]={id:slot.id,icon:slot.icon,count:1};slot.count--;if(slot.count<=0)inventoryGrid[idx]=null;updateInventoryUI();updateItemUI();return;}}
+  }
+}
+
+function buildEquipUI(){
+  const grid=document.getElementById('equip-grid');
+  const slots=[{k:'head',l:'Head'},{k:'chest',l:'Chest'},{k:'trinket',l:'Charm'},{k:'feet',l:'Feet'}];
+  grid.innerHTML='';
+  slots.forEach(s=>{
+    const el=document.createElement('div');
+    el.className='equip-slot';
+    el.id='eq-'+s.k;
+    el.innerHTML='<div class="es-icon" id="eq-i-'+s.k+'"></div><div>'+s.l+'</div>';
+    grid.appendChild(el);
+  });
+  updateEquipUI();
+}
+
+function updateEquipUI(){
+  ['head','chest','feet','trinket'].forEach(k=>{
+    const e=equipment[k];
+    const icon=document.getElementById('eq-i-'+k);
+    const cell=document.getElementById('eq-'+k);
+    if(icon) icon.textContent=e?e.icon:'';
+    if(cell) cell.classList.toggle('filled',!!e);
+  });
+}
+
+function updateAllyRosterUI(){
+  const list=document.getElementById('ally-list');
+  if(!list) return;
+  list.innerHTML='';
+  minions.forEach((m,i)=>{
+    const card=document.createElement('div');
+    card.className='ally-card';
+    const pct=Math.max(0,(m.hp||100)/(m.maxHp||100)*100);
+    card.innerHTML='<div class="an">'+(m.emoji||'💀')+' '+(m.name||'Ally')+'</div><div class="ab"><div class="abf" style="width:'+pct+'%"></div></div>';
+    card.onclick=()=>{if(m.mesh)camera.lookAt(m.mesh.position);};
+    list.appendChild(card);
+  });
+}
+
+function setCraftTab(tab){
+  craftTab=tab;
+  document.querySelectorAll('.studio-tab').forEach(t=>t.classList.toggle('sel',t.dataset.tab===tab));
+  buildCraftUI();
+  refreshCraftButtons();
+}
+
 function buildCraftUI(){
   const list=document.getElementById('craft-list');
   list.innerHTML='';
-  RECIPES.forEach(rec=>{
+  RECIPES.filter(r=>(r.tab||'consumables')===craftTab).forEach(rec=>{
     const costStr=Object.entries(rec.cost).map(([k,v])=>v+({'wood':'🪵','stone':'🪨','ore':'⚙️'}[k]||k)).join(' ');
     const row=document.createElement('div');
-    row.className='craft-row';
-    row.innerHTML='<div class="craft-emoji">'+rec.emoji+'</div><div class="craft-info"><div class="craft-name">'+rec.name+'</div><div class="craft-cost">Costs: '+costStr+' → x'+rec.result.count+'</div></div><button class="craft-btn" id="cbtn-'+rec.id+'" onclick="craftItem(\''+rec.id+'\')">CRAFT</button>';
+    row.className='craft-row'+(canAfford(rec.cost)?' can-afford':'');
+    row.innerHTML='<div class="craft-emoji">'+rec.emoji+'</div><div class="craft-info"><div class="craft-name">'+rec.name+'</div><div class="craft-cost">'+costStr+' → x'+rec.result.count+'</div></div><button class="craft-btn" id="cbtn-'+rec.id+'" onclick="craftItem(\''+rec.id+'\')">Forge</button>';
     list.appendChild(row);
   });
 }
 
+function toggleInventory(){
+  inventoryOpen=!inventoryOpen;
+  closeStudioPanels(inventoryOpen?'inv':null);
+  document.getElementById('inventory-panel').classList.toggle('open',inventoryOpen);
+}
+
+function toggleEquip(){
+  equipOpen=!equipOpen;
+  closeStudioPanels(equipOpen?'equip':null);
+  document.getElementById('equip-panel').classList.toggle('open',equipOpen);
+}
+
 function toggleCraft(){
   craftOpen=!craftOpen;
-  document.getElementById('craft-panel').style.display=craftOpen?'block':'none';
-  if(craftOpen) refreshCraftButtons();
+  closeStudioPanels(craftOpen?'craft':null);
+  document.getElementById('craft-panel').classList.toggle('open',craftOpen);
+  if(craftOpen){buildCraftUI();refreshCraftButtons();}
 }
 
 function refreshCraftButtons(){
@@ -2678,6 +3122,26 @@ function preloadModels(callback){
       },
       undefined,
       function(){} // Silent fail — fallback to vox
+    );
+  });
+}
+
+function preloadFantasyModels(callback){
+  if(typeof THREE.GLTFLoader==='undefined'||!glbLoader){callback();return;}
+  const keys=Object.keys(FANTASY_MODEL_MAP);
+  let loaded=0;
+  const total=keys.length;
+  if(!total){callback();return;}
+  keys.forEach(key=>{
+    glbLoader.load(FANTASY_MODEL_MAP[key],
+      function(gltf){
+        const model=gltf.scene;
+        model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+        FANTASY_CACHE[key]=model;
+        loaded++;if(loaded>=total)callback();
+      },
+      undefined,
+      function(){loaded++;if(loaded>=total)callback();}
     );
   });
 }
@@ -3303,6 +3767,7 @@ function animate(){
   updateTraversal(dt);
   updateSkeletonAnims(dt);
   updateVFXSprites(dt);
+  updateGrudox(dt);
   updateEnergyOrbs(dt);
   updateParry(dt);
   if(playerMixer) playerMixer.update(dt);
@@ -3439,7 +3904,9 @@ function preloadVFXTextures(){
     const def=VFX_DEFS[type];
     vfxTexCache[type]=[];
     if(def.procedural) return; // generated below
-    if(def.indices){
+    if(def.single){
+      loader.load(def.path+'.png',tex=>{vfxTexCache[type].push(tex);},undefined,()=>{});
+    } else if(def.indices){
       def.indices.forEach(idx=>{
         loader.load(def.path+idx+'.png',tex=>{vfxTexCache[type].push(tex);},undefined,()=>{});
       });

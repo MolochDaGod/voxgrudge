@@ -1,7 +1,21 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/", "dest": "/grudge-warlords-openworld.html" },
-    { "src": "/(.*)", "dest": "/$1" }
+    {
+      "src": "/api/grudox",
+      "dest": "https://voxgrudge-grudox-room.up.railway.app/api/grudox"
+    },
+    {
+      "src": "/api/health",
+      "dest": "https://voxgrudge-grudox-room.up.railway.app/health"
+    },
+    {
+      "src": "/",
+      "dest": "/grudge-warlords-openworld.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
   ]
 }
