@@ -146,6 +146,11 @@ body {
 .w-slot .hud-icon-img { width: 34px; height: 34px; }
 .equip-slot .hud-icon-img { width: 40px; height: 40px; }
 .craft-icon-wrap .hud-icon-img { width: 28px; height: 28px; }
+.build-slot .hud-icon-img { width: 26px; height: 26px; }
+.class-card .hud-icon-img { width: 40px; height: 40px; }
+.res-inline .res-icon { display: inline-flex; align-items: center; vertical-align: middle; }
+.res-inline .hud-icon-img { width: 14px; height: 14px; }
+.res-inline .res-pill { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; }
 .skill-icon,
 .i-icon,
 .w-icon,

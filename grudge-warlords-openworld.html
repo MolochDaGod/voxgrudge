@@ -243,9 +243,9 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <div class="stat-box">
     <div class="stat-label">Resources</div>
     <div class="res-inline">
-      <span>🪵 <span id="res-wood">0</span></span>
-      <span>🪨 <span id="res-stone">0</span></span>
-      <span>⚙️ <span id="res-ore">0</span></span>
+      <span class="res-pill"><span class="res-icon" id="res-wood-icon"></span> <span id="res-wood">0</span></span>
+      <span class="res-pill"><span class="res-icon" id="res-stone-icon"></span> <span id="res-stone">0</span></span>
+      <span class="res-pill"><span class="res-icon" id="res-ore-icon"></span> <span id="res-ore">0</span></span>
     </div>
   </div>
 </div>
@@ -372,6 +372,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="js/grudge-scale.js"></script>
 <script src="js/world-engine.js"></script>
+<script src="js/grudge-codex-icons.js"></script>
 <script src="js/grudge-items-loader.js"></script>
 <script>
 'use strict';
@@ -532,7 +533,7 @@ const ITEM_DEFS = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// HUD ASSETS — PSD palette, Cryo GUI, Grudge skill icons
+// HUD ASSETS — ObjectStore codex (items-loader + guide) + local HUD fallback
 // ═══════════════════════════════════════════════════════════════
 const HUD_BASE = 'ui/hud/';
 const SKILL_ICON_MAP = {
@@ -567,22 +568,47 @@ const CLASS_ICON_MAP = {
   swordsman:['swordsman',1],archer:['archer',1],mage:['mage',1],druid:['druid',1],paladin:['paladin',1],necromancer:['necromancer',1],
 };
 function hudIconUrl(pack,num){
+  if(window.GrudgeCodex) return GrudgeCodex.skillIconUrl(pack,num);
   if(pack==='mage') return HUD_BASE+'skills/mage/FrostMage_'+num+'.png';
   return HUD_BASE+'skills/'+pack+'/'+num+'.png';
 }
-function skillIconUrl(id){const m=SKILL_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
+function skillIconUrl(id){
+  const m=SKILL_ICON_MAP[id];
+  return m?hudIconUrl(m[0],m[1]):null;
+}
+function weaponIconUrl(wid){
+  if(window.GrudgeCodex) return GrudgeCodex.weaponIconUrl(wid);
+  const m=WEAPON_ICON_MAP[wid];
+  return m?hudIconUrl(m[0],m[1]):null;
+}
 function itemIconUrl(id){
   const def=ITEM_DEFS[id];
+  if(window.GrudgeCodex) return GrudgeCodex.itemIconUrl(id,def);
   if(def&&def.hudPack&&def.hudNum) return hudIconUrl(def.hudPack,def.hudNum);
   const m=ITEM_ICON_MAP[id];
   return m?hudIconUrl(m[0],m[1]):null;
 }
 function setHudIcon(el,url,fallback){
+  if(window.GrudgeCodex) return GrudgeCodex.setHudIcon(el,url,fallback);
   if(!el) return;
   let img=el.querySelector('.hud-icon-img');
   if(!img){el.textContent='';img=document.createElement('img');img.className='hud-icon-img';img.alt='';el.appendChild(img);}
   if(url){img.src=url;img.style.display='';img.onerror=function(){img.style.display='none';el.textContent=fallback||'';};}
   else{img.style.display='none';el.textContent=fallback||'';}
+}
+function initResourceIcons(){
+  if(!window.GrudgeCodex) return;
+  setHudIcon(document.getElementById('res-wood-icon'),GrudgeCodex.resourceIconUrl('wood'),'🪵');
+  setHudIcon(document.getElementById('res-stone-icon'),GrudgeCodex.resourceIconUrl('stone'),'🪨');
+  setHudIcon(document.getElementById('res-ore-icon'),GrudgeCodex.resourceIconUrl('ore'),'⚙️');
+}
+function initBuildIcons(){
+  if(!window.GrudgeCodex) return;
+  ['wood','stone','floor','heal'].forEach(function(bid){
+    const el=document.querySelector('#bs-'+bid+' .b-icon');
+    const def=BLOCK_DEFS[bid];
+    setHudIcon(el,GrudgeCodex.buildIconUrl(bid),bid==='wood'?'🪵':bid==='stone'?'🪨':bid==='floor'?'🟫':'💚');
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -853,8 +879,8 @@ function updateSkinPickerUI(){
     card.style.setProperty('--cc', cls.color);
     const ci=CLASS_ICON_MAP[cid];
     card.innerHTML = '<div class="c-icon"></div><div class="c-name">'+cls.name+'</div><div class="c-desc">'+cls.desc+'</div>';
-    if(ci) setHudIcon(card.querySelector('.c-icon'),hudIconUrl(ci[0],ci[1]),cls.emoji);
-    else card.querySelector('.c-icon').textContent=cls.emoji;
+    const classIcon=(window.GrudgeCodex&&GrudgeCodex.classIconUrl(cid))||(ci?hudIconUrl(ci[0],ci[1]):null);
+    setHudIcon(card.querySelector('.c-icon'),classIcon,cls.emoji);
     card.onclick = function(){
       document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
       card.classList.add('sel');
@@ -897,6 +923,12 @@ function startGame(){
   GrudgeItems.loadGrudgeItems(ITEM_DEFS,hudIconUrl).then(function(bundle){
     Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
     chestLootTable=bundle.chestLoot||{};
+    initWeaponIcons();
+    initResourceIcons();
+    initBuildIcons();
+    updateSkillUI();
+    updateItemUI();
+    buildCraftUI();
     preloadVFXTextures();
     preloadKenneyTextures(function(){
       preloadModels(function(){
@@ -1005,6 +1037,8 @@ function init(){
   buildInventoryUI();
   buildEquipUI();
   initWeaponIcons();
+  initResourceIcons();
+  initBuildIcons();
 
   // Skill CDs
   resetSkillCDs();
@@ -3170,13 +3204,12 @@ function updateSkillUI(){
 }
 
 function initWeaponIcons(){
-  Object.keys(WEAPON_ICON_MAP).forEach(wid=>{
+  Object.keys(WEAPONS).forEach(wid=>{
     const ws=document.getElementById('ws-'+wid);
     if(!ws) return;
-    const wi=WEAPON_ICON_MAP[wid];
     const wIcon=ws.querySelector('.w-icon');
     const wDef=WEAPONS[wid];
-    setHudIcon(wIcon,hudIconUrl(wi[0],wi[1]),wDef?wDef.emoji:'');
+    setHudIcon(wIcon,weaponIconUrl(wid),wDef?wDef.emoji:'');
   });
 }
 
@@ -4319,6 +4352,8 @@ function playAnimOnMesh(mesh, animName, crossfade){
 // initial UI call
 randomizeWorldSeed();
 initWeaponIcons();
+initResourceIcons();
+initBuildIcons();
 updateSkillUI();
 </script>
 </body>

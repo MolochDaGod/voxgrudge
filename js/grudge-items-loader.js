@@ -31,6 +31,7 @@
           grudgeType: it.type,
           hudPack: it.hudPack,
           hudNum: it.hudNum,
+          codexIcon: it.codexIcon || null,
         };
       });
     }
@@ -42,13 +43,18 @@
         const list = Array.isArray(apiData) ? apiData : (apiData.items || []);
         list.forEach(it => {
           if (!it.id || merged[it.id]) return;
+          var codexIcon = null;
+          if (it.icon && typeof it.icon === 'string' && it.icon.indexOf('/icons/') >= 0) {
+            codexIcon = it.icon.replace(/^https?:\/\/[^/]+\//, '');
+          }
           merged[it.id] = {
             name: it.name || it.id,
-            icon: it.icon || '📦',
+            icon: it.icon && it.icon.length <= 4 ? it.icon : '📦',
             color: 0x888899,
             effect: mapApiEffect(it),
             grudgeType: it.type,
             sellValue: it.sellValue || 1,
+            codexIcon: codexIcon,
           };
         });
       }
