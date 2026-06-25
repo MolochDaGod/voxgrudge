@@ -2077,11 +2077,16 @@ function spawnImpact(pos, type, color, dir){
 // GRUDOX LIVE ROOM (Carrier co-op sync)
 // ═══════════════════════════════════════════════════════════════
 const GRUDOX_WS_PATH = '/api/grudox';
+const GRUDOX_ROOM_HOST = 'voxgrudge-grudox-room-production.up.railway.app';
 let grudoxPlayerId = null;
 
 function grudoxWsUrl(){
   const proto = location.protocol==='https:'?'wss:':'ws:';
-  return proto+'//'+location.host+GRUDOX_WS_PATH;
+  // Vercel static hosting cannot proxy WebSockets — connect to Railway room directly
+  const host = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+    ? location.host
+    : GRUDOX_ROOM_HOST;
+  return proto+'//'+host+GRUDOX_WS_PATH;
 }
 
 function connectGrudox(){
