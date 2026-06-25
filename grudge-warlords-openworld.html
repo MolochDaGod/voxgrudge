@@ -18,6 +18,15 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #class-screen h1{color:#e63d3d;font-size:52px;margin:0 0 4px;letter-spacing:-2px;text-shadow:0 0 40px rgba(230,61,61,0.4);position:relative}
 #class-screen .sub{color:#666;font-size:11px;letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;position:relative}
 #class-screen .version{color:#333;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;position:relative}
+#skin-picker{position:relative;margin-bottom:18px;max-width:min(92vw,640px);padding:0 8px}
+.skin-picker-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:6px;text-align:center}
+#skin-body-row,#skin-texture-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px}
+.skin-body-btn{width:36px;height:36px;background:rgba(10,14,20,0.9);border:2px solid #2a2e3a;border-radius:6px;color:#888;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.15s;pointer-events:auto}
+.skin-body-btn:hover{border-color:#666;color:#ccc}
+.skin-body-btn.sel{border-color:#e63d3d;color:#fff;box-shadow:0 0 12px rgba(230,61,61,0.35)}
+.skin-tex-btn{width:28px;height:28px;border:2px solid #2a2e3a;border-radius:4px;cursor:pointer;background-size:cover;background-position:center;image-rendering:pixelated;transition:all 0.15s;pointer-events:auto;padding:0}
+.skin-tex-btn:hover{border-color:#666;transform:scale(1.08)}
+.skin-tex-btn.sel{border-color:#e63d3d;box-shadow:0 0 10px rgba(230,61,61,0.4);transform:scale(1.12)}
 .class-grid{display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));gap:14px;max-width:620px;position:relative}
 .class-card{background:rgba(10,14,20,0.9);border:2px solid #2a2e3a;border-radius:8px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center;pointer-events:auto;user-select:none}
 .class-card:hover{border-color:var(--cc);transform:translateY(-2px)}
@@ -158,8 +167,14 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="class-screen">
   <h1>⚔ GRUDGE WARLORDS</h1>
   <div class="sub">Open World · Voxel Combat · Survival Edition</div>
-  <div class="version">v0.8 — 13 Creatures · 14 Weapons · 7 Biomes · VFX Engine</div>
-  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 20px;position:relative">Choose your class to begin</p>
+  <div class="version">v0.8 — Kenney Voxel Skins · 14 Weapons · 7 Biomes · VFX Engine</div>
+  <div id="skin-picker">
+    <div class="skin-picker-label">Voxel Body</div>
+    <div id="skin-body-row"></div>
+    <div class="skin-picker-label">Color Palette</div>
+    <div id="skin-texture-row"></div>
+  </div>
+  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 16px;position:relative">Choose class, body, and palette</p>
   <div class="class-grid" id="class-grid"></div>
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">BEGIN SURVIVAL</button>
 </div>
@@ -271,7 +286,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
 <div id="traversal-state">GROUND</div>
 
-<div id="instructions">WASD:Move · LMB:Attack · RMB:Mine/Parry/Block · Click skills/weapons/items · Q/E/R/F:Skills · Space:Jump · Shift:Dash · B:Build · C:Craft · Scroll:Weapon</div>
+<div id="instructions">WASD:Move · LMB:Attack · RMB:Mine/Parry/Block · Click skills/weapons/items · Q/E/R/F:Skills · Space:Jump · Shift:Dash · B:Build · C:Craft · Scroll:Weapon · F12:Screenshot</div>
 
 </div><!-- /game-hud -->
 
@@ -487,6 +502,8 @@ let blockInstMesh, blockDirty = false;
 let dayTimer = 0, dayNumber = 1, isNight = false, nightRaidCount = 0, raidAlertTimer = 0;
 let DAY_LEN = 90, NIGHT_LEN = 60;
 let playerClass = null;
+let playerSkinBody = 'a';
+let playerSkinTexture = 'a';
 let level = 1, exp = 0, expToNext = 500;
 let minigunActive = false, minigunTimer = 0, minigunFireTimer = 0;
 let lastSpawnTime = 0, spawnInterval = 2200;
@@ -601,6 +618,53 @@ const ANIM_FILES = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// KENNEY SKIN PICKER UI
+// ═══════════════════════════════════════════════════════════════
+const KENNEY_BODY_LETTERS = ['a','b','c','d','e','f','g','h','i','j'];
+const KENNEY_TEXTURE_LETTERS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r'];
+
+function updateSkinPickerUI(){
+  document.querySelectorAll('.skin-body-btn').forEach(btn=>{
+    btn.classList.toggle('sel', btn.dataset.letter===playerSkinBody);
+  });
+  document.querySelectorAll('.skin-tex-btn').forEach(btn=>{
+    btn.classList.toggle('sel', btn.dataset.letter===playerSkinTexture);
+  });
+}
+
+(function buildSkinUI(){
+  const bodyRow = document.getElementById('skin-body-row');
+  const texRow = document.getElementById('skin-texture-row');
+  KENNEY_BODY_LETTERS.forEach(letter=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'skin-body-btn';
+    btn.dataset.letter = letter;
+    btn.textContent = letter.toUpperCase();
+    btn.title = 'Body '+letter.toUpperCase();
+    btn.onclick = function(){
+      playerSkinBody = letter;
+      updateSkinPickerUI();
+    };
+    bodyRow.appendChild(btn);
+  });
+  KENNEY_TEXTURE_LETTERS.forEach(letter=>{
+    const sw = document.createElement('button');
+    sw.type = 'button';
+    sw.className = 'skin-tex-btn';
+    sw.dataset.letter = letter;
+    sw.style.backgroundImage = "url('models/kenney/textures/texture-"+letter+".png')";
+    sw.title = 'Palette '+letter.toUpperCase();
+    sw.onclick = function(){
+      playerSkinTexture = letter;
+      updateSkinPickerUI();
+    };
+    texRow.appendChild(sw);
+  });
+  updateSkinPickerUI();
+})();
+
+// ═══════════════════════════════════════════════════════════════
 // CLASS SELECT UI
 // ═══════════════════════════════════════════════════════════════
 (function buildClassUI(){
@@ -615,6 +679,8 @@ const ANIM_FILES = {
       document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
       card.classList.add('sel');
       playerClass = cid;
+      playerSkinBody = CLASS_MODEL_MAP[cid]||'a';
+      updateSkinPickerUI();
       document.getElementById('start-btn').classList.remove('hidden');
     };
     grid.appendChild(card);
@@ -628,11 +694,11 @@ function startGame(){
   if(!playerClass) return;
   document.getElementById('class-screen').style.display='none';
   document.getElementById('game-hud').classList.remove('pre-game-hidden');
-  // Preload VFX textures
   preloadVFXTextures();
-  // Preload GLB models then init skeleton then start
-  preloadModels(function(){
-    initFBXSkeleton(function(){ init(); });
+  preloadKenneyTextures(function(){
+    preloadModels(function(){
+      initFBXSkeleton(function(){ init(); });
+    });
   });
 }
 
@@ -707,9 +773,9 @@ function init(){
   ghostMesh.visible = false;
   scene.add(ghostMesh);
 
-  // Player - try GLB model, fallback to vox boxes
-  const classLetter = CLASS_MODEL_MAP[playerClass]||'a';
-  const glbModel = cloneModel(classLetter);
+  // Player - Kenney voxel body + palette, fallback to vox boxes
+  const bodyLetter = playerSkinBody || CLASS_MODEL_MAP[playerClass]||'a';
+  const glbModel = cloneModel(bodyLetter, 1, playerSkinTexture);
   if(glbModel){
     playerMesh = glbModel;
     playerSkelParts = getSkeletonParts(playerMesh);
@@ -1528,10 +1594,10 @@ function spawnEnemy(isRaid){
   } else {
     const isHumanoid = def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
     const eLetter = ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
-    const enemyGlb = isHumanoid ? cloneModel(eLetter, def.sc||1) : null;
+    const eTex = KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
+    const enemyGlb = isHumanoid ? cloneModel(eLetter, def.sc||1, eTex) : null;
     if(enemyGlb){
       mesh = enemyGlb;
-      tintModel(mesh, def.body);
     } else {
       mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
     }
@@ -2175,21 +2241,6 @@ function switchWeapon(id){
   updateSkillUI();
 }
 
-function blockGameInput(e){ e.stopPropagation(); }
-function wireHudClicks(){
-  const stopBoth=(el,fn)=>{
-    if(!el||el.dataset.wired) return;
-    el.dataset.wired='1';
-    el.addEventListener('mousedown',blockGameInput);
-    el.addEventListener('click',e=>{ e.stopPropagation(); fn(); });
-  };
-  WEAPON_ORDER.forEach(id=>stopBoth(document.getElementById('ws-'+id),()=>{
-    if(WEAPONS[id].owned) switchWeapon(id);
-  }));
-  ['q','e','r','f'].forEach((s,i)=>stopBoth(document.getElementById('skill-'+s),()=>activateSkill(i)));
-  for(let i=1;i<=6;i++) stopBoth(document.getElementById('isl-'+i),()=>useItem(i-1));
-}
-
 // ═══════════════════════════════════════════════════════════════
 // DAY / NIGHT CYCLE
 // ═══════════════════════════════════════════════════════════════
@@ -2477,6 +2528,21 @@ function updateWeaponUI(){
   });
 }
 
+function blockGameInput(e){ e.stopPropagation(); }
+function wireHudClicks(){
+  const stopBoth=(el,fn)=>{
+    if(!el||el.dataset.wired) return;
+    el.dataset.wired='1';
+    el.addEventListener('mousedown',blockGameInput);
+    el.addEventListener('click',e=>{ e.stopPropagation(); fn(); });
+  };
+  WEAPON_ORDER.forEach(id=>stopBoth(document.getElementById('ws-'+id),()=>{
+    if(WEAPONS[id].owned) switchWeapon(id);
+  }));
+  ['q','e','r','f'].forEach((s,i)=>stopBoth(document.getElementById('skill-'+s),()=>activateSkill(i)));
+  for(let i=1;i<=6;i++) stopBoth(document.getElementById('isl-'+i),()=>useItem(i-1));
+}
+
 function updateSkillUI(){
   const skArr=getWeaponSkills();
   const slots=['q','e','r','f'];
@@ -2524,10 +2590,12 @@ function updateMinigun(dt){
 // GLB MODEL CACHE & LOADER
 // ═══════════════════════════════════════════════════════════════
 const MODEL_CACHE = {}; // letter -> THREE.Group template
+const TEXTURE_CACHE = {}; // letter -> THREE.Texture (Kenney palette)
 const CLASS_MODEL_MAP = {swordsman:'a',archer:'b',mage:'c',druid:'d',paladin:'e',necromancer:'f'};
 const ENEMY_MODEL_POOL = ['g','h','i','j'];
 let glbLoader = null;
 let modelsLoaded = false;
+let kenneyTexturesLoaded = false;
 
 // Creature GLB models (Blockbench voxel creatures)
 const CREATURE_CACHE = {}; // name -> THREE.Group
@@ -2545,10 +2613,45 @@ const CREATURE_SCALE_MAP = {
   'ender-dragon':3.5,'karate-boss':2.0
 };
 
+function preloadKenneyTextures(callback){
+  if(typeof THREE.TextureLoader==='undefined'){kenneyTexturesLoaded=false;callback();return;}
+  const loader = new THREE.TextureLoader();
+  let loaded = 0;
+  const total = KENNEY_TEXTURE_LETTERS.length;
+  KENNEY_TEXTURE_LETTERS.forEach(letter=>{
+    loader.load('models/kenney/textures/texture-'+letter+'.png',
+      function(tex){
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        tex.generateMipmaps = false;
+        TEXTURE_CACHE[letter] = tex;
+        loaded++;
+        if(loaded>=total){kenneyTexturesLoaded=true;callback();}
+      },
+      undefined,
+      function(){loaded++;if(loaded>=total){kenneyTexturesLoaded=true;callback();}}
+    );
+  });
+}
+
+function applyKenneyTexture(group, letter){
+  const tex = TEXTURE_CACHE[letter];
+  if(!tex||!group) return;
+  group.traverse(child=>{
+    if(!child.isMesh||!child.material) return;
+    const mats = Array.isArray(child.material)?child.material:[child.material];
+    mats.forEach(mat=>{
+      if(mat.color) mat.color.setHex(0xffffff);
+      mat.map = tex;
+      mat.needsUpdate = true;
+    });
+  });
+}
+
 function preloadModels(callback){
   if(typeof THREE.GLTFLoader==='undefined'){modelsLoaded=false;callback();return;}
   glbLoader = new THREE.GLTFLoader();
-  const letters = Object.values(CLASS_MODEL_MAP).concat(ENEMY_MODEL_POOL);
+  const letters = KENNEY_BODY_LETTERS;
   let loaded = 0;
   const totalKenney = letters.length;
   letters.forEach(letter=>{
@@ -2579,12 +2682,14 @@ function preloadModels(callback){
   });
 }
 
-function cloneModel(letter, scale){
+function cloneModel(letter, scale, textureLetter){
   scale = scale||1;
+  textureLetter = textureLetter||playerSkinTexture||'a';
   const template = MODEL_CACHE[letter];
   if(!template) return null;
   const clone = template.clone();
   clone.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+  applyKenneyTexture(clone, textureLetter);
   const sc = 1.4*scale; // Kenney models are ~1.9 units tall, we want ~2.8
   clone.scale.set(sc,sc,sc);
   return clone;
