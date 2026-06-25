@@ -24,6 +24,11 @@ body {
   background:
     url('frames/panel-bg.png') center/cover no-repeat,
     radial-gradient(ellipse at center, #1a0a0a 0%, #040408 100%);
+  isolation: isolate;
+}
+#class-screen > * {
+  position: relative;
+  z-index: 1;
 }
 #class-screen h1 {
   font-family: 'Cinzel Decorative', var(--hud-font);
@@ -35,6 +40,19 @@ body {
   border: 1px solid var(--gw-slot-border);
   border-radius: 4px;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.skin-body-btn,
+.skin-tex-btn,
+#class-screen .gw-btn,
+#class-screen .hud-action-btn {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 .class-card .c-icon img {
   width: 40px;
