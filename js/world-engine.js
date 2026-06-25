@@ -174,27 +174,51 @@
     function buildGround(sceneRef, genProcTexture, THREE) {
       scene = sceneRef;
       const biomeTexTypes = ['grass', 'swamp', 'ruins', 'wasteland', 'dark'];
-      biomes.forEach((biome, bi) => {
-        const r = (biome.maxD < 999 * WORLD_SCALE ? biome.maxD : 130 * WORLD_SCALE) * 2;
-        const prevR = biome.minD * 2;
-        const tex = genProcTexture(biomeTexTypes[bi] || 'grass');
-        tex.repeat.set(r / 16, r / 16);
-        if (bi === 0) {
-          const geo = new THREE.CircleGeometry(r, 96);
-          const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.05 });
-          const m = new THREE.Mesh(geo, mat);
-          m.rotation.x = -Math.PI / 2;
-          m.receiveShadow = true;
-          scene.add(m);
-        } else {
-          const geo = new THREE.RingGeometry(prevR, r, 96);
-          const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.05, side: THREE.DoubleSide });
-          const m = new THREE.Mesh(geo, mat);
-          m.rotation.x = -Math.PI / 2;
-          m.receiveShadow = true;
-          scene.add(m);
+      const coll = global.VoxCollision && global._collisionWorld;
+      const worldR = getWorldRadius();
+
+      if (global.VoxTerrain) {
+        const terrain = global.VoxTerrain.build({
+          THREE: THREE,
+          scene: sceneRef,
+          seed: seed,
+          size: worldR * 2.15,
+          segments: 128,
+          getBiomeAt: function (x, z) { return getBiomeAt(x, z, biomes); },
+          genProcTexture: genProcTexture,
+          biomeTexTypes: biomeTexTypes,
+        });
+        global._terrainHandle = terrain;
+        if (coll) coll.registerTerrain(terrain);
+        if (coll && biomes[0]) {
+          coll.registerSafeZone(0, 0, (biomes[0].maxD || 28 * WORLD_SCALE) * 0.95, {
+            label: biomes[0].label || 'Starter Island',
+            noAggro: true,
+          });
         }
-      });
+      } else {
+        biomes.forEach(function (biome, bi) {
+          const r = (biome.maxD < 999 * WORLD_SCALE ? biome.maxD : 130 * WORLD_SCALE) * 2;
+          const prevR = biome.minD * 2;
+          const tex = genProcTexture(biomeTexTypes[bi] || 'grass');
+          tex.repeat.set(r / 16, r / 16);
+          if (bi === 0) {
+            const geo = new THREE.CircleGeometry(r, 96);
+            const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.05 });
+            const m = new THREE.Mesh(geo, mat);
+            m.rotation.x = -Math.PI / 2;
+            m.receiveShadow = true;
+            scene.add(m);
+          } else {
+            const geo = new THREE.RingGeometry(prevR, r, 96);
+            const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.05, side: THREE.DoubleSide });
+            const m = new THREE.Mesh(geo, mat);
+            m.rotation.x = -Math.PI / 2;
+            m.receiveShadow = true;
+            scene.add(m);
+          }
+        });
+      }
 
       const waterSize = 300 * WORLD_SCALE;
       const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize, 48, 48);
@@ -203,8 +227,36 @@
       water.rotation.x = -Math.PI / 2;
       water.position.y = -1.2;
       water.receiveShadow = true;
+      water.name = 'vox-water';
       scene.add(water);
+      if (coll && global.VoxLayers) {
+        coll.register({
+          id: 'world_water',
+          kind: 'water',
+          layer: global.VoxLayers.LAYERS.WATER,
+          mesh: water,
+          solid: false,
+          trigger: true,
+        });
+      }
       return water;
+    }
+
+    function registerPropCollider(prop) {
+      const coll = global._collisionWorld;
+      const Layers = global.VoxLayers;
+      if (!coll || !Layers || !prop || !prop.mesh) return;
+      const kind = prop.kind;
+      const layer = Layers.layerForKind(kind === 'survivor' ? 'npc' : kind, prop.data);
+      coll.register({
+        id: 'prop_' + kind + '_' + (prop.data && (prop.data.id || prop.data.type) || Math.random().toString(36).slice(2, 8)),
+        kind: kind,
+        layer: layer,
+        mesh: prop.mesh,
+        solid: kind === 'wall' || kind === 'building',
+        trigger: kind === 'chest' || kind === 'survivor',
+        data: prop.data,
+      });
     }
 
     function spawnPropMeshes(THREE, helpers) {
@@ -238,6 +290,8 @@
           const prop = { kind: 'chest', data: c, mesh: g };
           props.push(prop);
           c.mesh = g;
+          registerPropCollider(prop);
+          if (global._collisionWorld) global._collisionWorld.snapObject(g, 0);
         });
 
         chunk.buildings.forEach(b => {
@@ -261,7 +315,10 @@
           g.position.set(b.x, 0, b.z);
           g.rotation.y = b.rot;
           scene.add(g);
-          props.push({ kind: 'building', data: b, mesh: g });
+          const bProp = { kind: 'building', data: b, mesh: g };
+          props.push(bProp);
+          registerPropCollider(bProp);
+          if (global._collisionWorld) global._collisionWorld.snapObject(g, 0);
         });
 
         chunk.walls.forEach(w => {
@@ -274,7 +331,10 @@
           m.castShadow = true;
           m.receiveShadow = true;
           scene.add(m);
-          props.push({ kind: 'wall', data: w, mesh: m });
+          const wProp = { kind: 'wall', data: w, mesh: m };
+          props.push(wProp);
+          registerPropCollider(wProp);
+          if (global._collisionWorld) global._collisionWorld.snapObject(m, 0);
         });
 
         chunk.survivors.forEach(s => {
@@ -282,7 +342,10 @@
           if (!g) return;
           g.position.set(s.x, 0, s.z);
           scene.add(g);
-          props.push({ kind: 'survivor', data: s, mesh: g });
+          const sProp = { kind: 'survivor', data: s, mesh: g };
+          props.push(sProp);
+          registerPropCollider(sProp);
+          if (global._collisionWorld) global._collisionWorld.snapObject(g, 0);
         });
       });
     }
@@ -350,9 +413,12 @@
     }
 
     function updateCampAggro(px, pz, enemies) {
+      const inSafe = global._collisionWorld && global._collisionWorld.isInSafeZone
+        ? global._collisionWorld.isInSafeZone(px, pz)
+        : false;
       camps.forEach(camp => {
         const d = Math.hypot(px - camp.x, pz - camp.z);
-        camp.aggro = d < AGGRO_RADIUS * 1.5;
+        camp.aggro = !inSafe && d < AGGRO_RADIUS * 1.5;
       });
       enemies.forEach(e => {
         if (!e.campId) return;

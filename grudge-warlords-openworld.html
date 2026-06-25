@@ -373,6 +373,9 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="js/grudge-env.js"></script>
 <script src="js/grudge-scale.js"></script>
+<script src="js/collision-layers.js"></script>
+<script src="js/terrain-collider.js"></script>
+<script src="js/collision-world.js"></script>
 <script src="js/world-engine.js"></script>
 <script src="js/grudge-codex-icons.js"></script>
 <script src="js/grudge-game-hud.js"></script>
@@ -626,6 +629,9 @@ const RECIPES = [
 let scene, camera, renderer, clock;
 let playerMesh, playerBodyMat, weaponMeshObj;
 let floorMesh;
+let collisionWorld = null;
+let blockColliderIds = [];
+const PLAYER_COLL_RADIUS = 1.1;
 let enemies = [], bullets = [], particles = [], worldItems = [], resourceNodes = [], minions = [];
 let hp, maxHp, score, survivalTime, isGameOver, gameStarted;
 let currentWeapon, attackTimer;
@@ -702,7 +708,28 @@ let climbSpeed = 6;
 let swimSpeedMult = 0.6;
 let isInWater = false;
 let iFrames = false, iFrameTimer = 0;
-const WATER_LEVEL = -0.5;
+let WATER_LEVEL = -0.5;
+function getGroundY(x,z){
+  return collisionWorld?collisionWorld.getGroundHeight(x,z):0;
+}
+function snapToGround(obj,footOffset){
+  if(!obj||!obj.position) return;
+  if(collisionWorld) collisionWorld.snapObject(obj,footOffset||0);
+  else obj.position.y=footOffset||0;
+}
+function registerEntityCollider(id,kind,mesh,def,opts){
+  if(!collisionWorld||!mesh) return null;
+  return collisionWorld.register({
+    id:id,
+    kind:kind,
+    layer:VoxLayers.layerForKind(kind,def),
+    mesh:mesh,
+    solid:!!(opts&&opts.solid),
+    trigger:!!(opts&&opts.trigger),
+    def:def||null,
+    data:(opts&&opts.data)||null,
+  });
+}
 
 // ── Asset Base URL (switch to R2 CDN for production) ──
 const ASSET_BASE = ''; // Set to 'https://assets.grudge-studio.com/' for R2
@@ -920,10 +947,10 @@ function init(){
 
   // Scene
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0a0e14, 40, 120);
+  scene.fog = new THREE.Fog(0x0a0e14, 55, 220);
 
   // Camera: top-down isometric
-  camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
+  camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 450);
   camera.position.set(0, 28, 22);
   camera.lookAt(0, 0, 0);
 
@@ -953,7 +980,10 @@ function init(){
   dirLight.shadow.mapSize.set(2048,2048);
   scene.add(dirLight);
 
-  // World ground
+  collisionWorld = VoxCollision.create({THREE:THREE, raycaster:raycaster});
+  window._collisionWorld = collisionWorld;
+
+  // World ground + mesh colliders
   buildWorld();
 
   // Block instanced mesh
@@ -983,6 +1013,7 @@ function init(){
   }
   playerMesh.position.set(0, 0, 0);
   scene.add(playerMesh);
+  snapToGround(playerMesh,0);
   weaponMeshObj = buildWeaponMesh('sword');
   playerMesh.add(weaponMeshObj);
 
@@ -1104,26 +1135,49 @@ function buildWorld(){
   if(worldEngine){
     window._waterPlane=worldEngine.buildGround(scene,genProcTexture,THREE);
     worldEngine.updateChunks(0,0,THREE,{spawnResourceNode:spawnResourceNode,buildSurvivor:buildSurvivorNPC});
+    WATER_LEVEL=-1.2;
     return;
   }
   const biomeTexTypes=['grass','swamp','ruins','wasteland','dark'];
-  BIOMES.forEach((biome,bi)=>{
-    const r=(biome.maxD<999?biome.maxD:130)*2;
-    const prevR=biome.minD*2;
-    const tex=genProcTexture(biomeTexTypes[bi]||'grass');
-    tex.repeat.set(r/4,r/4);
-    if(bi===0){
-      const geo=new THREE.CircleGeometry(r,64);
-      const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05});
-      const m=new THREE.Mesh(geo,mat);
-      m.rotation.x=-Math.PI/2;m.receiveShadow=true;scene.add(m);worldPlane=m;
-    } else {
-      const geo=new THREE.RingGeometry(prevR,r,64);
-      const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05,side:THREE.DoubleSide});
-      const m=new THREE.Mesh(geo,mat);
-      m.rotation.x=-Math.PI/2;m.receiveShadow=true;scene.add(m);
-    }
-  });
+  if(window.VoxTerrain){
+    const terrain=VoxTerrain.build({
+      THREE:THREE, scene:scene, seed:Date.now()%1000000000,
+      size:280, segments:96,
+      getBiomeAt:function(x,z){return getBiome(x,z);},
+      genProcTexture:genProcTexture, biomeTexTypes:biomeTexTypes,
+    });
+    window._terrainHandle=terrain;
+    if(collisionWorld) collisionWorld.registerTerrain(terrain);
+    if(collisionWorld) collisionWorld.registerSafeZone(0,0,BIOMES[0].maxD*10*0.95,{label:'Starter Island',noAggro:true});
+    worldPlane=terrain.mesh;
+  } else {
+    BIOMES.forEach((biome,bi)=>{
+      const r=(biome.maxD<999?biome.maxD:130)*2;
+      const prevR=biome.minD*2;
+      const tex=genProcTexture(biomeTexTypes[bi]||'grass');
+      tex.repeat.set(r/4,r/4);
+      if(bi===0){
+        const geo=new THREE.CircleGeometry(r,64);
+        const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05});
+        const m=new THREE.Mesh(geo,mat);
+        m.rotation.x=-Math.PI/2;m.receiveShadow=true;scene.add(m);worldPlane=m;
+      } else {
+        const geo=new THREE.RingGeometry(prevR,r,64);
+        const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05,side:THREE.DoubleSide});
+        const m=new THREE.Mesh(geo,mat);
+        m.rotation.x=-Math.PI/2;m.receiveShadow=true;scene.add(m);
+      }
+    });
+  }
+  const waterSize=600;
+  const waterGeo=new THREE.PlaneGeometry(waterSize,waterSize,32,32);
+  const waterMat=new THREE.MeshStandardMaterial({color:0x2266aa,transparent:true,opacity:0.55,roughness:0.1,metalness:0.4});
+  const water=new THREE.Mesh(waterGeo,waterMat);
+  water.rotation.x=-Math.PI/2; water.position.y=-1.2; water.receiveShadow=true;
+  scene.add(water);
+  window._waterPlane=water;
+  if(collisionWorld) collisionWorld.register({id:'legacy_water',kind:'water',layer:VoxLayers.LAYERS.WATER,mesh:water,solid:false,trigger:true});
+  WATER_LEVEL=-1.2;
   spawnResourceNodes();
 }
 
@@ -1159,10 +1213,12 @@ function spawnResourceNode(type, x, z){
   const geo = new THREE.BoxGeometry(1.5*cfg.scX, 1.5*cfg.scY, 1.5*cfg.scX);
   const mat = new THREE.MeshStandardMaterial({color:cfg.color, emissive:cfg.emColor, emissiveIntensity:0.3});
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(x, cfg.scY*0.75, z);
+  const gy=getGroundY(x,z);
+  mesh.position.set(x, gy+cfg.scY*0.75, z);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   scene.add(mesh);
+  registerEntityCollider('node_'+type+'_'+x.toFixed(0)+'_'+z.toFixed(0),'node',mesh,null,{solid:true,trigger:false,data:{type:type,x:x,z:z}});
 
   // For trees: add a cap
   if(type==='tree'){
@@ -1806,7 +1862,8 @@ function spawnEnemyAt(sx,sz,typeId,meta){
       else mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM));
     }
   }
-  mesh.position.set(sx,0,sz);
+  snapToGround(mesh,0);
+  registerEntityCollider('enemy_'+typeId+'_'+sx.toFixed(0)+'_'+sz.toFixed(0),'enemy',mesh,def,{solid:false,trigger:false});
   // Canvas health bar (replaces emoji)
   const hbCanvas = document.createElement('canvas'); hbCanvas.width=64; hbCanvas.height=10;
   const hbCtx = hbCanvas.getContext('2d');
@@ -1918,14 +1975,14 @@ function updateEnemies(dt){
 
     // Camp AI — Albion-style aggro + leash + patrol (not endless chase)
     if(e.campId){
+      const inSafe=collisionWorld&&collisionWorld.isInSafeZone(pp.x,pp.z);
       const distHome=Math.hypot(ep.x-e.homeX,ep.z-e.homeZ);
       const distPlayer=Math.hypot(ep.x-pp.x,ep.z-pp.z);
-      e.aggro=distPlayer<(worldEngine?worldEngine.AGGRO_RADIUS:32);
+      e.aggro=!inSafe&&distPlayer<(worldEngine?worldEngine.AGGRO_RADIUS:32);
       e.leashed=distHome>(worldEngine?worldEngine.LEASH_RADIUS:90);
       if(e.leashed){
         const toHome=new THREE.Vector3(e.homeX-ep.x,0,e.homeZ-ep.z).normalize();
         ep.add(toHome.multiplyScalar(e.speed*1.2*dt));
-        ep.y=0;
         if(dist<2.5&&e.attackCd<=0){e.attackCd=1.2;damagePlayer(e.dmg);}
         return;
       }
@@ -1936,7 +1993,6 @@ function updateEnemies(dt){
         const tz=e.homeZ+Math.sin(e.patrolAngle)*pr;
         const toP=new THREE.Vector3(tx-ep.x,0,tz-ep.z);
         if(toP.length()>0.5) ep.add(toP.normalize().multiplyScalar(e.speed*0.35*dt));
-        ep.y=0;
         return;
       }
     }
@@ -1984,8 +2040,7 @@ function updateEnemies(dt){
       moved=true;
     }
 
-    // Clamp Y
-    ep.y=0;
+    snapToGround(e.mesh,0);
 
     // Attack player
     if(dist<2.0&&e.attackCd<=0){
@@ -2512,7 +2567,9 @@ function spawnAlly(kind, pos, overrides){
     mesh=buildVoxChar(0x336655,0x112233,0.7);
   }
   mesh.position.copy(pos||playerMesh.position);
+  snapToGround(mesh,0);
   scene.add(mesh);
+  registerEntityCollider('ally_'+kind+'_'+minions.length,'ally',mesh,null,{solid:false,trigger:false});
   const ally={
     mesh, kind, name:def.name, emoji:def.emoji,
     hp:overrides?.hp||def.hp, maxHp:overrides?.hp||def.hp,
@@ -2600,13 +2657,30 @@ function removeBlock(){
   updateResUI();
 }
 
+function syncBlockColliders(){
+  if(!collisionWorld) return;
+  blockColliderIds.forEach(function(id){collisionWorld.unregister(id);});
+  blockColliderIds=[];
+  for(const [key,blk] of blocks){
+    if(!BLOCK_DEFS[blk.type].solid) continue;
+    const p=key.split(',');
+    const gx=parseInt(p[0]),gz=parseInt(p[1]);
+    const bx=gx*2,bz=gz*2,by=getGroundY(bx,bz)+0.9;
+    collisionWorld.register({
+      id:'block_'+key, kind:'block', layer:VoxLayers.LAYERS.BLOCK, solid:true,
+      box:{cx:bx,cy:by,cz:bz,hx:0.9,hy:0.9,hz:0.9},
+    });
+    blockColliderIds.push('block_'+key);
+  }
+}
+
 function rebuildBlockMesh(){
   let i=0;
   for(const [key,blk] of blocks){
     if(i>=1000) break;
     const p=key.split(',');
     const gx=parseInt(p[0]),gz=parseInt(p[1]);
-    _dummy.position.set(gx*2, 0.9, gz*2);
+    _dummy.position.set(gx*2, getGroundY(gx*2,gz*2)+0.9, gz*2);
     _dummy.updateMatrix();
     blockInstMesh.setMatrixAt(i,_dummy.matrix);
     _color.setHex(BLOCK_DEFS[blk.type].color);
@@ -2616,9 +2690,21 @@ function rebuildBlockMesh(){
   blockInstMesh.count=i;
   blockInstMesh.instanceMatrix.needsUpdate=true;
   if(blockInstMesh.instanceColor) blockInstMesh.instanceColor.needsUpdate=true;
+  syncBlockColliders();
 }
 
 function checkBlockCollision(newPos){
+  if(collisionWorld){
+    const resolved=collisionWorld.resolveHorizontal(
+      playerMesh.position.x, playerMesh.position.z,
+      newPos.x, newPos.z,
+      PLAYER_COLL_RADIUS,
+      VoxLayers.MASKS.PLAYER_MOVE
+    );
+    newPos.x=resolved.x;
+    newPos.z=resolved.z;
+    return false;
+  }
   for(const [key,blk] of blocks){
     if(!BLOCK_DEFS[blk.type].solid) continue;
     const p=key.split(',');
@@ -2960,32 +3046,49 @@ function updatePlayer(dt){
     const newX=playerMesh.position.x+dx*spd*dt;
     const newZ=playerMesh.position.z+dz*spd*dt;
     const newPos=new THREE.Vector3(newX,0,newZ);
+    const worldR=worldEngine?worldEngine.getWorldRadius():128;
 
-    // World bounds
-    if(Math.sqrt(newX*newX+newZ*newZ)<128){
-      if(!checkBlockCollision(newPos)){
+    if(Math.sqrt(newX*newX+newZ*newZ)<worldR){
+      if(collisionWorld){
+        const resolved=collisionWorld.resolveHorizontal(
+          playerMesh.position.x, playerMesh.position.z, newX, newZ,
+          PLAYER_COLL_RADIUS, VoxLayers.MASKS.PLAYER_MOVE
+        );
+        playerMesh.position.x=resolved.x;
+        playerMesh.position.z=resolved.z;
+      } else if(!checkBlockCollision(newPos)){
         playerMesh.position.x=newX;
         playerMesh.position.z=newZ;
       } else {
-        // Try sliding X only
         const nx2=new THREE.Vector3(newX,0,playerMesh.position.z);
         if(!checkBlockCollision(nx2)) playerMesh.position.x=newX;
-        // Try sliding Z only
         const nz2=new THREE.Vector3(playerMesh.position.x,0,newZ);
         if(!checkBlockCollision(nz2)) playerMesh.position.z=newZ;
       }
     }
   }
 
+  if(playerState==='ground'||playerState==='dodging'||playerState==='dashing'){
+    snapToGround(playerMesh,0);
+  }
+
   // Face aim direction
   const aimDir=getAimDir();
   if(aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
 
-  // Camera follow
+  const camGround=getGroundY(playerMesh.position.x,playerMesh.position.z);
   camera.position.x=playerMesh.position.x;
   camera.position.z=playerMesh.position.z+28;
-  camera.position.y=34;
-  camera.lookAt(playerMesh.position);
+  camera.position.y=34+camGround*0.25;
+  camera.lookAt(playerMesh.position.x,camGround+1.2,playerMesh.position.z);
+  const zonePill=document.getElementById('zone-pill');
+  if(zonePill){
+    const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
+    const safe=collisionWorld&&collisionWorld.isInSafeZone(playerMesh.position.x,playerMesh.position.z);
+    zonePill.textContent=(safe?'Safe · ':'Zone · ')+(biome.label||biome.name);
+    zonePill.style.color=safe?'#7ec8ff':'#8a7';
+    zonePill.style.borderColor=safe?'#4488aa':'#334';
+  }
   dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
 
   // Attack cooldown
@@ -3096,11 +3199,16 @@ function updateHUD(){
   document.getElementById('exp-fill').style.width=expPct+'%';
   document.getElementById('level-val').textContent='Lv.'+level+' — '+exp+'/'+expToNext;
 
-  // Biome / zone
+  // Biome / zone / safe area
   const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
+  const inSafe=collisionWorld&&collisionWorld.isInSafeZone(playerMesh.position.x,playerMesh.position.z);
   document.getElementById('biome-label').textContent=biome.name;
   const zp=document.getElementById('zone-pill');
-  if(zp) zp.textContent='Zone · '+biome.label+(worldEngine?' · seed '+worldEngine.getSeed():'');
+  if(zp){
+    zp.textContent=(inSafe?'Safe · ':'Zone · ')+biome.label+(worldEngine?' · seed '+worldEngine.getSeed():'');
+    zp.style.color=inSafe?'#7ec8ff':'#8a7';
+    zp.style.borderColor=inSafe?'#4488aa':'#334';
+  }
 
   // Skill cooldowns
   const slots=['Q','E','R','F'];
@@ -3765,16 +3873,17 @@ function updateTraversal(dt){
   const distFC=Math.sqrt(pp.x*pp.x+pp.z*pp.z);
   isInWater=distFC>130||pp.y<WATER_LEVEL;
 
+  const groundY=getGroundY(pp.x,pp.z);
   switch(playerState){
     case 'ground':
       if(isInWater&&distFC>130){playerState='swimming';}
-      pp.y=0;
+      pp.y=groundY;
       break;
     case 'jumping':
       playerVelY-=gravityForce*dt;
       pp.y+=playerVelY*dt;
-      if(pp.y<=0){
-        pp.y=0;playerVelY=0;
+      if(pp.y<=groundY){
+        pp.y=groundY;playerVelY=0;
         playerState='ground';
         triggerShake(0.08,0.04);
       }
@@ -3782,23 +3891,23 @@ function updateTraversal(dt){
     case 'falling':
       playerVelY-=gravityForce*dt;
       pp.y+=playerVelY*dt;
-      if(pp.y<=0){pp.y=0;playerVelY=0;playerState='ground';}
+      if(pp.y<=groundY){pp.y=groundY;playerVelY=0;playerState='ground';}
       break;
     case 'dodging':
       dodgeTimer-=dt;
       pp.add(dodgeDir.clone().multiplyScalar((DODGE_DIST/DODGE_DUR)*dt));
-      pp.y=0;
+      pp.y=getGroundY(pp.x,pp.z);
       if(dodgeTimer<=0){playerState='ground';iFrames=false;}
       break;
     case 'dashing':
       dashTimer-=dt;
       pp.add(dashDir.clone().multiplyScalar((DASH_DIST/DASH_DUR)*dt));
-      pp.y=0;
+      pp.y=getGroundY(pp.x,pp.z);
       if(dashTimer<=0){playerState='ground';}
       break;
     case 'swimming':
-      pp.y=WATER_LEVEL+Math.sin(gameClock*2)*0.15;
-      if(!isInWater||distFC<=128){playerState='ground';pp.y=0;}
+      pp.y=Math.max(WATER_LEVEL+Math.sin(gameClock*2)*0.15, groundY-0.5);
+      if(!isInWater||distFC<=(worldEngine?worldEngine.getWorldRadius():128)){playerState='ground';pp.y=getGroundY(pp.x,pp.z);}
       break;
     case 'climbing':
       if(keys['KeyW']||keys['Space'])pp.y+=climbSpeed*dt;
