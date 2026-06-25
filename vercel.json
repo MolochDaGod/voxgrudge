@@ -3,11 +3,11 @@
   "routes": [
     {
       "src": "/api/grudox",
-      "dest": "https://voxgrudge-grudox-room.up.railway.app/api/grudox"
+      "dest": "https://voxgrudge-grudox-room-production.up.railway.app/api/grudox"
     },
     {
       "src": "/api/health",
-      "dest": "https://voxgrudge-grudox-room.up.railway.app/health"
+      "dest": "https://voxgrudge-grudox-room-production.up.railway.app/health"
     },
     {
       "src": "/",
