@@ -1,3 +1,6 @@
 .vercel
+.env.local
+.env.development
+.env
 _asset_unpack/
 _hud_unpack/

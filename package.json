@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
+    "setup": "node scripts/setup-dev.mjs",
+    "dev": "node scripts/preflight-dev.mjs && node scripts/dev.mjs",
     "dev:game": "node scripts/dev-static.mjs",
     "dev:server": "npm run dev --prefix server",
+    "dev:check": "node scripts/health-dev.mjs",
     "verify:hud-icons": "node scripts/verify-hud-icons.mjs",
     "sync:mine-loader": "node scripts/sync-mine-loader-assets.mjs",
     "sync:grudge-game-hud": "node scripts/sync-grudge-game-hud.mjs",
+    "deploy:test": "node scripts/deploy-test.mjs",
     "start:server": "npm start --prefix server",
     "postinstall": "npm install --prefix server"
   },
