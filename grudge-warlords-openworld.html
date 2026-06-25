@@ -8,18 +8,20 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
-#class-screen{position:absolute;inset:0;z-index:50;background:radial-gradient(ellipse at center,#0d1520 0%,#04080f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+#game-canvas-wrap{position:fixed;inset:0;z-index:0}
+#game-canvas-wrap canvas{display:block;width:100%;height:100%}
+#game-hud{position:fixed;inset:0;z-index:20;pointer-events:none}
+.pre-game-hidden{display:none!important}
+#class-screen{position:fixed;inset:0;z-index:50;background:radial-gradient(ellipse at center,#0d1520 0%,#04080f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;pointer-events:auto}
 #class-screen::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30h60M30 0v60' stroke='%23ffffff08' stroke-width='1'/%3E%3C/svg%3E");opacity:0.5;animation:gridPulse 4s ease-in-out infinite}
 @keyframes gridPulse{0%,100%{opacity:0.3}50%{opacity:0.6}}
 #class-screen h1{color:#e63d3d;font-size:52px;margin:0 0 4px;letter-spacing:-2px;text-shadow:0 0 40px rgba(230,61,61,0.4);position:relative}
 #class-screen .sub{color:#666;font-size:11px;letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;position:relative}
 #class-screen .version{color:#333;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;position:relative}
-#creature-showcase{display:flex;gap:8px;margin-bottom:20px;position:relative}
-.creature-thumb{width:48px;height:48px;background:rgba(10,14,20,0.8);border:1px solid #2a2e3a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all 0.3s}
-.creature-thumb:hover{border-color:#e63d3d;transform:scale(1.15);box-shadow:0 0 12px rgba(230,61,61,0.3)}
-.class-grid{display:grid;grid-template-columns:repeat(3,190px);gap:14px}
-.class-card{background:rgba(10,14,20,0.9);border:2px solid #2a2e3a;border-radius:8px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center}
-.class-card:hover,.class-card.sel{border-color:var(--cc);box-shadow:0 0 20px rgba(255,255,255,0.08)}
+.class-grid{display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));gap:14px;max-width:620px;position:relative}
+.class-card{background:rgba(10,14,20,0.9);border:2px solid #2a2e3a;border-radius:8px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center;pointer-events:auto;user-select:none}
+.class-card:hover{border-color:var(--cc);transform:translateY(-2px)}
+.class-card.sel{border-color:var(--cc);box-shadow:0 0 24px color-mix(in srgb,var(--cc) 35%,transparent);background:rgba(20,14,18,0.95)}
 .class-card .c-icon{font-size:32px;margin-bottom:6px}
 .class-card .c-name{font-size:14px;font-weight:800;color:var(--cc);margin-bottom:4px}
 .class-card .c-desc{font-size:9px;color:#555;line-height:1.5}
@@ -45,23 +47,31 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .status-speed{border-color:#00ffee;color:#88ffee}
 .status-invuln{border-color:#ffdd00;color:#ffee88}
 .status-berserk{border-color:#ff0066;color:#ff88aa}
-#res-bar{position:absolute;top:16px;right:220px;z-index:10;display:flex;gap:10px;pointer-events:none}
-.res-chip{background:rgba(6,10,18,0.85);border:1px solid #2a2e3a;border-radius:4px;padding:5px 10px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
-#skill-bar{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:none;z-index:10}
-.skill-slot{width:64px;height:64px;background:rgba(6,10,18,0.9);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;transition:border-color 0.2s}
+.res-inline{display:flex;gap:12px;font-size:12px;font-weight:700;color:#aaa;margin-top:4px}
+.res-inline span{display:flex;align-items:center;gap:4px}
+#skill-bar{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:auto;z-index:10}
+.skill-slot{width:64px;height:64px;background:rgba(6,10,18,0.9);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;transition:border-color 0.2s;cursor:pointer;pointer-events:auto}
+.skill-slot:hover:not(.on-cd){border-color:#888;transform:translateY(-2px)}
 .skill-slot.off-cd{border-color:#e63d3d}.skill-slot.on-cd{border-color:#333}
 .skill-icon{font-size:20px}.skill-key{font-size:8px;font-weight:700;letter-spacing:1px;color:#e63d3d;margin-top:2px}
 .skill-name{font-size:7px;color:#777;margin-top:1px;text-align:center;line-height:1.2;padding:0 2px}
 .skill-cd-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
 .skill-cd-overlay.hidden{display:none}
-#item-bar{position:absolute;bottom:16px;left:16px;display:flex;gap:6px;z-index:10;pointer-events:none}
-.item-slot{width:52px;height:52px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+#item-bar{position:absolute;bottom:16px;left:16px;display:flex;gap:6px;z-index:10;pointer-events:auto}
+.item-slot{width:52px;height:52px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;pointer-events:auto}
+.item-slot:hover{border-color:#666}
 .item-slot.filled{border-color:#555}
+.item-slot.filled:hover{border-color:#e63d3d}
 .i-num{position:absolute;top:2px;left:5px;font-size:9px;color:#555;font-weight:700}
 .i-icon{font-size:18px}.i-count{font-size:9px;color:#aaa;position:absolute;bottom:2px;right:4px}
-#weapon-bar{position:absolute;bottom:16px;right:16px;display:flex;gap:5px;z-index:10;pointer-events:none;flex-wrap:wrap-reverse;max-width:460px;justify-content:flex-end}
-.w-slot{width:60px;height:60px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0.4;transition:all 0.15s}
-.w-slot.owned{opacity:0.8;border-color:#555}.w-slot.active{opacity:1;border-color:#e63d3d;background:rgba(230,61,61,0.15);transform:scale(1.08)}
+#weapon-bar{position:absolute;bottom:16px;right:16px;display:flex;gap:5px;z-index:10;pointer-events:auto;flex-wrap:nowrap;max-width:min(52vw,420px);justify-content:flex-end;overflow-x:auto;padding-bottom:2px}
+#weapon-bar::-webkit-scrollbar{height:4px}
+#weapon-bar::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+.w-slot{width:60px;height:60px;flex:0 0 60px;background:rgba(6,10,18,0.85);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.15s;cursor:pointer;pointer-events:auto}
+.w-slot:not(.owned){display:none}
+.w-slot.owned{opacity:0.85;border-color:#555}
+.w-slot.owned:hover{opacity:1;border-color:#888;transform:translateY(-2px)}
+.w-slot.active{opacity:1;border-color:#e63d3d;background:rgba(230,61,61,0.15);transform:scale(1.06)}
 .w-icon{font-size:20px}.w-name{font-size:7px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px}.w-ammo{font-size:9px;font-weight:700;color:#4af}
 #build-indicator{position:absolute;bottom:170px;right:16px;z-index:10;pointer-events:none;background:rgba(6,10,18,0.9);border:1px solid #44ffaa;border-radius:4px;padding:6px 12px;font-size:11px;font-weight:700;color:#44ffaa;opacity:0;transition:opacity 0.3s}
 #build-indicator.active{opacity:1}
@@ -70,7 +80,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .build-slot{width:54px;height:54px;background:rgba(6,10,18,0.9);border:2px solid #2a2e3a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
 .build-slot.sel{border-color:#44ffaa}
 .b-icon{font-size:18px}.b-name{font-size:7px;color:#666;text-align:center;margin-top:1px}.b-cost{font-size:7px;color:#444;margin-top:1px}
-#craft-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;background:rgba(4,8,16,0.98);border:2px solid #e63d3d;border-radius:8px;z-index:40;display:none;padding:18px;box-shadow:0 0 40px rgba(230,61,61,0.2)}
+#craft-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;background:rgba(4,8,16,0.98);border:2px solid #e63d3d;border-radius:8px;z-index:40;display:none;padding:18px;box-shadow:0 0 40px rgba(230,61,61,0.2);pointer-events:auto}
 #craft-panel h2{margin:0 0 14px;font-size:14px;letter-spacing:3px;color:#e63d3d;text-transform:uppercase}
 .craft-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #1a1e26}
 .craft-emoji{font-size:22px;width:30px;text-align:center}
@@ -82,7 +92,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #raid-alert.show{opacity:1}
 #wave-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:#e63d3d;pointer-events:none;z-index:30;opacity:0;transition:opacity 0.3s;text-shadow:0 0 40px rgba(230,61,61,0.8)}
 #night-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;background:rgba(0,5,25,0);transition:background 8s}
-.screen-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:20;background:rgba(4,6,12,0.96);padding:48px 56px;border-radius:6px;border:1px solid #e63d3d;box-shadow:0 0 60px rgba(230,61,61,0.2)}
+.screen-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:60;pointer-events:auto;background:rgba(4,6,12,0.96);padding:48px 56px;border-radius:6px;border:1px solid #e63d3d;box-shadow:0 0 60px rgba(230,61,61,0.2)}
 .screen-overlay h1{color:#e63d3d;font-size:48px;margin:0 0 8px;letter-spacing:-2px}
 .screen-overlay .sub{color:#555;font-size:11px;letter-spacing:2px;margin-bottom:20px}
 .gw-btn{background:#e63d3d;color:#fff;border:none;padding:12px 44px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:3px;border-radius:3px;cursor:pointer;margin-top:24px;pointer-events:auto;transition:all 0.2s}
@@ -117,9 +127,6 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 /* ── Damage Numbers ── */
 .dmg-num{position:absolute;pointer-events:none;z-index:25;font-weight:900;text-shadow:0 2px 4px rgba(0,0,0,0.8);transition:none;white-space:nowrap}
 
-/* ── Screen Shake ── */
-#game-canvas-wrap{position:absolute;inset:0}
-
 /* ── GCD Sweep ── */
 .skill-gcd-sweep{position:absolute;inset:0;background:rgba(0,0,0,0.5);pointer-events:none}
 .skill-gcd-sweep.hidden{display:none}
@@ -146,23 +153,18 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 </head>
 <body>
 
+<div id="game-canvas-wrap"></div>
+
 <div id="class-screen">
   <h1>⚔ GRUDGE WARLORDS</h1>
   <div class="sub">Open World · Voxel Combat · Survival Edition</div>
   <div class="version">v0.8 — 13 Creatures · 14 Weapons · 7 Biomes · VFX Engine</div>
-  <div id="creature-showcase">
-    <div class="creature-thumb" title="Werewolf">🐺</div>
-    <div class="creature-thumb" title="Dragon">🐉</div>
-    <div class="creature-thumb" title="Skeleton Warrior">💀</div>
-    <div class="creature-thumb" title="Iron Golem">🦾</div>
-    <div class="creature-thumb" title="Drake">🐲</div>
-    <div class="creature-thumb" title="Rhinoceros">🦏</div>
-    <div class="creature-thumb" title="Cheetah">🐆</div>
-    <div class="creature-thumb" title="Karate Boss">🥋</div>
-  </div>
+  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 20px;position:relative">Choose your class to begin</p>
   <div class="class-grid" id="class-grid"></div>
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">BEGIN SURVIVAL</button>
 </div>
+
+<div id="game-hud" class="pre-game-hidden">
 
 <div id="hud">
   <div class="stat-box">
@@ -177,6 +179,14 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   </div>
   <div class="stat-box"><div class="stat-label">Eliminated</div><div id="score-val" class="stat-value">0000</div></div>
   <div class="stat-box"><div class="stat-label">Survived</div><div id="timer-val" class="stat-value">00:00</div></div>
+  <div class="stat-box">
+    <div class="stat-label">Resources</div>
+    <div class="res-inline">
+      <span>🪵 <span id="res-wood">0</span></span>
+      <span>🪨 <span id="res-stone">0</span></span>
+      <span>⚙️ <span id="res-ore">0</span></span>
+    </div>
+  </div>
 </div>
 
 <div id="top-center">
@@ -189,11 +199,6 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 </div>
 
 <div id="status-bar"></div>
-<div id="res-bar">
-  <div class="res-chip">🪵 <span id="res-wood">0</span></div>
-  <div class="res-chip">🪨 <span id="res-stone">0</span></div>
-  <div class="res-chip">⚙️ <span id="res-ore">0</span></div>
-</div>
 
 <div id="skill-bar">
   <div class="skill-slot off-cd" id="skill-q"><div class="skill-icon" id="sq-icon">⚔️</div><div class="skill-key">Q</div><div class="skill-name" id="sq-name">Heroic Cleave</div><div class="skill-cd-overlay hidden" id="sq-cd">0</div></div>
@@ -266,7 +271,9 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
 <div id="traversal-state">GROUND</div>
 
-<div id="instructions">WASD:Move · LMB:Attack · RMB:Mine/Parry/Block · Q/E/R/F:Skills · Space:Jump/Dodge · Shift:Dash · B:Build · C:Craft · 1-6:Items · Scroll:Weapon · F12:Screenshot</div>
+<div id="instructions">WASD:Move · LMB:Attack · RMB:Mine/Parry/Block · Click skills/weapons/items · Q/E/R/F:Skills · Space:Jump · Shift:Dash · B:Build · C:Craft · Scroll:Weapon</div>
+
+</div><!-- /game-hud -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -620,6 +627,7 @@ const ANIM_FILES = {
 function startGame(){
   if(!playerClass) return;
   document.getElementById('class-screen').style.display='none';
+  document.getElementById('game-hud').classList.remove('pre-game-hidden');
   // Preload VFX textures
   preloadVFXTextures();
   // Preload GLB models then init skeleton then start
@@ -661,7 +669,7 @@ function init(){
   renderer.preserveDrawingBuffer = true; // needed for screenshots
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  document.body.appendChild(renderer.domElement);
+  document.getElementById('game-canvas-wrap').appendChild(renderer.domElement);
 
   clock = new THREE.Clock();
 
@@ -725,6 +733,7 @@ function init(){
   updateWeaponUI();
 
   gameStarted = true;
+  wireHudClicks();
 
   // Events
   window.addEventListener('keydown', e=>{
@@ -2166,6 +2175,21 @@ function switchWeapon(id){
   updateSkillUI();
 }
 
+function blockGameInput(e){ e.stopPropagation(); }
+function wireHudClicks(){
+  const stopBoth=(el,fn)=>{
+    if(!el||el.dataset.wired) return;
+    el.dataset.wired='1';
+    el.addEventListener('mousedown',blockGameInput);
+    el.addEventListener('click',e=>{ e.stopPropagation(); fn(); });
+  };
+  WEAPON_ORDER.forEach(id=>stopBoth(document.getElementById('ws-'+id),()=>{
+    if(WEAPONS[id].owned) switchWeapon(id);
+  }));
+  ['q','e','r','f'].forEach((s,i)=>stopBoth(document.getElementById('skill-'+s),()=>activateSkill(i)));
+  for(let i=1;i<=6;i++) stopBoth(document.getElementById('isl-'+i),()=>useItem(i-1));
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DAY / NIGHT CYCLE
 // ═══════════════════════════════════════════════════════════════
@@ -2444,8 +2468,10 @@ function updateWeaponUI(){
   WEAPON_ORDER.forEach(id=>{
     const el=document.getElementById('ws-'+id);
     if(!el) return;
-    el.classList.toggle('owned',WEAPONS[id].owned);
+    const owned=WEAPONS[id].owned;
+    el.classList.toggle('owned',owned);
     el.classList.toggle('active',currentWeapon.id===id);
+    el.style.display=owned?'':'none';
     const ammoEl=document.getElementById('wa-'+id);
     if(ammoEl&&WEAPONS[id].ammo!==Infinity) ammoEl.textContent=WEAPONS[id].ammo;
   });
