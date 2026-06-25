@@ -8,6 +8,7 @@
     "dev:game": "node scripts/dev-static.mjs",
     "dev:server": "npm run dev --prefix server",
     "verify:hud-icons": "node scripts/verify-hud-icons.mjs",
+    "sync:mine-loader": "node scripts/sync-mine-loader-assets.mjs",
     "start:server": "npm start --prefix server",
     "postinstall": "npm install --prefix server"
   },
