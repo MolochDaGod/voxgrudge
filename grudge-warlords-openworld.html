@@ -904,6 +904,11 @@ function startGame(){
     showFlash(sv.name+': "The wastes are wider now. Harvest nodes, clear camps, loot chests — don\'t let them chase you home."');
     hp=Math.min(maxHp,hp+25);
   });
+  worldEngine.setVendorHandler(function(v){
+    const stock=(v.stock||[]).filter(function(id){return ITEM_DEFS[id];});
+    if(stock.length) addToInventory(stock[Math.floor(Math.random()*stock.length)],1);
+    showFlash(v.name+': "Take what you need — island trade is scarce."');
+  });
   GrudgeItems.loadGrudgeItems(ITEM_DEFS).then(function(bundle){
     Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
     chestLootTable=bundle.chestLoot||{};
@@ -2452,9 +2457,11 @@ function spawnWorldItem(pos,tier){
   const mat=new THREE.MeshStandardMaterial({color:def.color||0xffaa00,emissive:def.color||0xffaa00,emissiveIntensity:0.45});
   const mesh=new THREE.Mesh(geo,mat);
   mesh.position.copy(pos);
-  mesh.position.y=0.5;
+  snapToGround(mesh,0.35);
   scene.add(mesh);
-  worldItems.push({mesh,id,def,spinAngle:Math.random()*Math.PI*2});
+  const colId='item_'+id+'_'+pos.x.toFixed(0)+'_'+pos.z.toFixed(0);
+  registerEntityCollider(colId,'item',mesh,null,{solid:false,trigger:true,data:{id:id}});
+  worldItems.push({mesh,id,def,colId,spinAngle:Math.random()*Math.PI*2});
 }
 
 function tryWorldInteract(){
@@ -2470,7 +2477,7 @@ function updateInteractHint(){
   const hint=worldEngine.getInteractHint(playerMesh.position.x,playerMesh.position.z);
   if(!hint){el.style.opacity='0';return;}
   el.style.opacity='1';
-  el.textContent=hint.type==='chest'?'[X] Open chest':'[X] Talk to survivor';
+  el.textContent=hint.type==='chest'?'[X] Open chest':hint.type==='vendor'?'[X] Trade with '+(hint.name||'vendor'):'[X] Talk to survivor';
 }
 
 function updateWorldItems(dt){
@@ -2478,10 +2485,12 @@ function updateWorldItems(dt){
   worldItems.forEach((it,i)=>{
     it.spinAngle+=dt*2;
     it.mesh.rotation.y=it.spinAngle;
-    it.mesh.position.y=0.4+Math.sin(it.spinAngle)*0.15;
+    const gy=getGroundY(it.mesh.position.x,it.mesh.position.z);
+    it.mesh.position.y=gy+0.35+Math.sin(it.spinAngle)*0.15;
     if(pp.distanceTo(it.mesh.position)<2.2){
       addToHotbar(it.id);
       scene.remove(it.mesh);
+      if(collisionWorld&&it.colId) collisionWorld.unregister(it.colId);
       it.picked=true;
     }
   });
@@ -3868,15 +3877,18 @@ function updateTraversal(dt){
   dashCd=Math.max(0,dashCd-dt);
   if(iFrameTimer>0){iFrameTimer-=dt;if(iFrameTimer<=0)iFrames=false;}
 
-  // Water detection: beyond world border
   const pp=playerMesh.position;
   const distFC=Math.sqrt(pp.x*pp.x+pp.z*pp.z);
-  isInWater=distFC>130||pp.y<WATER_LEVEL;
-
+  const worldR=worldEngine?worldEngine.getWorldRadius():130;
   const groundY=getGroundY(pp.x,pp.z);
+  const inSwampDip=groundY<WATER_LEVEL+0.35;
+  const pastShore=distFC>worldR*0.98;
+  isInWater=pastShore||inSwampDip;
+
   switch(playerState){
     case 'ground':
-      if(isInWater&&distFC>130){playerState='swimming';}
+      if(isInWater&&pastShore){playerState='swimming';}
+      else if(isInWater&&inSwampDip){playerState='swimming';}
       pp.y=groundY;
       break;
     case 'jumping':

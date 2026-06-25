@@ -13,6 +13,8 @@
     var terrain = null;
     var _box = new THREE.Box3();
     var _vec = new THREE.Vector3();
+    var _rayOrigin = new THREE.Vector3();
+    var _rayDir = new THREE.Vector3(0, -1, 0);
 
     function registerTerrain(terrainHandle) {
       terrain = terrainHandle;
@@ -21,7 +23,8 @@
         kind: 'terrain',
         layer: Layers.LAYERS.TERRAIN,
         mesh: terrainHandle.mesh,
-        solid: true,
+        solid: false,
+        groundOnly: true,
         trigger: false,
       });
     }
@@ -33,13 +36,14 @@
         layer: spec.layer || Layers.layerForKind(spec.kind, spec.def),
         mesh: spec.mesh || null,
         solid: spec.solid !== false,
+        groundOnly: !!spec.groundOnly,
         trigger: !!spec.trigger,
         data: spec.data || null,
         def: spec.def || null,
       };
       if (spec.box) {
         entry.box = spec.box;
-      } else if (spec.mesh) {
+      } else if (spec.mesh && !spec.groundOnly) {
         entry.box = meshBox(spec.mesh);
       }
       entries.push(entry);
@@ -68,7 +72,19 @@
       if (e && e.mesh) e.box = meshBox(e.mesh);
     }
 
+    function raycastGround(x, z) {
+      if (!terrain || !terrain.mesh) return null;
+      _rayOrigin.set(x, 400, z);
+      raycaster.set(_rayOrigin, _rayDir);
+      raycaster.far = 500;
+      var hits = raycaster.intersectObject(terrain.mesh, false);
+      if (hits.length) return hits[0].point.y;
+      return null;
+    }
+
     function getGroundHeight(x, z) {
+      var meshY = raycastGround(x, z);
+      if (meshY !== null) return meshY;
       if (terrain && terrain.sampleHeight) return terrain.sampleHeight(x, z);
       return 0;
     }
@@ -91,7 +107,7 @@
       for (var pass = 0; pass < 3; pass++) {
         for (var i = 0; i < entries.length; i++) {
           var e = entries[i];
-          if (!e.solid || e.trigger || !e.box) continue;
+          if (!e.solid || e.trigger || e.groundOnly || !e.box) continue;
           if (mask && !(e.layer & mask)) continue;
           if (!circleHitsBox(x, z, radius, e.box)) continue;
           var odx = Math.max(Math.abs(oldX - e.box.cx) - e.box.hx, 0);
@@ -159,6 +175,14 @@
       });
     }
 
+    function queryLayer(x, y, z, radius, layer) {
+      return querySphere(x, y, z, radius, layer);
+    }
+
+    function pickInteractable(x, y, z, radius) {
+      return querySphere(x, y, z, radius, Layers.MASKS.INTERACT);
+    }
+
     return {
       register: register,
       unregister: unregister,
@@ -166,6 +190,9 @@
       registerTerrain: registerTerrain,
       registerSafeZone: registerSafeZone,
       getGroundHeight: getGroundHeight,
+      raycastGround: raycastGround,
+      queryLayer: queryLayer,
+      pickInteractable: pickInteractable,
       snapObject: snapObject,
       resolveHorizontal: resolveHorizontal,
       raycast: raycast,

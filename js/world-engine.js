@@ -54,6 +54,7 @@
     let scene = null;
     let onChestOpen = null;
     let onSurvivorTalk = null;
+    let onVendorTalk = null;
 
     function rngForChunk(cx, cz) {
       const h = ((cx * 73856093) ^ (cz * 19349663) ^ seed) >>> 0;
@@ -126,8 +127,18 @@
       if (biome.zoneId === 0 && rand() < 0.12) {
         chunk.survivors.push({
           name: ['Mara', 'Torvin', 'Elira', 'Grudge Scout'][Math.floor(rand() * 4)],
+          role: 'npc',
           x: cx * CHUNK_SIZE + 20 + rand() * (CHUNK_SIZE - 40),
           z: cz * CHUNK_SIZE + 20 + rand() * (CHUNK_SIZE - 40),
+        });
+      }
+      if (biome.zoneId <= 1 && rand() < 0.06) {
+        chunk.survivors.push({
+          name: ['Trader Kael', 'Scrap Vendor', 'Island Quartermaster'][Math.floor(rand() * 3)],
+          role: 'vendor',
+          stock: ['t0_bandage', 't0_torch', 't0_ration'],
+          x: cx * CHUNK_SIZE + 24 + rand() * (CHUNK_SIZE - 48),
+          z: cz * CHUNK_SIZE + 24 + rand() * (CHUNK_SIZE - 48),
         });
       }
 
@@ -247,10 +258,12 @@
       const Layers = global.VoxLayers;
       if (!coll || !Layers || !prop || !prop.mesh) return;
       const kind = prop.kind;
-      const layer = Layers.layerForKind(kind === 'survivor' ? 'npc' : kind, prop.data);
+      const isVendor = kind === 'survivor' && prop.data && prop.data.role === 'vendor';
+      const regKind = isVendor ? 'vendor' : (kind === 'survivor' ? 'npc' : kind);
+      const layer = Layers.layerForKind(regKind, prop.data);
       coll.register({
-        id: 'prop_' + kind + '_' + (prop.data && (prop.data.id || prop.data.type) || Math.random().toString(36).slice(2, 8)),
-        kind: kind,
+        id: 'prop_' + regKind + '_' + (prop.data && (prop.data.name || prop.data.id || prop.data.type) || Math.random().toString(36).slice(2, 8)),
+        kind: regKind,
         layer: layer,
         mesh: prop.mesh,
         solid: kind === 'wall' || kind === 'building',
@@ -380,9 +393,14 @@
       props.forEach(p => {
         if (p.kind !== 'survivor') return;
         const d = Math.hypot(px - p.mesh.position.x, pz - p.mesh.position.z);
-        if (d < bestD) { bestD = d; best = p.data; }
+        if (d < bestD) { bestD = d; best = p; }
       });
-      if (best && onSurvivorTalk) { onSurvivorTalk(best); return true; }
+      if (!best) return false;
+      if (best.data && best.data.role === 'vendor' && onVendorTalk) {
+        onVendorTalk(best.data);
+        return true;
+      }
+      if (onSurvivorTalk) { onSurvivorTalk(best.data); return true; }
       return false;
     }
 
@@ -442,7 +460,16 @@
         }
       });
       if (chestD < 3.5) return { type: 'chest', dist: chestD };
-      if (survD < 4) return { type: 'survivor', dist: survD };
+      if (survD < 4) {
+        let near = null;
+        props.forEach(p => {
+          if (p.kind !== 'survivor') return;
+          const d = Math.hypot(px - p.mesh.position.x, pz - p.mesh.position.z);
+          if (d < 4) near = p;
+        });
+        if (near && near.data && near.data.role === 'vendor') return { type: 'vendor', dist: survD, name: near.data.name };
+        return { type: 'survivor', dist: survD };
+      }
       return null;
     }
 
@@ -458,6 +485,7 @@
       getPendingCampSpawns, updateCampAggro, ensureChunksAround,
       setChestHandler(fn) { onChestOpen = fn; },
       setSurvivorHandler(fn) { onSurvivorTalk = fn; },
+      setVendorHandler(fn) { onVendorTalk = fn; },
       getInteractHint,
       resetChunkMeshes() {
         loaded.forEach(c => { c.meshesBuilt = false; });

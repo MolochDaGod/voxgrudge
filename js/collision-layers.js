@@ -63,10 +63,19 @@
     }
   }
 
+  var LAYER_NAMES = {};
+  Object.keys(LAYERS).forEach(function (k) { LAYER_NAMES[LAYERS[k]] = k; });
+
+  function nameForLayer(bit) {
+    return LAYER_NAMES[bit] || ('0x' + bit.toString(16));
+  }
+
   global.VoxLayers = {
     LAYERS: LAYERS,
     MASKS: MASKS,
+    LAYER_NAMES: LAYER_NAMES,
     layerForKind: layerForKind,
     layerForEnemy: layerForEnemy,
+    nameForLayer: nameForLayer,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
