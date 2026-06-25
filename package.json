@@ -7,6 +7,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:game": "node scripts/dev-static.mjs",
     "dev:server": "npm run dev --prefix server",
+    "verify:hud-icons": "node scripts/verify-hud-icons.mjs",
     "start:server": "npm start --prefix server",
     "postinstall": "npm install --prefix server"
   },
