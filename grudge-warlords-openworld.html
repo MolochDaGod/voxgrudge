@@ -206,14 +206,19 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="class-screen">
   <h1>⚔ GRUDGE WARLORDS</h1>
   <div class="sub">Open World · Voxel Combat · Survival Edition</div>
-  <div class="version">v0.9 — Grudge Vox Studio · Fantasy Allies · GRUDOX Live · 14 Weapons</div>
+  <div class="version">v1.0 — 10× Albion Zones · Seeded World · Grudge Items · 2m Scale · GRUDOX</div>
   <div id="skin-picker">
     <div class="skin-picker-label">Voxel Body</div>
     <div id="skin-body-row"></div>
     <div class="skin-picker-label">Color Palette</div>
     <div id="skin-texture-row"></div>
   </div>
-  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 16px;position:relative">Choose class, body, and palette</p>
+  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Choose class, body, and palette</p>
+  <div id="seed-row" style="position:relative;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
+    <span style="font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase">World Seed</span>
+    <input id="world-seed-input" type="number" style="width:120px;background:#0a0e14;border:1px solid #333;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
+    <button type="button" class="hud-action-btn" style="pointer-events:auto" onclick="randomizeWorldSeed()">Random</button>
+  </div>
   <div class="class-grid" id="class-grid"></div>
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">BEGIN SURVIVAL</button>
 </div>
@@ -302,6 +307,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button class="hud-action-btn" onclick="summonAllyMenu()">Allies [T]</button>
 </div>
 
+<div id="zone-pill" style="position:absolute;top:96px;left:16px;z-index:12;pointer-events:none;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:12px;border:1px solid #334;background:rgba(6,10,18,0.85);color:#8a7">Zone · Starter</div>
 <div id="grudox-pill" class="offline">GRUDOX · offline</div>
 <div id="ally-roster"><h3>Allies</h3><div id="ally-list"></div></div>
 
@@ -353,13 +359,18 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
 <div id="traversal-state">GROUND</div>
 
-<div id="instructions">WASD:Move · LMB:Attack · RMB:Mine/Parry/Block · Click skills/weapons/items · Q/E/R/F:Skills · Space:Jump · Shift:Dash · B:Build · C:Craft · Scroll:Weapon · F12:Screenshot</div>
+<div id="world-loading" class="screen-overlay" style="z-index:55;display:none"><h1 style="font-size:28px">Forging World</h1><div class="sub" id="world-loading-msg">Seeding zones · placing camps · spawning nodes…</div></div>
+<div id="interact-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,80px);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e8a86e;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.25s">[X] Open chest · [X] Talk to survivor</div>
+<div id="instructions">WASD:Move · LMB:Attack/Harvest · RMB:Parry · X:Loot chest/Talk · Q/E/R/F:Skills · B:Build · C:Craft · I/G:Bag/Gear · 10× world · zone camps</div>
 
 </div><!-- /game-hud -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="js/grudge-scale.js"></script>
+<script src="js/world-engine.js"></script>
+<script src="js/grudge-items-loader.js"></script>
 <script>
 'use strict';
 
@@ -558,7 +569,12 @@ function hudIconUrl(pack,num){
   return HUD_BASE+'skills/'+pack+'/'+num+'.png';
 }
 function skillIconUrl(id){const m=SKILL_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
-function itemIconUrl(id){const m=ITEM_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
+function itemIconUrl(id){
+  const def=ITEM_DEFS[id];
+  if(def&&def.hudPack&&def.hudNum) return hudIconUrl(def.hudPack,def.hudNum);
+  const m=ITEM_ICON_MAP[id];
+  return m?hudIconUrl(m[0],m[1]):null;
+}
 function setHudIcon(el,url,fallback){
   if(!el) return;
   let img=el.querySelector('.hud-icon-img');
@@ -656,6 +672,10 @@ const _color = new THREE.Color();
 let mmCanvas, mmCtx;
 let ambientLight, dirLight;
 let worldPlane;
+let worldEngine = null;
+let chestLootTable = {};
+let campSpawnQueue = [];
+let lastChunkUpdate = 0;
 let attackCd = 0;
 
 // ── New Systems State ──
@@ -848,15 +868,43 @@ function updateSkinPickerUI(){
 // ═══════════════════════════════════════════════════════════════
 // START GAME
 // ═══════════════════════════════════════════════════════════════
+function randomizeWorldSeed(){
+  const inp=document.getElementById('world-seed-input');
+  if(inp) inp.value=String(Math.floor(Math.random()*999999999));
+}
+
 function startGame(){
   if(!playerClass) return;
+  const seedInp=document.getElementById('world-seed-input');
+  const worldSeed=parseInt(seedInp&&seedInp.value?seedInp.value:'',10)||(Date.now()%1000000000);
+  if(seedInp&&!seedInp.value) seedInp.value=String(worldSeed);
+  const loadEl=document.getElementById('world-loading');
+  if(loadEl) loadEl.style.display='block';
   document.getElementById('class-screen').style.display='none';
   document.getElementById('game-hud').classList.remove('pre-game-hidden');
-  preloadVFXTextures();
-  preloadKenneyTextures(function(){
-    preloadModels(function(){
-      preloadFantasyModels(function(){
-        initFBXSkeleton(function(){ init(); connectGrudox(); });
+  worldEngine=VoxWorld.createWorldEngine({seed:worldSeed,biomes:BIOMES,tierPools:TIER_POOLS});
+  worldEngine.setChestHandler(function(chest){
+    const lootId=GrudgeItems.rollChestLoot(chestLootTable,chest.tier,Math.random);
+    if(lootId&&ITEM_DEFS[lootId]){addToInventory(lootId,1);showFlash('Chest: '+ITEM_DEFS[lootId].name);}
+    else{resources.wood+=2;resources.stone+=1;updateResUI();showFlash('Chest: supplies');}
+  });
+  worldEngine.setSurvivorHandler(function(sv){
+    showFlash(sv.name+': "The wastes are wider now. Harvest nodes, clear camps, loot chests — don\'t let them chase you home."');
+    hp=Math.min(maxHp,hp+25);
+  });
+  GrudgeItems.loadGrudgeItems(ITEM_DEFS,hudIconUrl).then(function(bundle){
+    Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
+    chestLootTable=bundle.chestLoot||{};
+    preloadVFXTextures();
+    preloadKenneyTextures(function(){
+      preloadModels(function(){
+        preloadFantasyModels(function(){
+          initFBXSkeleton(function(){
+            init();
+            connectGrudox();
+            if(loadEl) loadEl.style.display='none';
+          });
+        });
       });
     });
   });
@@ -871,7 +919,7 @@ function init(){
   // Apply class bonuses to state
   maxHp = Math.round(100 * (cls.hpMult||1));
   hp = maxHp;
-  const baseSpeed = 12 * (cls.speedMult||1);
+  const baseSpeed = 16 * (cls.speedMult||1);
 
   // Apply start weapons
   Object.keys(WEAPONS).forEach(w => WEAPONS[w].owned = false);
@@ -907,10 +955,10 @@ function init(){
   dirLight.castShadow = true;
   dirLight.shadow.camera.near = 1;
   dirLight.shadow.camera.far = 200;
-  dirLight.shadow.camera.left = -80;
-  dirLight.shadow.camera.right = 80;
-  dirLight.shadow.camera.top = 80;
-  dirLight.shadow.camera.bottom = -80;
+  dirLight.shadow.camera.left = -160;
+  dirLight.shadow.camera.right = 160;
+  dirLight.shadow.camera.top = 160;
+  dirLight.shadow.camera.bottom = -160;
   dirLight.shadow.mapSize.set(2048,2048);
   scene.add(dirLight);
 
@@ -940,7 +988,7 @@ function init(){
     playerMesh = glbModel;
     playerSkelParts = getSkeletonParts(playerMesh);
   } else {
-    playerMesh = buildVoxChar(0x5588cc, 0x224466);
+    playerMesh = buildVoxChar(0x5588cc, 0x224466, GrudgeScale.voxScale(GrudgeScale.PLAYER_HEIGHT_M));
   }
   playerMesh.position.set(0, 0, 0);
   scene.add(playerMesh);
@@ -971,6 +1019,7 @@ function init(){
     if(e.code==='KeyI') { e.preventDefault(); toggleInventory(); }
     if(e.code==='KeyG') { e.preventDefault(); toggleEquip(); }
     if(e.code==='KeyT') { e.preventDefault(); summonAllyMenu(); }
+    if(e.code==='KeyX') { e.preventDefault(); tryWorldInteract(); }
     if(e.code==='KeyM') tryMineResource();
     if(e.code==='KeyQ') activateSkill(0);
     if(e.code==='KeyE') activateSkill(1);
@@ -1059,55 +1108,35 @@ function genProcTexture(type){
 }
 
 function buildWorld(){
+  if(worldEngine){
+    window._waterPlane=worldEngine.buildGround(scene,genProcTexture,THREE);
+    worldEngine.updateChunks(0,0,THREE,{spawnResourceNode:spawnResourceNode,buildSurvivor:buildSurvivorNPC});
+    return;
+  }
   const biomeTexTypes=['grass','swamp','ruins','wasteland','dark'];
   BIOMES.forEach((biome,bi)=>{
-    const r = (biome.maxD < 999 ? biome.maxD : 130)*2;
-    const prevR = biome.minD*2;
+    const r=(biome.maxD<999?biome.maxD:130)*2;
+    const prevR=biome.minD*2;
     const tex=genProcTexture(biomeTexTypes[bi]||'grass');
     tex.repeat.set(r/4,r/4);
     if(bi===0){
-      const geo = new THREE.CircleGeometry(r, 64);
-      const mat = new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05});
-      const m = new THREE.Mesh(geo, mat);
-      m.rotation.x = -Math.PI/2;
-      m.receiveShadow = true;
-      scene.add(m);
-      worldPlane = m;
+      const geo=new THREE.CircleGeometry(r,64);
+      const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05});
+      const m=new THREE.Mesh(geo,mat);
+      m.rotation.x=-Math.PI/2;m.receiveShadow=true;scene.add(m);worldPlane=m;
     } else {
-      const geo = new THREE.RingGeometry(prevR, r, 64);
-      const mat = new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05,side:THREE.DoubleSide});
-      const m = new THREE.Mesh(geo, mat);
-      m.rotation.x = -Math.PI/2;
-      m.receiveShadow = true;
-      scene.add(m);
+      const geo=new THREE.RingGeometry(prevR,r,64);
+      const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0.05,side:THREE.DoubleSide});
+      const m=new THREE.Mesh(geo,mat);
+      m.rotation.x=-Math.PI/2;m.receiveShadow=true;scene.add(m);
     }
   });
-
-  // Animated water plane
-  const waterGeo = new THREE.PlaneGeometry(300,300,32,32);
-  const waterMat = new THREE.MeshStandardMaterial({color:0x2266aa,transparent:true,opacity:0.55,roughness:0.1,metalness:0.4});
-  const waterPlane = new THREE.Mesh(waterGeo, waterMat);
-  waterPlane.rotation.x=-Math.PI/2;
-  waterPlane.position.y=-1.2;
-  waterPlane.receiveShadow=true;
-  scene.add(waterPlane);
-  // Store for animation
-  window._waterPlane=waterPlane;
-
   spawnResourceNodes();
+}
 
-  // Border pillars with glow tops
-  for(let a=0;a<36;a++){
-    const angle = (a/36)*Math.PI*2;
-    const r = 135;
-    const post = new THREE.Mesh(new THREE.BoxGeometry(2,8,2),new THREE.MeshStandardMaterial({color:0x1a0a22,roughness:0.8}));
-    post.position.set(Math.cos(angle)*r, 4, Math.sin(angle)*r);
-    post.castShadow=true;
-    scene.add(post);
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.6,6,6),new THREE.MeshStandardMaterial({color:0xe63d3d,emissive:0xe63d3d,emissiveIntensity:0.8}));
-    glow.position.set(Math.cos(angle)*r, 8.5, Math.sin(angle)*r);
-    scene.add(glow);
-  }
+function buildSurvivorNPC(sv){
+  const g=cloneModel('e',1,'a')||buildVoxChar(0x8899aa,0x334455,GrudgeScale.voxScale(2));
+  return g;
 }
 
 function spawnResourceNodes(){
@@ -1692,7 +1721,7 @@ function killEnemy(e){
   }
 
   // Drop items
-  if(Math.random()<0.25) spawnWorldItem(e.mesh.position);
+  if(Math.random()<0.35) spawnWorldItem(e.mesh.position,e.def.tier);
 
   // Level up
   while(exp >= expToNext){
@@ -1746,68 +1775,45 @@ function triggerGameOver(){
 // ENEMY SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function getBiome(x,z){
-  const d = Math.sqrt(x*x+z*z);
-  for(let i=BIOMES.length-1;i>=0;i--){
-    if(d>=BIOMES[i].minD) return BIOMES[i];
-  }
+  if(worldEngine) return worldEngine.getBiomeAt(x,z);
+  const d=Math.sqrt(x*x+z*z);
+  for(let i=BIOMES.length-1;i>=0;i--){if(d>=BIOMES[i].minD) return BIOMES[i];}
   return BIOMES[0];
 }
 
-function spawnEnemy(isRaid){
-  const pp = playerMesh.position;
-  const biome = getBiome(pp.x, pp.z);
-  const tiers = biome.tiers;
-  const tier = tiers[Math.floor(Math.random()*tiers.length)];
-  const pool = TIER_POOLS[tier]||TIER_POOLS[1];
-  const typeId = pool[Math.floor(Math.random()*pool.length)];
-  const def = ENEMY_TYPES[typeId];
-
-  // Spawn position
-  let sx, sz;
-  if(isRaid){
-    const angle = Math.random()*Math.PI*2;
-    const d = 50+Math.random()*20;
-    sx = Math.cos(angle)*d;
-    sz = Math.sin(angle)*d;
-  } else {
-    const angle = Math.random()*Math.PI*2;
-    const d = 25+Math.random()*15;
-    sx = pp.x+Math.cos(angle)*d;
-    sz = pp.z+Math.sin(angle)*d;
-  }
-
-  // Fantasy GLB → creature GLB → Kenney humanoid → vox fallback
+function spawnEnemyAt(sx,sz,typeId,meta){
+  meta=meta||{};
+  const def=ENEMY_TYPES[typeId];
+  if(!def) return null;
+  const heightM=GrudgeScale.heightForEnemy(def,typeId);
   let mesh;
-  const fantasyKey = def.fantasy;
-  const fantasyTemplate = fantasyKey ? FANTASY_CACHE[fantasyKey] : null;
+  const fantasyKey=def.fantasy;
+  const fantasyTemplate=fantasyKey?FANTASY_CACHE[fantasyKey]:null;
   if(fantasyTemplate){
-    mesh = fantasyTemplate.clone();
+    mesh=fantasyTemplate.clone();
     mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
-    const fsc = (FANTASY_SCALE[fantasyKey]||1.2)*(def.sc||1)*0.55;
+    const fsc=GrudgeScale.fantasyScale(fantasyKey,heightM);
     mesh.scale.set(fsc,fsc,fsc);
-    tintModel(mesh, def.body);
+    tintModel(mesh,def.body);
   } else {
-  const creatureName = CREATURE_MODEL_MAP[typeId];
-  const creatureTemplate = creatureName ? CREATURE_CACHE[creatureName] : null;
-  if(creatureTemplate){
-    mesh = creatureTemplate.clone();
-    mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
-    const csc = (CREATURE_SCALE_MAP[creatureName]||1.5) * (def.sc||1) * 0.5;
-    mesh.scale.set(csc,csc,csc);
-    tintModel(mesh, def.body);
-  } else {
-    const isHumanoid = def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
-    const eLetter = ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
-    const eTex = KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
-    const enemyGlb = isHumanoid ? cloneModel(eLetter, def.sc||1, eTex) : null;
-    if(enemyGlb){
-      mesh = enemyGlb;
+    const creatureName=CREATURE_MODEL_MAP[typeId];
+    const creatureTemplate=creatureName?CREATURE_CACHE[creatureName]:null;
+    if(creatureTemplate){
+      mesh=creatureTemplate.clone();
+      mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+      const csc=GrudgeScale.creatureScale(creatureName,heightM);
+      mesh.scale.set(csc,csc,csc);
+      tintModel(mesh,def.body);
     } else {
-      mesh = buildVoxChar(def.body, (def.pants||0x222222), def.sc||1);
+      const isHumanoid=def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
+      const eLetter=ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
+      const eTex=KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
+      const enemyGlb=isHumanoid?cloneModel(eLetter,heightM/GrudgeScale.PLAYER_HEIGHT_M,eTex):null;
+      if(enemyGlb) mesh=enemyGlb;
+      else mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM));
     }
   }
-  }
-  mesh.position.set(sx, 0, sz);
+  mesh.position.set(sx,0,sz);
   // Canvas health bar (replaces emoji)
   const hbCanvas = document.createElement('canvas'); hbCanvas.width=64; hbCanvas.height=10;
   const hbCtx = hbCanvas.getContext('2d');
@@ -1817,34 +1823,64 @@ function spawnEnemy(isRaid){
   const hbMat = new THREE.SpriteMaterial({map:hbTex,transparent:true});
   const hbSprite = new THREE.Sprite(hbMat);
   hbSprite.scale.set(2.0, 0.3, 1);
-  hbSprite.position.set(0, 4.0*(def.sc||1), 0);
+  const barY=heightM*2+0.5;
+  hbSprite.position.set(0,barY,0);
   mesh.add(hbSprite);
-  // Name label
-  const nlCanvas = document.createElement('canvas'); nlCanvas.width=128; nlCanvas.height=24;
-  const nlCtx = nlCanvas.getContext('2d');
-  nlCtx.fillStyle='rgba(0,0,0,0.6)'; nlCtx.fillRect(0,0,128,24);
-  nlCtx.font='bold 14px sans-serif'; nlCtx.fillStyle='#fff'; nlCtx.textAlign='center';
+  const nlCanvas=document.createElement('canvas');nlCanvas.width=128;nlCanvas.height=24;
+  const nlCtx=nlCanvas.getContext('2d');
+  nlCtx.fillStyle='rgba(0,0,0,0.6)';nlCtx.fillRect(0,0,128,24);
+  nlCtx.font='bold 14px sans-serif';nlCtx.fillStyle='#fff';nlCtx.textAlign='center';
   nlCtx.fillText(def.name,64,17);
-  const nlTex = new THREE.CanvasTexture(nlCanvas);
-  const nlMat = new THREE.SpriteMaterial({map:nlTex,transparent:true});
-  const nlSprite = new THREE.Sprite(nlMat);
-  nlSprite.scale.set(3.0, 0.5, 1);
-  nlSprite.position.set(0, 4.5*(def.sc||1), 0);
+  const nlTex=new THREE.CanvasTexture(nlCanvas);
+  const nlMat=new THREE.SpriteMaterial({map:nlTex,transparent:true});
+  const nlSprite=new THREE.Sprite(nlMat);
+  nlSprite.scale.set(3.0,0.5,1);
+  nlSprite.position.set(0,barY+0.5,0);
   mesh.add(nlSprite);
   scene.add(mesh);
 
-  enemies.push({
-    mesh, def, typeId,
-    hp: def.hp, maxHp: def.hp, dmg: def.dmg,
-    speed: def.speed, alive: true,
-    flashTimer:0, attackCd:0,
-    beh: def.beh,
-    bleed: null,
-    chargeVel: null, chargeTimer:0,
-    ghostTimer:0, ghostLeapCd: 3+Math.random()*3,
-    leapTimer: 0, leapCd: 2+Math.random()*2,
-    hbCanvas, hbCtx, hbTex, hbSprite,
-  });
+  const enemy={
+    mesh,def,typeId,heightM,
+    hp:def.hp,maxHp:def.hp,dmg:def.dmg,
+    speed:def.speed,alive:true,
+    flashTimer:0,attackCd:0,
+    beh:def.beh,
+    bleed:null,
+    chargeVel:null,chargeTimer:0,
+    ghostTimer:0,ghostLeapCd:3+Math.random()*3,
+    leapTimer:0,leapCd:2+Math.random()*2,
+    hbCanvas,hbCtx,hbTex,hbSprite,
+    campId:meta.campId||null,
+    campSlot:meta.campSlot,
+    homeX:meta.homeX!=null?meta.homeX:sx,
+    homeZ:meta.homeZ!=null?meta.homeZ:sz,
+    aggro:!!meta.isRaid,
+    leashed:false,
+    patrolAngle:Math.random()*Math.PI*2,
+  };
+  enemies.push(enemy);
+  return enemy;
+}
+
+function spawnEnemy(isRaid){
+  const pp=playerMesh.position;
+  const biome=getBiome(pp.x,pp.z);
+  const tier=biome.tiers[Math.floor(Math.random()*biome.tiers.length)];
+  const pool=TIER_POOLS[tier]||TIER_POOLS[1];
+  const typeId=pool[Math.floor(Math.random()*pool.length)];
+  let sx,sz;
+  if(isRaid){
+    const angle=Math.random()*Math.PI*2;
+    const d=80+Math.random()*40;
+    sx=pp.x+Math.cos(angle)*d;
+    sz=pp.z+Math.sin(angle)*d;
+  } else {
+    const angle=Math.random()*Math.PI*2;
+    const d=40+Math.random()*25;
+    sx=pp.x+Math.cos(angle)*d;
+    sz=pp.z+Math.sin(angle)*d;
+  }
+  return spawnEnemyAt(sx,sz,typeId,{isRaid:!!isRaid,homeX:sx,homeZ:sz});
 }
 
 function updateEnemies(dt){
@@ -1886,6 +1922,31 @@ function updateEnemies(dt){
 
     // Attack cooldown
     e.attackCd = Math.max(0, e.attackCd-dt);
+
+    // Camp AI — Albion-style aggro + leash + patrol (not endless chase)
+    if(e.campId){
+      const distHome=Math.hypot(ep.x-e.homeX,ep.z-e.homeZ);
+      const distPlayer=Math.hypot(ep.x-pp.x,ep.z-pp.z);
+      e.aggro=distPlayer<(worldEngine?worldEngine.AGGRO_RADIUS:32);
+      e.leashed=distHome>(worldEngine?worldEngine.LEASH_RADIUS:90);
+      if(e.leashed){
+        const toHome=new THREE.Vector3(e.homeX-ep.x,0,e.homeZ-ep.z).normalize();
+        ep.add(toHome.multiplyScalar(e.speed*1.2*dt));
+        ep.y=0;
+        if(dist<2.5&&e.attackCd<=0){e.attackCd=1.2;damagePlayer(e.dmg);}
+        return;
+      }
+      if(!e.aggro){
+        e.patrolAngle=(e.patrolAngle||0)+dt*0.4;
+        const pr=(worldEngine?worldEngine.PATROL_RADIUS:14)*0.45;
+        const tx=e.homeX+Math.cos(e.patrolAngle)*pr;
+        const tz=e.homeZ+Math.sin(e.patrolAngle)*pr;
+        const toP=new THREE.Vector3(tx-ep.x,0,tz-ep.z);
+        if(toP.length()>0.5) ep.add(toP.normalize().multiplyScalar(e.speed*0.35*dt));
+        ep.y=0;
+        return;
+      }
+    }
 
     // Behaviors
     let moved = false;
@@ -2325,20 +2386,43 @@ function updateParticles(dt){
 // ═══════════════════════════════════════════════════════════════
 // WORLD ITEMS
 // ═══════════════════════════════════════════════════════════════
-function spawnWorldItem(pos){
-  const itemIds = Object.keys(ITEM_DEFS);
-  const id = itemIds[Math.floor(Math.random()*itemIds.length)];
-  const def = ITEM_DEFS[id];
-  const geo = new THREE.BoxGeometry(0.8,0.8,0.8);
-  const mat = new THREE.MeshStandardMaterial({color:def.color||0xffaa00,emissive:def.color||0xffaa00,emissiveIntensity:0.5});
-  const mesh = new THREE.Mesh(geo,mat);
+function pickDropItemId(tier){
+  const t0=Object.keys(ITEM_DEFS).filter(k=>k.startsWith('t0_'));
+  const pool=t0.length?t0:Object.keys(ITEM_DEFS);
+  if(chestLootTable[String(tier||1)]){
+    const cl=chestLootTable[String(tier)];
+    if(cl.length) return cl[Math.floor(Math.random()*cl.length)];
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function spawnWorldItem(pos,tier){
+  const id=pickDropItemId(tier);
+  const def=ITEM_DEFS[id];
+  if(!def) return;
+  const geo=new THREE.BoxGeometry(0.6,0.6,0.6);
+  const mat=new THREE.MeshStandardMaterial({color:def.color||0xffaa00,emissive:def.color||0xffaa00,emissiveIntensity:0.45});
+  const mesh=new THREE.Mesh(geo,mat);
   mesh.position.copy(pos);
   mesh.position.y=0.5;
-  const lbl = makeEmojiSprite(def.icon,1.2);
-  lbl.position.y=1.2;
-  mesh.add(lbl);
   scene.add(mesh);
-  worldItems.push({mesh, id, def, spinAngle:Math.random()*Math.PI*2});
+  worldItems.push({mesh,id,def,spinAngle:Math.random()*Math.PI*2});
+}
+
+function tryWorldInteract(){
+  if(!worldEngine||!playerMesh) return;
+  const p=playerMesh.position;
+  if(worldEngine.tryOpenChest(p.x,p.z)) return;
+  worldEngine.tryTalkSurvivor(p.x,p.z);
+}
+
+function updateInteractHint(){
+  const el=document.getElementById('interact-hint');
+  if(!el||!worldEngine||!playerMesh){if(el)el.style.opacity='0';return;}
+  const hint=worldEngine.getInteractHint(playerMesh.position.x,playerMesh.position.z);
+  if(!hint){el.style.opacity='0';return;}
+  el.style.opacity='1';
+  el.textContent=hint.type==='chest'?'[X] Open chest':'[X] Talk to survivor';
 }
 
 function updateWorldItems(dt){
@@ -2859,14 +2943,14 @@ function updatePlayer(dt){
   // Skip normal movement during traversal actions
   if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing'){
     camera.position.x=playerMesh.position.x;
-    camera.position.z=playerMesh.position.z+22;
-    camera.position.y=28;
+    camera.position.z=playerMesh.position.z+28;
+    camera.position.y=34;
     camera.lookAt(playerMesh.position);
     dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
     attackCd=Math.max(0,attackCd-dt);
     return;
   }
-  const baseSpeed = 12*(CLASSES[playerClass].speedMult||1);
+  const baseSpeed = 16*(CLASSES[playerClass].speedMult||1);
   let spd = baseSpeed * (statusEffects.speed ? statusEffects.speed.mult : 1);
   if(playerState==='swimming') spd*=swimSpeedMult;
   if(formBuff) spd*=(formBuff.speedMult||1);
@@ -2906,8 +2990,8 @@ function updatePlayer(dt){
 
   // Camera follow
   camera.position.x=playerMesh.position.x;
-  camera.position.z=playerMesh.position.z+22;
-  camera.position.y=28;
+  camera.position.z=playerMesh.position.z+28;
+  camera.position.y=34;
   camera.lookAt(playerMesh.position);
   dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
 
@@ -2920,17 +3004,33 @@ function updatePlayer(dt){
 // ═══════════════════════════════════════════════════════════════
 function updateSpawning(dt){
   const now=performance.now();
-  // Dynamic spawn interval (more enemies in harder biomes, during night)
-  const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
-  const biomeIdx=BIOMES.indexOf(biome);
-  let interval=spawnInterval - biomeIdx*200 - (dayNumber*50);
-  if(isNight) interval*=0.6;
-  interval=Math.max(800,interval);
-
-  if(now-lastSpawnTime>interval&&enemies.length<30){
-    spawnEnemy(false);
-    lastSpawnTime=now;
+  const pp=playerMesh.position;
+  if(worldEngine){
+    if(now-lastChunkUpdate>900){
+      worldEngine.updateChunks(pp.x,pp.z,THREE,{spawnResourceNode:spawnResourceNode,buildSurvivor:buildSurvivorNPC});
+      worldEngine.updateCampAggro(pp.x,pp.z,enemies);
+      lastChunkUpdate=now;
+    }
+    const pending=worldEngine.getPendingCampSpawns(pp.x,pp.z,enemies);
+    const maxAlive=22;
+    if(enemies.length<maxAlive&&pending.length){
+      const batch=pending.slice(0,Math.min(3,pending.length));
+      batch.forEach(function(sp){
+        spawnEnemyAt(sp.x,sp.z,sp.typeId,{campId:sp.campId,campSlot:sp.campSlot,homeX:sp.homeX,homeZ:sp.homeZ});
+      });
+    }
+    if(isNight&&now-lastSpawnTime>spawnInterval*1.8&&enemies.length<maxAlive+6){
+      spawnEnemy(true);
+      lastSpawnTime=now;
+    }
+    return;
   }
+  const biome=getBiome(pp.x,pp.z);
+  const biomeIdx=BIOMES.indexOf(biome);
+  let interval=spawnInterval-biomeIdx*200-(dayNumber*50);
+  if(isNight) interval*=0.6;
+  interval=Math.max(1200,interval);
+  if(now-lastSpawnTime>interval&&enemies.length<18){spawnEnemy(false);lastSpawnTime=now;}
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2953,12 +3053,14 @@ function updateGhostBlock(){
 function updateMinimap(){
   mmCtx.fillStyle='#0a0e14';
   mmCtx.fillRect(0,0,120,120);
-  const cx=60,cy=60,scale=120/260;
+  const worldR=worldEngine?worldEngine.getWorldRadius():130;
+  const cx=60,cy=60,scale=110/(worldR*2.2);
 
   // Draw biome rings
   const biomeColors=['#2a4a1a','#1a2a10','#3a2020','#4a3010','#110022'];
-  BIOMES.forEach((b,i)=>{
-    const r=Math.min(b.maxD<999?b.maxD:130,130)*scale;
+  const scaledBiomes=worldEngine?worldEngine.getBiomes():BIOMES.map(b=>({...b,maxD:b.maxD>=999?130*10:b.maxD*10,minD:b.minD*10}));
+  scaledBiomes.forEach((b,i)=>{
+    const r=Math.min(b.maxD<999*10?b.maxD:130*10,b.maxD)*scale;
     mmCtx.fillStyle=biomeColors[i];
     mmCtx.beginPath(); mmCtx.arc(cx,cy,r,0,Math.PI*2); mmCtx.fill();
   });
@@ -3001,9 +3103,11 @@ function updateHUD(){
   document.getElementById('exp-fill').style.width=expPct+'%';
   document.getElementById('level-val').textContent='Lv.'+level+' — '+exp+'/'+expToNext;
 
-  // Biome
+  // Biome / zone
   const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
   document.getElementById('biome-label').textContent=biome.name;
+  const zp=document.getElementById('zone-pill');
+  if(zp) zp.textContent='Zone · '+biome.label+(worldEngine?' · seed '+worldEngine.getSeed():'');
 
   // Skill cooldowns
   const slots=['Q','E','R','F'];
@@ -3219,15 +3323,15 @@ function preloadFantasyModels(callback){
   });
 }
 
-function cloneModel(letter, scale, textureLetter){
-  scale = scale||1;
-  textureLetter = textureLetter||playerSkinTexture||'a';
-  const template = MODEL_CACHE[letter];
+function cloneModel(letter, heightMult, textureLetter){
+  heightMult=heightMult||1;
+  textureLetter=textureLetter||playerSkinTexture||'a';
+  const template=MODEL_CACHE[letter];
   if(!template) return null;
-  const clone = template.clone();
+  const clone=template.clone();
   clone.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
-  applyKenneyTexture(clone, textureLetter);
-  const sc = 1.4*scale; // Kenney models are ~1.9 units tall, we want ~2.8
+  applyKenneyTexture(clone,textureLetter);
+  const sc=GrudgeScale.kenneyScale(GrudgeScale.PLAYER_HEIGHT_M*heightMult);
   clone.scale.set(sc,sc,sc);
   return clone;
 }
@@ -3841,6 +3945,7 @@ function animate(){
   updateSkeletonAnims(dt);
   updateVFXSprites(dt);
   updateGrudox(dt);
+  updateInteractHint();
   updateEnergyOrbs(dt);
   updateParry(dt);
   if(playerMixer) playerMixer.update(dt);
@@ -4209,6 +4314,7 @@ function playAnimOnMesh(mesh, animName, crossfade){
 }
 
 // initial UI call
+randomizeWorldSeed();
 initWeaponIcons();
 updateSkillUI();
 </script>

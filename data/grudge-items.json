@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "source": "Grudge Warlords T0 manifest (offline fallback)",
+  "api": "https://api.grudge-studio.com/api/game/items",
+  "items": [
+    {"id":"t0_herb","name":"Wild Herb","icon":"🌿","type":"material","sellValue":1,"hudPack":"druid","hudNum":3},
+    {"id":"t0_wood_log","name":"Rough Log","icon":"🪵","type":"material","sellValue":1,"hudPack":"druid","hudNum":8},
+    {"id":"t0_stone_chunk","name":"Stone Chunk","icon":"🪨","type":"material","sellValue":1,"hudPack":"swordsman","hudNum":22},
+    {"id":"t0_iron_ore","name":"Iron Ore","icon":"⚙️","type":"material","sellValue":2,"hudPack":"swordsman","hudNum":23},
+    {"id":"t0_health_potion","name":"Weak Health Potion","icon":"🧪","type":"consumable","effect":"heal","healAmt":60,"sellValue":2,"hudPack":"mage","hudNum":13},
+    {"id":"t0_mana_potion","name":"Weak Mana Potion","icon":"💧","type":"consumable","effect":"speed","duration":8,"mult":1.15,"sellValue":2,"hudPack":"mage","hudNum":14},
+    {"id":"t0_cooked_meat","name":"Charred Meat","icon":"🍖","type":"consumable","effect":"heal","healAmt":40,"sellValue":1,"hudPack":"archer","hudNum":19},
+    {"id":"t0_rusty_dagger","name":"Rusty Dagger","icon":"🗡️","type":"weapon","sellValue":3,"hudPack":"necromancer","hudNum":1},
+    {"id":"t0_leather_scrap","name":"Leather Scrap","icon":"🦺","type":"material","sellValue":2,"hudPack":"swordsman","hudNum":14},
+    {"id":"t0_moonflower","name":"Moonflower","icon":"🌙","type":"material","sellValue":2,"hudPack":"mage","hudNum":6},
+    {"id":"t0_water_vial","name":"Water Vial","icon":"🫙","type":"material","sellValue":1,"hudPack":"paladin","hudNum":5},
+    {"id":"t0_salvage_gear","name":"Salvage Gear","icon":"⚙️","type":"material","sellValue":3,"hudPack":"archer","hudNum":24},
+    {"id":"t0_grudge_relic","name":"Grudge Relic Shard","icon":"💎","type":"accessory","effect":"rage","duration":12,"mult":1.2,"sellValue":8,"hudPack":"paladin","hudNum":20},
+    {"id":"t0_smoke_bomb","name":"Smoke Bomb","icon":"💨","type":"consumable","effect":"speed","duration":6,"mult":1.35,"sellValue":4,"hudPack":"necromancer","hudNum":12},
+    {"id":"t0_field_bandage","name":"Field Bandage","icon":"🩹","type":"consumable","effect":"heal","healAmt":90,"sellValue":3,"hudPack":"paladin","hudNum":10}
+  ],
+  "chestLoot": {
+    "1": ["t0_herb","t0_wood_log","t0_health_potion","t0_cooked_meat"],
+    "2": ["t0_stone_chunk","t0_leather_scrap","t0_field_bandage","t0_mana_potion"],
+    "3": ["t0_iron_ore","t0_rusty_dagger","t0_smoke_bomb","t0_salvage_gear"],
+    "4": ["t0_iron_ore","t0_grudge_relic","t0_field_bandage","health_potion"],
+    "5": ["t0_grudge_relic","medkit","power_charm","t0_moonflower"],
+    "6": ["berserker","invuln_potion","t0_grudge_relic","frag_grenade"],
+    "7": ["t0_grudge_relic","berserker","invuln_potion","power_charm"]
+  }
+}
