@@ -2199,9 +2199,10 @@ let grudoxPlayerId = null;
 
 function grudoxWsUrl(){
   const proto = location.protocol==='https:'?'wss:':'ws:';
-  // Vercel static hosting cannot proxy WebSockets — connect to Railway room directly
+  // Vercel cannot proxy WebSockets — production uses Railway directly.
+  // Local dev: game on :3000, GRUDOX room on :8787 (npm run dev).
   const host = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
-    ? location.host
+    ? 'localhost:8787'
     : GRUDOX_ROOM_HOST;
   return proto+'//'+host+GRUDOX_WS_PATH;
 }
