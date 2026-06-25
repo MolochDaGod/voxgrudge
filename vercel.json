@@ -1,21 +1,22 @@
 {
-  "version": 2,
-  "routes": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/grudox", "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/grudox" },
+    { "source": "/api/health", "destination": "https://voxgrudge-grudox-room-production.up.railway.app/health" },
+    { "source": "/api/auth/:path*", "destination": "https://id.grudge-studio.com/auth/:path*" },
+    { "source": "/api/characters/:path*", "destination": "https://api.grudge-studio.com/api/characters/:path*" },
+    { "source": "/api/assets/:path*", "destination": "https://assets.grudge-studio.com/:path*" },
+    { "source": "/api/:path*", "destination": "https://api.grudge-studio.com/api/:path*" },
+    { "source": "/", "destination": "/grudge-warlords-openworld.html" },
+    { "source": "/(.*)", "destination": "/$1" }
+  ],
+  "headers": [
     {
-      "src": "/api/grudox",
-      "dest": "https://voxgrudge-grudox-room-production.up.railway.app/api/grudox"
-    },
-    {
-      "src": "/api/health",
-      "dest": "https://voxgrudge-grudox-room-production.up.railway.app/health"
-    },
-    {
-      "src": "/",
-      "dest": "/grudge-warlords-openworld.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
     }
   ]
 }
