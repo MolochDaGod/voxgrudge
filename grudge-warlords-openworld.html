@@ -553,7 +553,10 @@ const WEAPON_ICON_MAP = {
 const CLASS_ICON_MAP = {
   swordsman:['swordsman',1],archer:['archer',1],mage:['mage',1],druid:['druid',1],paladin:['paladin',1],necromancer:['necromancer',1],
 };
-function hudIconUrl(pack,num){return HUD_BASE+'skills/'+pack+'/'+num+'.png';}
+function hudIconUrl(pack,num){
+  if(pack==='mage') return HUD_BASE+'skills/mage/FrostMage_'+num+'.png';
+  return HUD_BASE+'skills/'+pack+'/'+num+'.png';
+}
 function skillIconUrl(id){const m=SKILL_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
 function itemIconUrl(id){const m=ITEM_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
 function setHudIcon(el,url,fallback){
