@@ -1,0 +1,254 @@
+/* Grudge Warlords HUD — PSD palette + Cryo Mini GUI + gothic slot frames */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Cinzel+Decorative:wght@700&display=swap');
+
+:root {
+  --gw-blood: #8B0000;
+  --gw-blood-bright: #c41e1e;
+  --gw-blue: #1a3a6e;
+  --gw-blue-bright: #3d6db5;
+  --gw-orange: #E8A86E;
+  --gw-orange-deep: #c47a3a;
+  --gw-panel: rgba(8, 6, 14, 0.94);
+  --gw-gold: #c9a227;
+  --gw-slot-border: #4a3020;
+  --hud-font: 'Cinzel', 'Segoe UI', serif;
+  --hud-slice: 18;
+}
+
+body {
+  font-family: var(--hud-font);
+}
+
+/* ── Class screen ── */
+#class-screen {
+  background:
+    url('frames/panel-bg.png') center/cover no-repeat,
+    radial-gradient(ellipse at center, #1a0a0a 0%, #040408 100%);
+}
+#class-screen h1 {
+  font-family: 'Cinzel Decorative', var(--hud-font);
+  color: var(--gw-blood-bright);
+  text-shadow: 0 0 30px rgba(139, 0, 0, 0.6), 0 2px 0 #000;
+}
+.class-card {
+  background: url('frames/slot-gothic.png') center/100% 100% no-repeat, rgba(10, 8, 14, 0.92);
+  border: 1px solid var(--gw-slot-border);
+  border-radius: 4px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.class-card .c-icon img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+.gw-btn {
+  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, var(--gw-blood);
+  border: 1px solid var(--gw-gold);
+  font-family: var(--hud-font);
+  letter-spacing: 4px;
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.4);
+}
+.gw-btn:hover {
+  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, var(--gw-orange-deep);
+  color: #fff;
+}
+
+/* ── Stat boxes & bars ── */
+.stat-box {
+  background: url('frames/panel-fg.png') center/100% 100% no-repeat, var(--gw-panel);
+  border-left: 3px solid var(--gw-blood);
+  border-radius: 2px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+.stat-label {
+  color: var(--gw-orange);
+  font-family: var(--hud-font);
+  letter-spacing: 3px;
+}
+.bar-track {
+  height: 6px;
+  background: var(--gw-blue);
+  border: 1px solid #0a1020;
+  border-radius: 2px;
+}
+#hp-fill {
+  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, var(--gw-blood), var(--gw-orange));
+}
+#exp-fill {
+  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, var(--gw-blue), var(--gw-blue-bright));
+}
+#day-bar {
+  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, #ffcc44, var(--gw-orange));
+}
+#stamina-fill {
+  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, #228822, #44cc44);
+}
+#energy-fill {
+  background: url('palette/royal-blue.png') center/cover, linear-gradient(90deg, var(--gw-blue), #88ccff);
+}
+#cast-bar-fill {
+  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, var(--gw-orange-deep), #ffcc00);
+}
+#channel-bar-fill {
+  background: url('palette/royal-blue.png') center/cover, linear-gradient(90deg, #2288ff, #44ddff);
+}
+
+/* ── Top labels ── */
+#biome-label {
+  color: var(--gw-orange);
+  font-family: var(--hud-font);
+  text-shadow: 0 0 12px rgba(232, 168, 110, 0.5);
+}
+.status-pill {
+  background: url('frames/panel-fg.png') center/100% 100% no-repeat, var(--gw-panel);
+  border-color: var(--gw-slot-border);
+  font-family: var(--hud-font);
+}
+
+/* ── Gothic slot frames (skills, items, weapons, build) ── */
+.skill-slot,
+.item-slot,
+.w-slot,
+.build-slot,
+.inv-slot,
+.equip-slot {
+  background: url('frames/gothic-slot.jpg') center/cover no-repeat, rgba(6, 8, 14, 0.95);
+  border: 2px solid var(--gw-slot-border);
+  border-radius: 4px;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.skill-slot.off-cd { border-color: var(--gw-blood-bright); }
+.skill-slot.off-cd:hover:not(.on-cd) { border-color: var(--gw-orange); box-shadow: 0 0 14px rgba(232, 168, 110, 0.35); }
+.w-slot.active {
+  border-color: var(--gw-blood-bright);
+  background: url('frames/gothic-slot.jpg') center/cover no-repeat, rgba(139, 0, 0, 0.25);
+  box-shadow: 0 0 16px rgba(196, 30, 30, 0.4);
+}
+.inv-slot.sel {
+  border-color: var(--gw-orange);
+  box-shadow: 0 0 12px rgba(232, 168, 110, 0.4);
+}
+.equip-slot.filled { border-color: var(--gw-blue-bright); border-style: solid; }
+
+/* ── Icon images inside slots ── */
+.hud-icon-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+  image-rendering: auto;
+}
+.skill-slot .hud-icon-img { width: 38px; height: 38px; }
+.item-slot .hud-icon-img,
+.inv-slot .hud-icon-img { width: 32px; height: 32px; }
+.w-slot .hud-icon-img { width: 34px; height: 34px; }
+.equip-slot .hud-icon-img { width: 40px; height: 40px; }
+.craft-icon-wrap .hud-icon-img { width: 28px; height: 28px; }
+.skill-icon,
+.i-icon,
+.w-icon,
+.b-icon,
+.is-icon,
+.es-icon,
+.craft-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.skill-key {
+  color: var(--gw-orange);
+  font-family: var(--hud-font);
+  text-shadow: 0 1px 2px #000;
+}
+.skill-name { color: #998877; }
+
+/* ── Action buttons ── */
+.hud-action-btn {
+  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, rgba(8, 6, 12, 0.92);
+  border: 1px solid var(--gw-slot-border);
+  color: var(--gw-orange);
+  font-family: var(--hud-font);
+}
+.hud-action-btn:hover {
+  border-color: var(--gw-blood-bright);
+  color: #fff;
+}
+
+/* ── Studio panels (craft / inventory / equip) ── */
+.studio-panel,
+#craft-panel {
+  background: url('cryo/gui/panel-9slice.png') center/100% 100% no-repeat, url('frames/panel-bg.png') center/cover no-repeat, var(--gw-panel);
+  border: 2px solid var(--gw-slot-border);
+  border-radius: 6px;
+  box-shadow: 0 0 60px rgba(139, 0, 0, 0.25), inset 0 0 40px rgba(0, 0, 0, 0.4);
+}
+.studio-panel h2,
+#craft-panel h2 {
+  color: var(--gw-orange);
+  font-family: 'Cinzel Decorative', var(--hud-font);
+  border-bottom-color: var(--gw-blood);
+  text-shadow: 0 0 10px rgba(232, 168, 110, 0.3);
+}
+.studio-tab {
+  background: rgba(8, 6, 12, 0.9);
+  border-color: var(--gw-slot-border);
+  color: #887766;
+  font-family: var(--hud-font);
+}
+.studio-tab.sel {
+  border-color: var(--gw-orange);
+  color: var(--gw-orange);
+  background: rgba(139, 0, 0, 0.2);
+}
+.panel-close,
+#craft-close {
+  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, transparent;
+  border-color: var(--gw-slot-border);
+  color: var(--gw-orange);
+  font-family: var(--hud-font);
+}
+.craft-btn {
+  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, var(--gw-blood);
+  border: 1px solid var(--gw-gold);
+  font-family: var(--hud-font);
+  letter-spacing: 1px;
+}
+.craft-btn:disabled {
+  background: rgba(20, 18, 16, 0.8);
+  border-color: #333;
+}
+
+/* ── Ally roster & GRUDOX pill ── */
+#ally-roster h3 { color: var(--gw-orange); font-family: var(--hud-font); }
+.ally-card {
+  background: url('frames/panel-fg.png') center/100% 100% no-repeat, rgba(6, 10, 14, 0.9);
+  border-color: #2a4a2a;
+}
+#grudox-pill {
+  background: url('frames/panel-fg.png') center/100% 100% no-repeat, rgba(6, 10, 18, 0.85);
+  font-family: var(--hud-font);
+}
+
+/* ── Overlays ── */
+.screen-overlay {
+  background: url('cryo/gui/panel-9slice.png') center/100% 100% no-repeat, url('frames/panel-bg.png') center/cover, rgba(4, 6, 12, 0.97);
+  border-color: var(--gw-blood);
+}
+.screen-overlay h1 {
+  font-family: 'Cinzel Decorative', var(--hud-font);
+}
+#build-indicator {
+  background: url('frames/panel-fg.png') center/100% 100% no-repeat, rgba(6, 10, 18, 0.9);
+  font-family: var(--hud-font);
+}
+#raid-alert { color: var(--gw-orange); }
+#wave-flash { color: var(--gw-blood-bright); }
+
+/* ── Minimap frame ── */
+#mm-canvas {
+  border: 2px solid var(--gw-slot-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}

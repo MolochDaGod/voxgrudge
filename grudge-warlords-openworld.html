@@ -197,6 +197,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #energy-val{font-size:9px;color:#88ccff;font-weight:700;margin-top:1px}
 #parry-flash{position:absolute;inset:0;pointer-events:none;z-index:6;background:rgba(68,136,255,0);transition:background 0.1s}
 </style>
+<link rel="stylesheet" href="ui/hud/grudge-hud.css">
 </head>
 <body>
 
@@ -518,6 +519,52 @@ const ITEM_DEFS = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// HUD ASSETS — PSD palette, Cryo GUI, Grudge skill icons
+// ═══════════════════════════════════════════════════════════════
+const HUD_BASE = 'ui/hud/';
+const SKILL_ICON_MAP = {
+  heroic_cleave:['swordsman',1],shadow_edge:['swordsman',2],blood_rush:['swordsman',3],execute:['swordsman',4],
+  whirl_pain:['swordsman',5],carnage_spin:['swordsman',6],bloodletting:['swordsman',7],apocalypse_cleave:['swordsman',8],
+  gs_whirlwind:['swordsman',9],gs_leapslam:['swordsman',10],gs_execute:['swordsman',11],gs_channel_fury:['swordsman',12],
+  hm_overhead:['swordsman',13],hm_groundslam:['swordsman',14],hm_warshout:['swordsman',15],hm_earthshatter:['swordsman',16],
+  sp_thrust:['swordsman',17],sp_sweep:['swordsman',18],sp_impale:['swordsman',19],sp_cyclone:['swordsman',20],
+  ss_shield_bash:['paladin',1],ss_dash_strike:['paladin',2],ss_heal_channel:['paladin',3],ss_fortress:['paladin',4],
+  mc_smite:['paladin',5],mc_holyslam:['paladin',6],mc_judgement:['paladin',7],mc_consecrate:['paladin',8],
+  aimed_shot:['archer',1],multi_shot:['archer',2],piercing_arrow:['archer',3],rain_of_arrows:['archer',4],
+  xb_powershot:['archer',5],xb_explosive:['archer',6],xb_triplebolt:['archer',7],xb_siegemode:['archer',8],
+  burst_fire:['archer',9],sniper_shot:['archer',10],explosive_round:['archer',11],ironstorm_minigun:['archer',12],
+  fireball:['mage',1],chain_lightning:['mage',2],blink:['mage',3],emberwrath_nova:['mage',4],
+  wn_arcaneblast:['mage',5],wn_frostbolt:['mage',6],wn_blinkstrike:['mage',7],wn_arcanebarrage:['mage',8],
+  dg_backstab:['necromancer',1],dg_fanofknives:['necromancer',2],dg_shadowstep:['necromancer',3],dg_deathmark:['necromancer',4],
+  tm_soulfire:['necromancer',5],tm_lifedrain:['necromancer',6],tm_darkpact:['necromancer',7],tm_doomchannel:['necromancer',8],
+  shadow_strike_enhanced:['necromancer',9],
+};
+const ITEM_ICON_MAP = {
+  health_potion:['mage',13],medkit:['paladin',10],swiftness:['archer',14],rage_potion:['swordsman',16],
+  frag_grenade:['archer',17],berserker:['swordsman',18],invuln_potion:['paladin',11],
+  iron_helm:['paladin',12],leather_vest:['swordsman',14],boots:['archer',15],power_charm:['mage',9],
+  ally_crow:['necromancer',20],ally_spider:['necromancer',21],ally_snake:['druid',5],
+};
+const WEAPON_ICON_MAP = {
+  sword:['swordsman',1],axe:['swordsman',5],greatsword:['swordsman',9],sword_shield:['paladin',1],
+  bow:['archer',1],staff:['mage',1],gun:['archer',12],hammer:['swordsman',13],mace:['paladin',5],
+  dagger:['necromancer',1],crossbow:['archer',5],spear:['swordsman',17],wand:['mage',5],tome:['necromancer',5],
+};
+const CLASS_ICON_MAP = {
+  swordsman:['swordsman',1],archer:['archer',1],mage:['mage',1],druid:['druid',1],paladin:['paladin',1],necromancer:['necromancer',1],
+};
+function hudIconUrl(pack,num){return HUD_BASE+'skills/'+pack+'/'+num+'.png';}
+function skillIconUrl(id){const m=SKILL_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
+function itemIconUrl(id){const m=ITEM_ICON_MAP[id];return m?hudIconUrl(m[0],m[1]):null;}
+function setHudIcon(el,url,fallback){
+  if(!el) return;
+  let img=el.querySelector('.hud-icon-img');
+  if(!img){el.textContent='';img=document.createElement('img');img.className='hud-icon-img';img.alt='';el.appendChild(img);}
+  if(url){img.src=url;img.style.display='';img.onerror=function(){img.style.display='none';el.textContent=fallback||'';};}
+  else{img.style.display='none';el.textContent=fallback||'';}
+}
+
+// ═══════════════════════════════════════════════════════════════
 // BLOCK / BUILD DEFS
 // ═══════════════════════════════════════════════════════════════
 const BLOCK_DEFS = {
@@ -779,7 +826,10 @@ function updateSkinPickerUI(){
     const card = document.createElement('div');
     card.className = 'class-card';
     card.style.setProperty('--cc', cls.color);
-    card.innerHTML = '<div class="c-icon">'+cls.emoji+'</div><div class="c-name">'+cls.name+'</div><div class="c-desc">'+cls.desc+'</div>';
+    const ci=CLASS_ICON_MAP[cid];
+    card.innerHTML = '<div class="c-icon"></div><div class="c-name">'+cls.name+'</div><div class="c-desc">'+cls.desc+'</div>';
+    if(ci) setHudIcon(card.querySelector('.c-icon'),hudIconUrl(ci[0],ci[1]),cls.emoji);
+    else card.querySelector('.c-icon').textContent=cls.emoji;
     card.onclick = function(){
       document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
       card.classList.add('sel');
@@ -901,6 +951,7 @@ function init(){
   buildCraftUI();
   buildInventoryUI();
   buildEquipUI();
+  initWeaponIcons();
 
   // Skill CDs
   resetSkillCDs();
@@ -2567,7 +2618,7 @@ function updateInventoryUI(){
     const el=document.getElementById('inv-i-'+i);
     const ct=document.getElementById('inv-c-'+i);
     const cell=document.querySelector('.inv-slot[data-idx="'+i+'"]');
-    if(el) el.textContent=slot?slot.icon:'';
+    if(el) setHudIcon(el,slot?itemIconUrl(slot.id):null,slot?slot.icon:'');
     if(ct) ct.textContent=slot&&slot.count>1?slot.count:'';
     if(cell) cell.classList.toggle('filled',!!slot);
   }
@@ -2603,7 +2654,8 @@ function updateEquipUI(){
     const e=equipment[k];
     const icon=document.getElementById('eq-i-'+k);
     const cell=document.getElementById('eq-'+k);
-    if(icon) icon.textContent=e?e.icon:'';
+    const itemKey=e?Object.keys(ITEM_DEFS).find(ik=>ITEM_DEFS[ik].name===e.id):null;
+    if(icon) setHudIcon(icon,itemKey?itemIconUrl(itemKey):null,e?e.icon:'');
     if(cell) cell.classList.toggle('filled',!!e);
   });
 }
@@ -2636,7 +2688,8 @@ function buildCraftUI(){
     const costStr=Object.entries(rec.cost).map(([k,v])=>v+({'wood':'🪵','stone':'🪨','ore':'⚙️'}[k]||k)).join(' ');
     const row=document.createElement('div');
     row.className='craft-row'+(canAfford(rec.cost)?' can-afford':'');
-    row.innerHTML='<div class="craft-emoji">'+rec.emoji+'</div><div class="craft-info"><div class="craft-name">'+rec.name+'</div><div class="craft-cost">'+costStr+' → x'+rec.result.count+'</div></div><button class="craft-btn" id="cbtn-'+rec.id+'" onclick="craftItem(\''+rec.id+'\')">Forge</button>';
+    row.innerHTML='<div class="craft-icon-wrap"></div><div class="craft-info"><div class="craft-name">'+rec.name+'</div><div class="craft-cost">'+costStr+' → x'+rec.result.count+'</div></div><button class="craft-btn" id="cbtn-'+rec.id+'" onclick="craftItem(\''+rec.id+'\')">Forge</button>';
+    setHudIcon(row.querySelector('.craft-icon-wrap'),itemIconUrl(rec.result.item),rec.emoji);
     list.appendChild(row);
   });
 }
@@ -2993,15 +3046,27 @@ function wireHudClicks(){
 }
 
 function updateSkillUI(){
-  const skArr=getWeaponSkills();
+  const ids=currentWeapon?currentWeapon.skills:[];
   const slots=['q','e','r','f'];
   slots.forEach((s,i)=>{
-    const sk=skArr[i];
+    const sid=ids[i];
+    const sk=sid?SKILLS[sid]:null;
     if(!sk) return;
     const icon=document.getElementById('s'+s+'-icon');
     const name=document.getElementById('s'+s+'-name');
-    if(icon) icon.textContent=sk.icon;
+    setHudIcon(icon,skillIconUrl(sid),sk.icon);
     if(name) name.textContent=sk.name;
+  });
+}
+
+function initWeaponIcons(){
+  Object.keys(WEAPON_ICON_MAP).forEach(wid=>{
+    const ws=document.getElementById('ws-'+wid);
+    if(!ws) return;
+    const wi=WEAPON_ICON_MAP[wid];
+    const wIcon=ws.querySelector('.w-icon');
+    const wDef=WEAPONS[wid];
+    setHudIcon(wIcon,hudIconUrl(wi[0],wi[1]),wDef?wDef.emoji:'');
   });
 }
 
@@ -3009,7 +3074,7 @@ function updateItemUI(){
   for(let i=0;i<6;i++){
     const slot=itemHotbar[i];
     document.getElementById('isl-'+(i+1)).classList.toggle('filled',!!slot.id);
-    document.getElementById('ii-'+(i+1)).textContent=slot.icon||'';
+    setHudIcon(document.getElementById('ii-'+(i+1)),slot.id?itemIconUrl(slot.id):null,slot.icon||'');
     document.getElementById('ic-'+(i+1)).textContent=slot.count>1?slot.count:'';
   }
 }
@@ -4141,6 +4206,7 @@ function playAnimOnMesh(mesh, animName, crossfade){
 }
 
 // initial UI call
+initWeaponIcons();
 updateSkillUI();
 </script>
 </body>
