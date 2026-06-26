@@ -376,6 +376,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="js/collision-layers.js"></script>
 <script src="js/terrain-collider.js"></script>
 <script src="js/collision-world.js"></script>
+<script src="js/vox-roll-anim.js"></script>
 <script src="js/world-engine.js"></script>
 <script src="js/grudge-codex-icons.js"></script>
 <script src="js/grudge-game-hud.js"></script>
@@ -701,6 +702,8 @@ let playerVelY = 0;
 let stamina = 100, maxStamina = 100, staminaRegen = 25;
 let dodgeCd = 0, DODGE_CD = 0.8, DODGE_DIST = 8, DODGE_DUR = 0.25;
 let dodgeTimer = 0, dodgeDir = new THREE.Vector3();
+let voxRollAnim = null, dodgeRollPhase = 'none';
+const USE_VOX_ROLL = /(?:\?|&)voxroll=1(?:&|$)/.test(location.search);
 let dashCd = 0, DASH_CD = 1.5, DASH_DIST = 12, DASH_DUR = 0.2;
 let dashTimer = 0, dashDir = new THREE.Vector3();
 let jumpForce = 14, gravityForce = 35;
@@ -988,6 +991,11 @@ function init(){
   collisionWorld = VoxCollision.create({THREE:THREE, raycaster:raycaster});
   window._collisionWorld = collisionWorld;
 
+  if(window.VoxRollAnim){
+    voxRollAnim = VoxRollAnim.create({THREE:THREE, loader:new THREE.GLTFLoader()});
+    voxRollAnim.load();
+  }
+
   // World ground + mesh colliders
   buildWorld();
 
@@ -1007,20 +1015,43 @@ function init(){
   ghostMesh.visible = false;
   scene.add(ghostMesh);
 
-  // Player - Kenney voxel body + palette, fallback to vox boxes
+  // Player — Kenney GLB, Collidion roll rig (?voxroll=1), or procedural vox boxes
   const bodyLetter = playerSkinBody || CLASS_MODEL_MAP[playerClass]||'a';
-  const glbModel = cloneModel(bodyLetter, 1, playerSkinTexture);
+  const glbModel = !USE_VOX_ROLL ? cloneModel(bodyLetter, 1, playerSkinTexture) : null;
+  if(USE_VOX_ROLL && voxRollAnim){
+    voxRollAnim.whenReady(function(){
+      const kenneyTex = new THREE.TextureLoader().load('models/kenney/textures/texture-'+(playerSkinTexture||'a')+'.png');
+      kenneyTex.magFilter = THREE.NearestFilter;
+      kenneyTex.minFilter = THREE.NearestFilter;
+      const rig = voxRollAnim.buildRig({
+        replace: function(mesh, oldMat){
+          return new THREE.MeshStandardMaterial({map:kenneyTex, roughness:0.9});
+        }
+      });
+      if(rig){
+        rig.scale.set(1.6,1.6,1.6);
+        playerMesh = rig;
+        playerSkelParts = null;
+        playerMixer = rig.userData._voxRollMixer;
+        scene.add(playerMesh);
+        snapToGround(playerMesh,0);
+        if(weaponMeshObj) playerMesh.add(weaponMeshObj);
+      }
+    });
+  }
   if(glbModel){
     playerMesh = glbModel;
     playerSkelParts = getSkeletonParts(playerMesh);
-  } else {
+  } else if(!USE_VOX_ROLL) {
     playerMesh = buildVoxChar(0x5588cc, 0x224466, GrudgeScale.voxScale(GrudgeScale.PLAYER_HEIGHT_M));
+  } else {
+    playerMesh = new THREE.Group();
   }
   playerMesh.position.set(0, 0, 0);
   scene.add(playerMesh);
   snapToGround(playerMesh,0);
   weaponMeshObj = buildWeaponMesh('sword');
-  playerMesh.add(weaponMeshObj);
+  if(!USE_VOX_ROLL) playerMesh.add(weaponMeshObj);
 
   // Minimap
   mmCanvas = document.getElementById('mm-canvas');
@@ -3793,7 +3824,16 @@ function updateSkeletonAnims(dt){
   playerAnimTime+=dt;
   if(playerSkelParts && playerSkelParts.legLeft){
     if(playerState==='dodging'){
-      animateDodge(playerSkelParts, 1-dodgeTimer/DODGE_DUR);
+      if(USE_VOX_ROLL && voxRollAnim && playerMixer){
+        const p = dodgeTimer / DODGE_DUR;
+        const phase = p > 0.72 ? 'out' : p > 0.18 ? 'loop' : 'up';
+        if(dodgeRollPhase !== phase){
+          dodgeRollPhase = phase;
+          voxRollAnim.playDodge(playerMixer, phase, 0.06);
+        }
+      } else {
+        animateDodge(playerSkelParts, 1-dodgeTimer/DODGE_DUR);
+      }
     } else if(playerState==='dashing'){
       animateDash(playerSkelParts, 1-dashTimer/DASH_DUR);
     } else if(playerState==='swimming'){
@@ -3919,7 +3959,7 @@ function updateTraversal(dt){
       break;
     case 'swimming':
       pp.y=Math.max(WATER_LEVEL+Math.sin(gameClock*2)*0.15, groundY-0.5);
-      if(!isInWater||distFC<=(worldEngine?worldEngine.getWorldRadius():128)){playerState='ground';pp.y=getGroundY(pp.x,pp.z);}
+      if(!isInWater||distFC<=worldR*0.95){playerState='ground';pp.y=getGroundY(pp.x,pp.z);}
       break;
     case 'climbing':
       if(keys['KeyW']||keys['Space'])pp.y+=climbSpeed*dt;
@@ -3956,6 +3996,8 @@ function tryJump(){
       dodgeCd=DODGE_CD;
       stamina-=20;
       playerState='dodging';
+      dodgeRollPhase='none';
+      if(voxRollAnim&&playerMixer) voxRollAnim.playDodge(playerMixer,'up',0.05);
       iFrames=true;iFrameTimer=DODGE_DUR;
       spawnScatterBurst(playerMesh.position,0x88ffaa,8,2,0.3);
       return;
@@ -4062,6 +4104,7 @@ function animate(){
   updateEnergyOrbs(dt);
   updateParry(dt);
   if(playerMixer) playerMixer.update(dt);
+  else if(voxRollAnim && playerMesh && playerMesh.userData._voxRollMixer) voxRollAnim.update(playerMesh.userData._voxRollMixer, dt);
 
   // Animate water plane
   if(window._waterPlane){
