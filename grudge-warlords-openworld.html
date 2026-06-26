@@ -697,12 +697,16 @@ let formBuff = null; // {name, timer, dmgReduction, speedMult}
 // (stored per enemy as e.knockbackVel)
 
 // ── Traversal State Machine ──
-let playerState = 'ground'; // ground, jumping, falling, swimming, dodging, dashing, climbing
+let playerState = 'ground'; // ground, jumping, falling, swimming, dodging, rolling, dashing, climbing
 let playerVelY = 0;
 let stamina = 100, maxStamina = 100, staminaRegen = 25;
 let dodgeCd = 0, DODGE_CD = 0.8, DODGE_DIST = 8, DODGE_DUR = 0.25;
 let dodgeTimer = 0, dodgeDir = new THREE.Vector3();
-let voxRollAnim = null, dodgeRollPhase = 'none';
+let rollCd = 0, ROLL_CD = 0.55, ROLL_DIST = 7, ROLL_DUR = 0.38, ROLL_IFRAMES = 0.35;
+let rollTimer = 0, rollDir = new THREE.Vector3();
+let lastDirTap = {KeyW:0, KeyS:0, KeyA:0, KeyD:0};
+const DIR_DOUBLE_TAP_MS = 280;
+let voxRollAnim = null, rollAnimPhase = 'none';
 const USE_VOX_ROLL = /(?:\?|&)voxroll=1(?:&|$)/.test(location.search);
 let dashCd = 0, DASH_CD = 1.5, DASH_DIST = 12, DASH_DUR = 0.2;
 let dashTimer = 0, dashDir = new THREE.Vector3();
@@ -1074,6 +1078,7 @@ function init(){
   // Events
   window.addEventListener('keydown', e=>{
     keys[e.code] = true;
+    if(e.code==='KeyW'||e.code==='KeyS'||e.code==='KeyA'||e.code==='KeyD') tryDirectionalRoll(e.code);
     if(e.code==='KeyB') toggleBuildMode();
     if(e.code==='KeyC') { e.preventDefault(); toggleCraft(); }
     if(e.code==='KeyI') { e.preventDefault(); toggleInventory(); }
@@ -1429,7 +1434,7 @@ function getWeaponSkills(){
 
 function activateSkill(slotIdx){
   if(isGameOver||craftOpen||!gameStarted) return;
-  if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing') return;
+  if(playerState==='dodging'||playerState==='rolling'||playerState==='dashing'||playerState==='climbing') return;
   const sk = getWeaponSkills()[slotIdx];
   if(!sk) return;
   const key = ['Q','E','R','F'][slotIdx];
@@ -1610,7 +1615,7 @@ function getAimTarget(){
 
 function tryAttack(){
   if(isGameOver||!gameStarted||attackCd>0) return;
-  if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing') return;
+  if(playerState==='dodging'||playerState==='rolling'||playerState==='dashing'||playerState==='climbing') return;
   attackCd = currentWeapon.cd||0.3;
   const cls = CLASSES[playerClass];
   const pp = playerMesh.position;
@@ -3060,7 +3065,7 @@ function updateStatusEffects(dt){
 function updatePlayer(dt){
   if(isGameOver) return;
   // Skip normal movement during traversal actions
-  if(playerState==='dodging'||playerState==='dashing'||playerState==='climbing'){
+  if(playerState==='dodging'||playerState==='rolling'||playerState==='dashing'||playerState==='climbing'){
     camera.position.x=playerMesh.position.x;
     camera.position.z=playerMesh.position.z+28;
     camera.position.y=34;
@@ -3108,7 +3113,7 @@ function updatePlayer(dt){
     }
   }
 
-  if(playerState==='ground'||playerState==='dodging'||playerState==='dashing'){
+  if(playerState==='ground'||playerState==='dodging'||playerState==='rolling'||playerState==='dashing'){
     snapToGround(playerMesh,0);
   }
 
@@ -3824,15 +3829,17 @@ function updateSkeletonAnims(dt){
   playerAnimTime+=dt;
   if(playerSkelParts && playerSkelParts.legLeft){
     if(playerState==='dodging'){
+      animateDodge(playerSkelParts, 1-dodgeTimer/DODGE_DUR);
+    } else if(playerState==='rolling'){
       if(USE_VOX_ROLL && voxRollAnim && playerMixer){
-        const p = dodgeTimer / DODGE_DUR;
+        const p = rollTimer / ROLL_DUR;
         const phase = p > 0.72 ? 'out' : p > 0.18 ? 'loop' : 'up';
-        if(dodgeRollPhase !== phase){
-          dodgeRollPhase = phase;
+        if(rollAnimPhase !== phase){
+          rollAnimPhase = phase;
           voxRollAnim.playDodge(playerMixer, phase, 0.06);
         }
       } else {
-        animateDodge(playerSkelParts, 1-dodgeTimer/DODGE_DUR);
+        animateDodge(playerSkelParts, 1-rollTimer/ROLL_DUR);
       }
     } else if(playerState==='dashing'){
       animateDash(playerSkelParts, 1-dashTimer/DASH_DUR);
@@ -3914,6 +3921,7 @@ function updateTraversal(dt){
     stamina=Math.min(maxStamina,stamina+staminaRegen*dt);
   }
   dodgeCd=Math.max(0,dodgeCd-dt);
+  rollCd=Math.max(0,rollCd-dt);
   dashCd=Math.max(0,dashCd-dt);
   if(iFrameTimer>0){iFrameTimer-=dt;if(iFrameTimer<=0)iFrames=false;}
 
@@ -3949,7 +3957,18 @@ function updateTraversal(dt){
       dodgeTimer-=dt;
       pp.add(dodgeDir.clone().multiplyScalar((DODGE_DIST/DODGE_DUR)*dt));
       pp.y=getGroundY(pp.x,pp.z);
-      if(dodgeTimer<=0){playerState='ground';iFrames=false;}
+      if(dodgeTimer<=0){playerState='ground';if(iFrameTimer<=0)iFrames=false;}
+      break;
+    case 'rolling':
+      rollTimer-=dt;
+      pp.add(rollDir.clone().multiplyScalar((ROLL_DIST/ROLL_DUR)*dt));
+      pp.y=getGroundY(pp.x,pp.z);
+      if(rollDir.lengthSq()>0.01) playerMesh.rotation.y=Math.atan2(rollDir.x,rollDir.z);
+      if(rollTimer<=0){
+        playerState='ground';
+        rollAnimPhase='none';
+        if(iFrameTimer<=0) iFrames=false;
+      }
       break;
     case 'dashing':
       dashTimer-=dt;
@@ -3976,7 +3995,7 @@ function updateTraversal(dt){
   // Update traversal state indicator
   const stateEl=document.getElementById('traversal-state');
   if(stateEl){
-    if(playerState!=='ground'){stateEl.textContent=playerState.toUpperCase();stateEl.classList.add('active');}
+    if(playerState!=='ground'){stateEl.textContent=(playerState==='rolling'?'ROLL':playerState.toUpperCase());stateEl.classList.add('active');}
     else{stateEl.classList.remove('active');}
   }
 }
@@ -3996,8 +4015,6 @@ function tryJump(){
       dodgeCd=DODGE_CD;
       stamina-=20;
       playerState='dodging';
-      dodgeRollPhase='none';
-      if(voxRollAnim&&playerMixer) voxRollAnim.playDodge(playerMixer,'up',0.05);
       iFrames=true;iFrameTimer=DODGE_DUR;
       spawnScatterBurst(playerMesh.position,0x88ffaa,8,2,0.3);
       return;
@@ -4018,6 +4035,33 @@ function tryJump(){
     playerVelY=jumpForce*0.7;
     playerState='jumping';
   }
+}
+
+function tryDirectionalRoll(code){
+  if(isGameOver||!gameStarted) return;
+  if(playerState!=='ground') return;
+  if(rollCd>0) return;
+  const now=performance.now();
+  const prev=lastDirTap[code]||0;
+  if(now-prev>DIR_DOUBLE_TAP_MS){
+    lastDirTap[code]=now;
+    return;
+  }
+  lastDirTap[code]=0;
+  let dx=0,dz=0;
+  if(code==='KeyW') dz=-1;
+  else if(code==='KeyS') dz=1;
+  else if(code==='KeyA') dx=-1;
+  else if(code==='KeyD') dx=1;
+  rollDir.set(dx,0,dz);
+  rollTimer=ROLL_DUR;
+  rollCd=ROLL_CD;
+  playerState='rolling';
+  rollAnimPhase='none';
+  iFrames=true;
+  iFrameTimer=ROLL_IFRAMES;
+  if(voxRollAnim&&playerMixer) voxRollAnim.playDodge(playerMixer,'up',0.05);
+  spawnScatterBurst(playerMesh.position,0xaaccff,10,2.2,0.35);
 }
 
 function tryDash(){
