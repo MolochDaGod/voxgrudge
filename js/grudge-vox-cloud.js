@@ -261,17 +261,22 @@
   }
 
   function loginGrudgeId() {
-    var ret = global.location.origin + global.location.pathname + global.location.search;
+    var ret = global.location.origin + global.location.pathname + (global.location.search || '');
+    // Prefer loginForce → /login?redirect_uri= (never drop return URL).
+    // loginPage uses sso-check which is fine when cookie works, but force is safer.
+    if (global.GrudgeAuth && typeof global.GrudgeAuth.loginForce === 'function') {
+      global.GrudgeAuth.loginForce(ret);
+      return;
+    }
     if (global.GrudgeAuth && typeof global.GrudgeAuth.loginPage === 'function') {
       global.GrudgeAuth.loginPage(ret);
       return;
     }
-    if (global.GrudgeAuth && typeof global.GrudgeAuth.login === 'function') {
-      global.GrudgeAuth.login(ret);
-      return;
-    }
     global.location.href =
-      'https://id.grudge-studio.com/login?redirect_uri=' + encodeURIComponent(ret);
+      'https://id.grudge-studio.com/login?redirect_uri=' +
+      encodeURIComponent(ret) +
+      '&redirect=' +
+      encodeURIComponent(ret);
   }
 
   function logout() {
