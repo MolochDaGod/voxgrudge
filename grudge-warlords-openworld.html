@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
+    <!-- Fleet auth (Grudge ID) — do not replace with a parallel login system -->
     <script src="https://client.grudge-studio.com/grudge-game-bootstrap.js"></script>
+    <!-- Puter user-pays cloud (kv/fs/auth) — same SDK as crafting / Warlords -->
+    <script src="https://js.puter.com/v2/"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Grudge Warlords — Open World Voxel Edition</title>
 <meta name="description" content="Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.">
@@ -465,6 +468,8 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="js/grudge-instanced-fire.js"></script>
 <script src="js/grudge-world-fires.js"></script>
 <script src="js/grudge-explorer-combat.js"></script>
+<!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
+<script src="js/grudge-vox-cloud.js"></script>
 <script>
 'use strict';
 
@@ -1108,6 +1113,7 @@ function startGame(){
   const seedInp=document.getElementById('world-seed-input');
   const worldSeed=parseInt(seedInp&&seedInp.value?seedInp.value:'',10)||(Date.now()%1000000000);
   if(seedInp&&!seedInp.value) seedInp.value=String(worldSeed);
+  window._voxWorldSeed=worldSeed;
   const loadEl=document.getElementById('world-loading');
   if(loadEl&&window.GrudgeAssetLoader) GrudgeAssetLoader.bindLoadScreen(loadEl);
   else if(loadEl){loadEl.style.display='block';loadEl.classList.add('is-active');}
@@ -1139,6 +1145,11 @@ function startGame(){
   function finishWorldEntry(){
     linkVfxAliases();
     init();
+    if(window.VoxCloud){
+      try{ VoxCloud.applyPending(); }catch(e){ console.warn('[VoxCloud] applyPending', e); }
+      try{ VoxCloud.startAutosave(); }catch(e){}
+      try{ VoxCloud.updateAccountBar(); }catch(e){}
+    }
     connectGrudox();
     hideWorldLoading();
   }
@@ -2490,6 +2501,7 @@ function triggerGameOver(){
   const m = Math.floor(survivalTime/60), s = Math.floor(survivalTime%60);
   document.getElementById('go-stats').textContent = 'Survived: '+m+'m'+s+'s  ·  Eliminated: '+score+'  ·  Level: '+level+'  ·  Day: '+dayNumber;
   document.getElementById('game-over').classList.remove('hidden');
+  if(window.VoxCloud){ try{ VoxCloud.saveNow('gameover'); }catch(e){} }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5316,6 +5328,118 @@ randomizeWorldSeed();
 initWeaponIcons();
 initResourceIcons();
 initBuildIcons();
+
+// ── Cloud save hooks (VoxCloud → Puter KV + GrudgeAuth; no new identity stack) ──
+(function wireVoxCloud(){
+  if(!window.VoxCloud) return;
+
+  function serializeWeapons(){
+    const out={};
+    Object.keys(WEAPONS).forEach(function(id){
+      const w=WEAPONS[id];
+      out[id]={owned:!!w.owned,ammo:w.ammo,maxAmmo:w.maxAmmo};
+    });
+    return out;
+  }
+
+  function collectRun(){
+    if(!playerClass) return null;
+    const seedInp=document.getElementById('world-seed-input');
+    const worldSeed=seedInp&&seedInp.value?parseInt(seedInp.value,10):(window._voxWorldSeed||null);
+    const blockArr=[];
+    blocks.forEach(function(v,k){ blockArr.push({k:k,type:v.type}); });
+    return {
+      playerClass:playerClass,
+      playerSkinBody:playerSkinBody,
+      playerSkinTexture:playerSkinTexture,
+      worldSeed:worldSeed,
+      level:level,exp:exp,expToNext:expToNext,score:score,
+      hp:hp,maxHp:maxHp,
+      resources:Object.assign({},resources),
+      inventoryGrid:inventoryGrid.slice(),
+      equipment:Object.assign({},equipment),
+      weapons:serializeWeapons(),
+      currentWeaponId:currentWeapon?currentWeapon.id:null,
+      playerAttributes:playerAttributes?Object.assign({},playerAttributes):null,
+      dayNumber:dayNumber,dayTimer:dayTimer,isNight:!!isNight,
+      survivalTime:typeof survivalTime==='number'?survivalTime:0,
+      blocks:blockArr.slice(0,800),
+      characterId:(VoxCloud.getMeta&&VoxCloud.getMeta().characterId)||null,
+    };
+  }
+
+  function applyRun(run){
+    if(!run) return;
+    if(run.resources) resources=Object.assign(resources,run.resources);
+    if(Array.isArray(run.inventoryGrid)) inventoryGrid=run.inventoryGrid.slice();
+    if(run.equipment) equipment=Object.assign(createEmptyEquipment(),run.equipment);
+    if(run.weapons){
+      Object.keys(run.weapons).forEach(function(id){
+        if(!WEAPONS[id]) return;
+        const w=run.weapons[id];
+        if(w.owned!=null) WEAPONS[id].owned=!!w.owned;
+        if(w.ammo!=null) WEAPONS[id].ammo=w.ammo;
+        if(w.maxAmmo!=null) WEAPONS[id].maxAmmo=w.maxAmmo;
+      });
+    }
+    if(run.level!=null) level=run.level;
+    if(run.exp!=null) exp=run.exp;
+    if(run.expToNext!=null) expToNext=run.expToNext;
+    if(run.score!=null) score=run.score;
+    if(run.hp!=null) hp=run.hp;
+    if(run.maxHp!=null) maxHp=run.maxHp;
+    if(run.playerAttributes) playerAttributes=Object.assign({},run.playerAttributes);
+    if(run.dayNumber!=null) dayNumber=run.dayNumber;
+    if(run.dayTimer!=null) dayTimer=run.dayTimer;
+    if(run.isNight!=null) isNight=!!run.isNight;
+    if(run.survivalTime!=null&&typeof survivalTime!=='undefined') survivalTime=run.survivalTime;
+    if(Array.isArray(run.blocks)){
+      blocks.clear();
+      run.blocks.forEach(function(b){
+        if(b&&b.k&&b.type) blocks.set(b.k,{type:b.type});
+      });
+      if(typeof rebuildBlockMesh==='function') rebuildBlockMesh();
+    }
+    if(run.currentWeaponId&&WEAPONS[run.currentWeaponId]&&WEAPONS[run.currentWeaponId].owned){
+      try{ switchWeapon(run.currentWeaponId); }catch(e){}
+    }
+    if(typeof updateResUI==='function') updateResUI();
+    if(typeof updateSkillUI==='function') updateSkillUI();
+    if(typeof updateItemUI==='function') updateItemUI();
+    if(typeof updateEquipUI==='function') updateEquipUI();
+    if(typeof applyNexusStats==='function') applyNexusStats();
+    else if(typeof applySkillPassives==='function') applySkillPassives();
+    if(window.GrudgeStudioUI&&GrudgeStudioUI.renderAll) GrudgeStudioUI.renderAll();
+  }
+
+  VoxCloud.registerHooks({ collect:collectRun, apply:applyRun });
+
+  window.startGameFromSave=function(save){
+    if(!save||!save.run) return;
+    const run=save.run;
+    if(run.playerClass){
+      playerClass=run.playerClass;
+      document.querySelectorAll('.class-card').forEach(function(c){
+        c.classList.toggle('sel', false);
+      });
+      // mark matching card if present
+      document.querySelectorAll('.class-card').forEach(function(c){
+        const name=c.querySelector('.c-name');
+        if(name&&CLASSES[run.playerClass]&&name.textContent===CLASSES[run.playerClass].name){
+          c.classList.add('sel');
+        }
+      });
+      document.getElementById('start-btn').classList.remove('hidden');
+    }
+    if(run.playerSkinBody) playerSkinBody=run.playerSkinBody;
+    if(run.playerSkinTexture) playerSkinTexture=run.playerSkinTexture;
+    const seedInp=document.getElementById('world-seed-input');
+    if(seedInp&&run.worldSeed!=null) seedInp.value=String(run.worldSeed);
+    // stash for applyPending inside startGame finishWorldEntry
+    if(VoxCloud){ /* pending already set by continueFromCloud */ }
+    startGame();
+  };
+})();
 updateSkillUI();
 </script>
 </body>
