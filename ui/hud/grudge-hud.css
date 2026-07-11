@@ -1,4 +1,10 @@
-/* Grudge Warlords HUD — grudge-game CraftPix kit + ObjectStore icons */
+/* Grudge Warlords HUD — CraftPix meshes used for their intended roles
+   Buttons → Buttons/Rectangular/*
+   Windows → Window/* + Modal_Box/*
+   Skill slots ONLY → Action_Bar/Slots/*
+   Inventory slots → Inventory/*
+   Do NOT stretch Action_Bar art as generic panel/button chrome. */
+
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Cinzel+Decorative:wght@700&display=swap');
 
 :root {
@@ -12,20 +18,273 @@
   --gw-gold: #c9a227;
   --gw-slot-border: #4a3020;
   --hud-font: 'Cinzel', 'Segoe UI', serif;
-  --hud-slice: 18;
-  --gg-slot-action: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Background.png');
+
+  /* ── CraftPix button meshes (actual buttons) ── */
+  --gg-btn-lg: url('../../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background.png');
+  --gg-btn-lg-yellow: url('../../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background_Yellow.png');
+  --gg-btn-lg-green: url('../../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background_Green.png');
+  --gg-btn-lg-hover: url('../../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Hover_Yellow.png');
+  --gg-btn-lg-press: url('../../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Press.png');
+
+  --gg-btn-md: url('../../assets/grudge-game/ui/Buttons/Rectangular/Medium/Button_RM_Background.png');
+  --gg-btn-md-red: url('../../assets/grudge-game/ui/Buttons/Rectangular/Medium/Button_RM_Foreground_Red.png');
+  --gg-btn-md-hover: url('../../assets/grudge-game/ui/Buttons/Rectangular/Medium/Button_RM_Hover_Red.png');
+  --gg-btn-md-press: url('../../assets/grudge-game/ui/Buttons/Rectangular/Medium/Button_RM_Press.png');
+
+  --gg-btn-sm: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Background.png');
+  --gg-btn-sm-red: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Foreground_Red.png');
+  --gg-btn-sm-green: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Foreground_Green.png');
+  --gg-btn-sm-yellow: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Foreground_Yellow.png');
+  --gg-btn-sm-hover-red: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Hover_Red.png');
+  --gg-btn-sm-hover-green: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Hover_Green.png');
+  --gg-btn-sm-hover-yellow: url('../../assets/grudge-game/ui/Buttons/Rectangular/Small/Buttom_RS_Hover_Yellow.png');
+
+  --gg-btn-tiny: url('../../assets/grudge-game/ui/Buttons/Rectangular/Tiny/Button_RT_Background.png');
+  --gg-btn-tiny-hover: url('../../assets/grudge-game/ui/Buttons/Rectangular/Tiny/Button_RT_Hover.png');
+  --gg-btn-tiny-press: url('../../assets/grudge-game/ui/Buttons/Rectangular/Tiny/Button_RT_Press.png');
+
+  /* ── Windows / modals (panels — not action bars) ── */
+  --gg-window: url('../../assets/grudge-game/ui/Window/Window_Background.png');
+  --gg-window-header: url('../../assets/grudge-game/ui/Window/Window_Header_Background.png');
+  --gg-window-close: url('../../assets/grudge-game/ui/Window/Window_CloseBtn_Background.png');
+  --gg-window-close-hover: url('../../assets/grudge-game/ui/Window/Window_CloseBtn_Hover.png');
+  --gg-window-close-press: url('../../assets/grudge-game/ui/Window/Window_CloseBtn_Press.png');
+  --gg-modal: url('../../assets/grudge-game/ui/Modal_Box/ModalBox_Background.png');
+  --gg-modal-close: url('../../assets/grudge-game/ui/Modal_Box/ModalBox_CloseButton_Background.png');
+  --gg-modal-close-hover: url('../../assets/grudge-game/ui/Modal_Box/ModalBox_CloseButton_Hover.png');
+
+  /* ── Tabs ── */
+  --gg-tab: url('../../assets/grudge-game/ui/Spell_Book/Tabs/SpellBook_Tab_Background.png');
+  --gg-tab-active: url('../../assets/grudge-game/ui/Spell_Book/Tabs/SpellBook_Tab_Background_Active.png');
+  --gg-tab-hover: url('../../assets/grudge-game/ui/Spell_Book/Tabs/SpellBook_Tab_Hover.png');
+  --gg-menu: url('../../assets/grudge-game/ui/Window/Menu/Window_Menu_Background.png');
+  --gg-menu-active: url('../../assets/grudge-game/ui/Window/Menu/Window_Menu_Active.png');
+  --gg-menu-hover: url('../../assets/grudge-game/ui/Window/Menu/Window_Menu_Hover.png');
+
+  /* ── Slots (correct role only) ── */
+  --gg-slot-skill: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Background.png');
+  --gg-slot-skill-hover: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Hover.png');
+  --gg-slot-skill-press: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Press.png');
   --gg-slot-extra: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Extra_Slot_Background.png');
   --gg-slot-inv: url('../../assets/grudge-game/ui/Inventory/Inventory_Slot_Background.png');
+  --gg-slot-equip: url('../../assets/grudge-game/ui/Character_Window/Slots/CharacterWindow_Slot_Hover.png');
+
+  /* ── Bars (unit frame / cast / xp — not button chrome) ── */
+  --gg-cast-track: url('../../assets/grudge-game/ui/Cast_Bars/CastBar_Bar_Background.png');
+  --gg-cast-fill: url('../../assets/grudge-game/ui/Cast_Bars/CastBar_Bar_Fill.png');
+  --gg-xp-track: url('../../assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Background.png');
+  --gg-xp-fill: url('../../assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Fill.png');
+  --gg-unitframe: url('../../assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Background.png');
+  --gg-hp-fill: url('../../assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_HP_Fill_Red.png');
+  --gg-mp-fill: url('../../assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_MP_Fill_Green.png');
+  --gg-notif: url('../../assets/grudge-game/ui/Notifications/Notification_Background.png');
 }
 
 body {
   font-family: var(--hud-font);
 }
 
-/* ── Class screen ── */
+/* ═══════════════════════════════════════════
+   PRIMARY BUTTONS — rectangular button meshes
+   ═══════════════════════════════════════════ */
+
+.gw-btn,
+button.gw-btn {
+  background: var(--gg-btn-lg) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: #fff8e8 !important;
+  font-family: var(--hud-font);
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 #000, 0 0 8px rgba(0, 0, 0, 0.8);
+  box-shadow: none !important;
+  min-height: 52px;
+  min-width: 180px;
+  padding: 14px 40px !important;
+  image-rendering: auto;
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+.gw-btn:hover,
+button.gw-btn:hover {
+  background: var(--gg-btn-lg-hover) center / 100% 100% no-repeat !important;
+  color: #fff !important;
+  filter: brightness(1.08);
+  transform: translateY(-1px) scale(1.02);
+}
+.gw-btn:active,
+button.gw-btn:active {
+  background: var(--gg-btn-lg-press) center / 100% 100% no-repeat !important;
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.95);
+}
+
+/* HUD action row (Bag / Gear / Craft / Allies) — medium button mesh */
+.hud-action-btn,
+button.hud-action-btn {
+  background: var(--gg-btn-md) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: #f0e0c0 !important;
+  font-family: var(--hud-font);
+  font-size: 9px !important;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px #000;
+  padding: 12px 18px !important;
+  min-height: 40px;
+  min-width: 88px;
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+.hud-action-btn:hover,
+button.hud-action-btn:hover {
+  background: var(--gg-btn-md-hover) center / 100% 100% no-repeat !important;
+  color: #fff !important;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+.hud-action-btn:active {
+  background: var(--gg-btn-md-press) center / 100% 100% no-repeat !important;
+  transform: translateY(1px);
+}
+
+/* Craft confirm — small red button mesh */
+.craft-btn,
+button.craft-btn {
+  background: var(--gg-btn-sm-red) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: #fff !important;
+  font-family: var(--hud-font);
+  font-size: 9px !important;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px #000;
+  padding: 10px 16px !important;
+  min-height: 32px;
+  min-width: 72px;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.craft-btn:hover:not(:disabled) {
+  background: var(--gg-btn-sm-hover-red) center / 100% 100% no-repeat !important;
+  filter: brightness(1.08);
+}
+.craft-btn:disabled {
+  background: var(--gg-btn-sm) center / 100% 100% no-repeat !important;
+  color: #666 !important;
+  filter: grayscale(0.8) brightness(0.55);
+  cursor: not-allowed;
+}
+
+/* Panel close — window close button mesh (not a stretched bar) */
+.panel-close,
+#craft-close,
+button.panel-close {
+  background: var(--gg-window-close) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: #d8c8a8 !important;
+  font-family: var(--hud-font);
+  font-size: 9px !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px #000;
+  padding: 10px 20px !important;
+  min-height: 36px;
+  min-width: 96px;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.panel-close:hover,
+#craft-close:hover {
+  background: var(--gg-window-close-hover) center / 100% 100% no-repeat !important;
+  color: #fff !important;
+}
+.panel-close:active,
+#craft-close:active {
+  background: var(--gg-window-close-press) center / 100% 100% no-repeat !important;
+}
+
+/* Skin picker tiny buttons */
+.skin-body-btn {
+  background: var(--gg-btn-tiny) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: #ccc !important;
+  box-shadow: none !important;
+}
+.skin-body-btn:hover,
+.skin-body-btn.sel {
+  background: var(--gg-btn-tiny-hover) center / 100% 100% no-repeat !important;
+  color: #fff !important;
+}
+.skin-body-btn:active {
+  background: var(--gg-btn-tiny-press) center / 100% 100% no-repeat !important;
+}
+
+/* ═══════════════════════════════════════════
+   PANELS / WINDOWS — window mesh, not action bar
+   ═══════════════════════════════════════════ */
+
+.studio-panel,
+#craft-panel {
+  background: var(--gg-window) center / 100% 100% no-repeat, var(--gw-panel) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: none !important;
+  padding: 8px !important;
+}
+.studio-panel h2,
+#craft-panel h2 {
+  background: var(--gg-window-header) center / 100% 100% no-repeat;
+  color: var(--gw-orange) !important;
+  font-family: 'Cinzel Decorative', var(--hud-font);
+  border-bottom: none !important;
+  text-shadow: 0 0 10px rgba(232, 168, 110, 0.35);
+  margin: 4px 8px 0 !important;
+  padding: 14px 18px 12px !important;
+}
+
+.studio-tab {
+  background: var(--gg-tab) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: #a89880 !important;
+  font-family: var(--hud-font);
+  box-shadow: none !important;
+}
+.studio-tab:hover {
+  background: var(--gg-tab-hover) center / 100% 100% no-repeat !important;
+  color: #e8d8b8 !important;
+}
+.studio-tab.sel {
+  background: var(--gg-tab-active) center / 100% 100% no-repeat !important;
+  color: #fff0c8 !important;
+}
+
+.screen-overlay {
+  background: var(--gg-modal) center / 100% 100% no-repeat, rgba(4, 6, 12, 0.92) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.75);
+}
+.screen-overlay h1 {
+  font-family: 'Cinzel Decorative', var(--hud-font);
+}
+
+/* ═══════════════════════════════════════════
+   CLASS SCREEN
+   ═══════════════════════════════════════════ */
+
 #class-screen {
   background:
-    url('frames/panel-bg.png') center/cover no-repeat,
     radial-gradient(ellipse at center, #1a0a0a 0%, #040408 100%);
   isolation: isolate;
 }
@@ -38,15 +297,26 @@ body {
   color: var(--gw-blood-bright);
   text-shadow: 0 0 30px rgba(139, 0, 0, 0.6), 0 2px 0 #000;
 }
+
 .class-card {
-  background: url('frames/slot-gothic.png') center/100% 100% no-repeat, rgba(10, 8, 14, 0.92);
-  border: 1px solid var(--gw-slot-border);
-  border-radius: 4px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  background: var(--gg-window) center / 100% 100% no-repeat, rgba(10, 8, 14, 0.92) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
   position: relative;
   z-index: 2;
   cursor: pointer;
   touch-action: manipulation;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.class-card:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+.class-card.sel {
+  filter: brightness(1.18) drop-shadow(0 0 12px rgba(201, 162, 39, 0.45));
+  outline: 2px solid var(--gw-gold);
+  outline-offset: -4px;
 }
 .skin-body-btn,
 .skin-tex-btn,
@@ -63,56 +333,61 @@ body {
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
-.gw-btn {
-  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, var(--gw-blood);
-  border: 1px solid var(--gw-gold);
-  font-family: var(--hud-font);
-  letter-spacing: 4px;
-  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.4);
-}
-.gw-btn:hover {
-  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, var(--gw-orange-deep);
-  color: #fff;
+
+.class-preview {
+  background: var(--gg-window) center / 100% 100% no-repeat, rgba(6, 10, 18, 0.94) !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
-/* ── Stat boxes & bars ── */
+/* ═══════════════════════════════════════════
+   STAT BOXES / BARS — unit frame + bar fills
+   ═══════════════════════════════════════════ */
+
 .stat-box {
-  background: url('frames/panel-fg.png') center/100% 100% no-repeat, var(--gw-panel);
-  border-left: 3px solid var(--gw-blood);
-  border-radius: 2px;
+  background: var(--gg-unitframe) left center / auto 100% no-repeat, rgba(6, 10, 18, 0.88) !important;
+  border: 1px solid #2a2030 !important;
+  border-left: 3px solid var(--gw-blood) !important;
+  border-radius: 2px !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: none !important;
 }
 .stat-label {
   color: var(--gw-orange);
   font-family: var(--hud-font);
   letter-spacing: 3px;
 }
-.bar-track {
-  height: 6px;
-  background: var(--gw-blue);
-  border: 1px solid #0a1020;
-  border-radius: 2px;
+.bar-track,
+#cast-bar-track,
+#channel-bar-track,
+#stamina-track,
+#energy-track,
+#day-bar-wrap {
+  background: var(--gg-cast-track) center / 100% 100% no-repeat, #1a1e26 !important;
+  border: 1px solid #0a1020 !important;
+  border-radius: 2px !important;
+  overflow: hidden;
 }
 #hp-fill {
-  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, var(--gw-blood), var(--gw-orange));
+  background: var(--gg-hp-fill) center / 100% 100% no-repeat, linear-gradient(90deg, var(--gw-blood), var(--gw-orange)) !important;
 }
 #exp-fill {
-  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, var(--gw-blue), var(--gw-blue-bright));
+  background: var(--gg-xp-fill) center / 100% 100% no-repeat, linear-gradient(90deg, var(--gw-blue), var(--gw-blue-bright)) !important;
 }
 #day-bar {
-  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, #ffcc44, var(--gw-orange));
+  background: var(--gg-xp-fill) center / 100% 100% no-repeat, linear-gradient(90deg, #ffcc44, var(--gw-orange)) !important;
 }
 #stamina-fill {
-  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, #228822, #44cc44);
+  background: var(--gg-mp-fill) center / 100% 100% no-repeat, linear-gradient(90deg, #228822, #44cc44) !important;
 }
 #energy-fill {
-  background: url('palette/royal-blue.png') center/cover, linear-gradient(90deg, var(--gw-blue), #88ccff);
+  background: var(--gg-cast-fill) center / 100% 100% no-repeat, linear-gradient(90deg, var(--gw-blue), #88ccff) !important;
 }
 #cast-bar-fill {
-  background: url('palette/bar-orange.png') center/cover, linear-gradient(90deg, var(--gw-orange-deep), #ffcc00);
+  background: var(--gg-cast-fill) center / 100% 100% no-repeat, linear-gradient(90deg, var(--gw-orange-deep), #ffcc00) !important;
 }
 #channel-bar-fill {
-  background: url('palette/royal-blue.png') center/cover, linear-gradient(90deg, #2288ff, #44ddff);
+  background: var(--gg-cast-fill) center / 100% 100% no-repeat, linear-gradient(90deg, #2288ff, #44ddff) !important;
 }
 
 /* ── Top labels ── */
@@ -122,53 +397,99 @@ body {
   text-shadow: 0 0 12px rgba(232, 168, 110, 0.5);
 }
 .status-pill {
-  background: url('frames/panel-fg.png') center/100% 100% no-repeat, var(--gw-panel);
-  border-color: var(--gw-slot-border);
+  background: var(--gg-notif) center / 100% 100% no-repeat, var(--gw-panel) !important;
+  border: none !important;
+  border-radius: 0 !important;
   font-family: var(--hud-font);
 }
 
-/* ── grudge-game CraftPix action-bar slots ── */
-.skill-slot,
-.item-slot {
-  background: var(--gg-slot-action) center/100% 100% no-repeat;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  width: 72px;
-  height: 72px;
+/* ═══════════════════════════════════════════
+   SLOTS — skill bar uses action-bar slots ONLY
+   ═══════════════════════════════════════════ */
+
+.skill-slot {
+  background: var(--gg-slot-skill) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  width: 72px !important;
+  height: 72px !important;
+  padding-top: 0 !important;
 }
-.w-slot,
-.build-slot {
-  background: var(--gg-slot-extra) center/100% 100% no-repeat;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  width: 56px;
-  height: 56px;
-}
-.inv-slot,
-.equip-slot {
-  background: var(--gg-slot-inv) center/100% 100% no-repeat;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
-.skill-slot.off-cd:hover:not(.on-cd) {
-  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.55));
+.skill-slot:hover:not(.on-cd) {
+  background: var(--gg-slot-skill-hover) center / 100% 100% no-repeat !important;
   transform: translateY(-2px);
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.45));
+}
+.skill-slot:active:not(.on-cd) {
+  background: var(--gg-slot-skill-press) center / 100% 100% no-repeat !important;
+}
+.skill-slot.off-cd {
+  filter: drop-shadow(0 0 6px rgba(201, 162, 39, 0.3));
+}
+.skill-slot.on-cd {
+  filter: brightness(0.55);
+}
+
+/* Hotbar items / weapons — inventory + extra slots (not full action-bar strip art) */
+.item-slot,
+.w-slot {
+  background: var(--gg-slot-extra) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  width: 56px !important;
+  height: 56px !important;
 }
 .w-slot.active {
-  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7));
-  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.7));
+  opacity: 1 !important;
+  background: var(--gg-slot-skill-hover) center / 100% 100% no-repeat !important;
+  transform: scale(1.05);
 }
-.w-slot:not(.active) { opacity: 0.55; }
+.w-slot:not(.active) {
+  opacity: 0.7;
+}
+.w-slot.owned:hover {
+  background: var(--gg-slot-skill-hover) center / 100% 100% no-repeat !important;
+}
+
+.build-slot {
+  background: var(--gg-slot-extra) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  width: 54px !important;
+  height: 54px !important;
+}
+.build-slot.sel {
+  filter: drop-shadow(0 0 8px rgba(68, 255, 170, 0.55));
+  background: var(--gg-slot-skill-hover) center / 100% 100% no-repeat !important;
+}
+
+/* Inventory grid — inventory slot mesh only */
+.inv-slot {
+  background: var(--gg-slot-inv) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
 .inv-slot.sel {
-  border-color: var(--gw-orange);
-  box-shadow: 0 0 12px rgba(232, 168, 110, 0.4);
+  filter: drop-shadow(0 0 10px rgba(232, 168, 110, 0.5));
+  outline: 1px solid var(--gw-orange);
+  outline-offset: -2px;
 }
-.equip-slot.filled { border-color: var(--gw-blue-bright); border-style: solid; }
+
+/* Equipment — character window slot frames */
+.equip-slot {
+  background: var(--gg-slot-equip) center / 100% 100% no-repeat, rgba(8, 12, 22, 0.6) !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+.equip-slot.filled {
+  filter: drop-shadow(0 0 6px rgba(68, 136, 255, 0.45));
+}
 
 /* ── Icon images inside slots ── */
 .hud-icon-img {
@@ -191,15 +512,40 @@ body {
   transform: scale(1.04);
 }
 .hud-icon-img.gg-icon,
-.skill-slot .hud-icon-img { width: 52px; height: 52px; max-width: 74%; max-height: 74%; }
+.skill-slot .hud-icon-img {
+  width: 48px;
+  height: 48px;
+  max-width: 70%;
+  max-height: 70%;
+}
 .item-slot .hud-icon-img,
-.inv-slot .hud-icon-img { width: 50px; height: 56px; }
-.w-slot .hud-icon-img { width: 50px; height: 56px; }
-.equip-slot .hud-icon-img { width: 52px; height: 58px; }
-.craft-icon-wrap .hud-icon-img { width: 40px; height: 44px; }
-.build-slot .hud-icon-img { width: 36px; height: 40px; }
-.class-card .hud-icon-img { width: 56px; height: 64px; }
-.has-hud-icon .skill-name { display: none; }
+.inv-slot .hud-icon-img {
+  width: 40px;
+  height: 44px;
+}
+.w-slot .hud-icon-img {
+  width: 42px;
+  height: 46px;
+}
+.equip-slot .hud-icon-img {
+  width: 48px;
+  height: 52px;
+}
+.craft-icon-wrap .hud-icon-img {
+  width: 40px;
+  height: 44px;
+}
+.build-slot .hud-icon-img {
+  width: 36px;
+  height: 40px;
+}
+.class-card .hud-icon-img {
+  width: 56px;
+  height: 64px;
+}
+.has-hud-icon .skill-name {
+  display: none;
+}
 .has-hud-icon .skill-key {
   position: absolute;
   top: 2px;
@@ -211,9 +557,21 @@ body {
   border-radius: 2px;
   text-shadow: none;
 }
-.res-inline .res-icon { display: inline-flex; align-items: center; vertical-align: middle; }
-.res-inline .hud-icon-img { width: 18px; height: 20px; }
-.res-inline .res-pill { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; }
+.res-inline .res-icon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.res-inline .hud-icon-img {
+  width: 18px;
+  height: 20px;
+}
+.res-inline .res-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 6px;
+}
 .skill-icon,
 .i-icon,
 .w-icon,
@@ -231,95 +589,50 @@ body {
   font-family: var(--hud-font);
   text-shadow: 0 1px 2px #000;
 }
-.skill-name { color: #998877; }
+.skill-name {
+  color: #998877;
+}
 .w-slot.has-hud-icon .w-name,
-.item-slot.has-hud-icon .i-icon + .i-count { opacity: 1; }
-.w-slot.has-hud-icon .w-name { display: none; }
-
-/* ── Action buttons ── */
-.hud-action-btn {
-  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, rgba(8, 6, 12, 0.92);
-  border: 1px solid var(--gw-slot-border);
-  color: var(--gw-orange);
-  font-family: var(--hud-font);
+.item-slot.has-hud-icon .i-icon + .i-count {
+  opacity: 1;
 }
-.hud-action-btn:hover {
-  border-color: var(--gw-blood-bright);
-  color: #fff;
+.w-slot.has-hud-icon .w-name {
+  display: none;
 }
 
-/* ── Studio panels (craft / inventory / equip) ── */
-.studio-panel,
-#craft-panel {
-  background: url('cryo/gui/panel-9slice.png') center/100% 100% no-repeat, url('frames/panel-bg.png') center/cover no-repeat, var(--gw-panel);
-  border: 2px solid var(--gw-slot-border);
-  border-radius: 6px;
-  box-shadow: 0 0 60px rgba(139, 0, 0, 0.25), inset 0 0 40px rgba(0, 0, 0, 0.4);
-}
-.studio-panel h2,
-#craft-panel h2 {
-  color: var(--gw-orange);
-  font-family: 'Cinzel Decorative', var(--hud-font);
-  border-bottom-color: var(--gw-blood);
-  text-shadow: 0 0 10px rgba(232, 168, 110, 0.3);
-}
-.studio-tab {
-  background: rgba(8, 6, 12, 0.9);
-  border-color: var(--gw-slot-border);
-  color: #887766;
-  font-family: var(--hud-font);
-}
-.studio-tab.sel {
-  border-color: var(--gw-orange);
-  color: var(--gw-orange);
-  background: rgba(139, 0, 0, 0.2);
-}
-.panel-close,
-#craft-close {
-  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, transparent;
-  border-color: var(--gw-slot-border);
+/* ── Ally roster & GRUDOX ── */
+#ally-roster h3 {
   color: var(--gw-orange);
   font-family: var(--hud-font);
 }
-.craft-btn {
-  background: url('cryo/buttons/btn-9slice.png') center/100% 100% no-repeat, var(--gw-blood);
-  border: 1px solid var(--gw-gold);
-  font-family: var(--hud-font);
-  letter-spacing: 1px;
-}
-.craft-btn:disabled {
-  background: rgba(20, 18, 16, 0.8);
-  border-color: #333;
-}
-
-/* ── Ally roster & GRUDOX pill ── */
-#ally-roster h3 { color: var(--gw-orange); font-family: var(--hud-font); }
 .ally-card {
-  background: url('frames/panel-fg.png') center/100% 100% no-repeat, rgba(6, 10, 14, 0.9);
-  border-color: #2a4a2a;
+  background: var(--gg-notif) center / 100% 100% no-repeat, rgba(6, 10, 14, 0.9) !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 #grudox-pill {
-  background: url('frames/panel-fg.png') center/100% 100% no-repeat, rgba(6, 10, 18, 0.85);
+  background: var(--gg-notif) center / 100% 100% no-repeat, rgba(6, 10, 18, 0.85) !important;
+  border: none !important;
+  border-radius: 0 !important;
   font-family: var(--hud-font);
 }
 
-/* ── Overlays ── */
-.screen-overlay {
-  background: url('cryo/gui/panel-9slice.png') center/100% 100% no-repeat, url('frames/panel-bg.png') center/cover, rgba(4, 6, 12, 0.97);
-  border-color: var(--gw-blood);
-}
-.screen-overlay h1 {
-  font-family: 'Cinzel Decorative', var(--hud-font);
-}
 #build-indicator {
-  background: url('frames/panel-fg.png') center/100% 100% no-repeat, rgba(6, 10, 18, 0.9);
+  background: var(--gg-notif) center / 100% 100% no-repeat, rgba(6, 10, 18, 0.9) !important;
+  border: none !important;
+  border-radius: 0 !important;
   font-family: var(--hud-font);
 }
-#raid-alert { color: var(--gw-orange); }
-#wave-flash { color: var(--gw-blood-bright); }
+#raid-alert {
+  color: var(--gw-orange);
+}
+#wave-flash {
+  color: var(--gw-blood-bright);
+}
 
-/* ── Minimap frame ── */
+/* ── Minimap ── */
 #mm-canvas {
   border: 2px solid var(--gw-slot-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  background: url('../../assets/grudge-game/ui/Minimap/Minimap_Overlay.png') center / cover no-repeat;
 }
