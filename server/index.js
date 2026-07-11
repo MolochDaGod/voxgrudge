@@ -40,7 +40,8 @@ const server = http.createServer((req, res) => {
     json(res, 204, {}, origin);
     return;
   }
-  if (req.url === '/health' || req.url === '/api/health') {
+  const pathOnly = (req.url || '/').split('?')[0];
+  if (pathOnly === '/' || pathOnly === '/health' || pathOnly === '/api/health') {
     json(res, 200, {
       ok: true,
       service: 'voxgrudge-grudox-room',
@@ -49,15 +50,19 @@ const server = http.createServer((req, res) => {
     }, origin);
     return;
   }
-  if (req.url === '/api/grudox/rooms') {
+  if (pathOnly === '/api/grudox' || pathOnly === '/api/grudox/rooms') {
+    // HTTP GET is health/room metadata; realtime is WebSocket upgrade on same path.
     json(res, 200, {
+      ok: true,
       room: 'vox-openworld',
       players: players.size,
       maxPlayers: MAX_PLAYERS,
+      transport: 'websocket',
+      path: '/api/grudox',
     }, origin);
     return;
   }
-  res.writeHead(404);
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('not found');
 });
 

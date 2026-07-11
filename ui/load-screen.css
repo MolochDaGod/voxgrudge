@@ -1,0 +1,62 @@
+/**
+ * Load / forge-world overlay for VoxGrudge.
+ */
+#world-loading.screen-overlay,
+.screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #0d1520 0%, #04080f 100%);
+  pointer-events: auto;
+}
+
+#world-loading h1,
+.screen-overlay h1 {
+  margin: 0 0 12px;
+  font-size: 28px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #e63d3d;
+  text-shadow: 0 0 24px rgba(230, 61, 61, 0.35);
+}
+
+#world-loading .sub,
+.screen-overlay .sub,
+#world-loading-msg {
+  color: #778;
+  font-size: 12px;
+  letter-spacing: 1px;
+  max-width: 420px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.load-bar {
+  margin-top: 20px;
+  width: min(280px, 70vw);
+  height: 4px;
+  background: #1a1e26;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.load-bar > span {
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, #e63d3d, #e8a86e);
+  animation: loadPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes loadPulse {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}

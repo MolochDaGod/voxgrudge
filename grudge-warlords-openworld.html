@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
@@ -6,7 +6,20 @@
     <script src="https://client.grudge-studio.com/grudge-game-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Grudge Warlords — Open World Voxel Edition</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230a0e14'/%3E%3Cpath d='M10 6l6 10-6 10M22 6l-6 10 6 10' stroke='%23e63d3d' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e63d3d'/%3E%3C/svg%3E">
+<meta name="description" content="Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.">
+<meta name="theme-color" content="#e86a1a">
+<link rel="icon" href="branding/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="branding/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="branding/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="branding/apple-touch-icon.png">
+<link rel="manifest" href="branding/site.webmanifest">
+<meta property="og:title" content="Grudge Warlords — Open World Voxel Edition">
+<meta property="og:description" content="Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.">
+<meta property="og:image" content="https://voxgrudge.vercel.app/branding/og-image.png">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="ui/grudge-studio-shell.css">
+    <link rel="stylesheet" href="ui/hud/grudge-hud.css">
+<link rel="stylesheet" href="ui/load-screen.css">
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
@@ -14,8 +27,8 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #game-canvas-wrap canvas{display:block;width:100%;height:100%}
 #game-hud{position:fixed;inset:0;z-index:20;pointer-events:none}
 .pre-game-hidden{display:none!important}
-#class-screen{position:fixed;inset:0;z-index:50;background:radial-gradient(ellipse at center,#0d1520 0%,#04080f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;pointer-events:auto;isolation:isolate}
-#class-screen::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30h60M30 0v60' stroke='%23ffffff08' stroke-width='1'/%3E%3C/svg%3E");opacity:0.5;animation:gridPulse 4s ease-in-out infinite}
+#class-screen{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;pointer-events:auto}
+#class-screen::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30h60M30 0v60' stroke='%23ffffff08' stroke-width='1'/%3E%3C/svg%3E");opacity:0.35;animation:gridPulse 4s ease-in-out infinite}
 #class-screen > *{position:relative;z-index:1}
 @keyframes gridPulse{0%,100%{opacity:0.3}50%{opacity:0.6}}
 #class-screen h1{color:#e63d3d;font-size:52px;margin:0 0 4px;letter-spacing:-2px;text-shadow:0 0 40px rgba(230,61,61,0.4);position:relative}
@@ -37,6 +50,17 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .class-card .c-icon{font-size:32px;margin-bottom:6px}
 .class-card .c-name{font-size:14px;font-weight:800;color:var(--cc);margin-bottom:4px}
 .class-card .c-desc{font-size:9px;color:#555;line-height:1.5}
+.class-select-layout{display:flex;gap:20px;max-width:min(96vw,920px);width:100%;align-items:stretch;justify-content:center;flex-wrap:wrap}
+.class-preview{flex:1;min-width:260px;max-width:320px;background:rgba(6,10,18,0.92);border:1px solid #2a3550;border-radius:10px;padding:16px;text-align:left}
+.class-preview h3{margin:0 0 4px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#aaccff}
+.class-preview .cp-val{font-size:28px;font-weight:900;color:#e8a86e;margin:8px 0 12px}
+.class-preview .preview-era{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#556;margin-bottom:12px}
+.class-preview .preview-era a{color:#7ec8ff;text-decoration:none}
+.class-preview .stat-line{display:flex;justify-content:space-between;font-size:10px;padding:5px 0;border-bottom:1px solid #1a2030;color:#889}
+.class-preview .stat-line span:last-child{color:#cde;font-weight:700}
+.class-preview .perk-tag{display:inline-block;margin-top:10px;padding:4px 8px;border-radius:4px;font-size:8px;letter-spacing:1px;text-transform:uppercase;background:rgba(68,136,255,0.12);border:1px solid #3a5080;color:#9bc}
+.class-preview .preview-hint{font-size:10px;color:#555;line-height:1.5;margin:0}
+.class-card .c-cp{font-size:10px;color:#e8a86e;margin-top:6px;font-weight:700}
 #hud{position:absolute;top:16px;left:16px;z-index:10;pointer-events:none;display:flex;flex-direction:column;gap:8px;min-width:190px}
 .stat-box{background:rgba(6,10,18,0.85);padding:8px 16px;border-radius:4px;border-left:3px solid #e63d3d;backdrop-filter:blur(8px)}
 .stat-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#e63d3d;margin-bottom:2px}
@@ -136,15 +160,14 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #grudox-pill.live{border-color:#44cc88;color:#8fd}
 #grudox-pill.offline{border-color:#553;color:#866}
 #hud-actions{position:absolute;bottom:90px;left:16px;display:flex;gap:6px;z-index:12;pointer-events:auto}
-.hud-action-btn{background:rgba(6,10,18,0.9);border:1px solid #334;color:#889;padding:6px 10px;font-size:8px;font-weight:700;letter-spacing:1px;border-radius:4px;cursor:pointer;text-transform:uppercase}
-.hud-action-btn:hover{border-color:#e63d3d;color:#fff}
+.hud-action-btn{cursor:pointer;text-transform:uppercase}
 #raid-alert{position:absolute;top:80px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:800;letter-spacing:4px;color:#ff4400;text-transform:uppercase;pointer-events:none;z-index:20;opacity:0;transition:opacity 0.5s;text-shadow:0 0 20px rgba(255,68,0,0.8)}
 #raid-alert.show{opacity:1}
 #wave-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:#e63d3d;pointer-events:none;z-index:30;opacity:0;transition:opacity 0.3s;text-shadow:0 0 40px rgba(230,61,61,0.8)}
 #night-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;background:rgba(0,5,25,0);transition:background 8s}
-.screen-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:60;pointer-events:auto;background:rgba(4,6,12,0.96);padding:48px 56px;border-radius:6px;border:1px solid #e63d3d;box-shadow:0 0 60px rgba(230,61,61,0.2)}
-.screen-overlay h1{color:#e63d3d;font-size:48px;margin:0 0 8px;letter-spacing:-2px}
-.screen-overlay .sub{color:#555;font-size:11px;letter-spacing:2px;margin-bottom:20px}
+.screen-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:60;pointer-events:auto;padding:48px 56px;border-radius:8px}
+.screen-overlay h1{font-size:48px;margin:0 0 8px;letter-spacing:-2px}
+.screen-overlay .sub{font-size:11px;letter-spacing:2px;margin-bottom:20px}
 .gw-btn{background:#e63d3d;color:#fff;border:none;padding:12px 44px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:3px;border-radius:3px;cursor:pointer;margin-top:24px;pointer-events:auto;transition:all 0.2s}
 .gw-btn:hover{background:#fff;color:#e63d3d;transform:scale(1.04)}
 .hidden{display:none!important}
@@ -207,23 +230,36 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="game-canvas-wrap"></div>
 
 <div id="class-screen">
-  <h1>⚔ GRUDGE WARLORDS</h1>
-  <div class="sub">Open World · Voxel Combat · Survival Edition</div>
-  <div class="version">v1.0 — 10× Albion Zones · Seeded World · Grudge Items · 2m Scale · GRUDOX</div>
+  <header class="gw-brand">
+    <img class="gw-logo" src="branding/logo-256.png" alt="" width="96" height="96" decoding="async">
+    <h1>GRUDGE WARLORDS</h1>
+  </header>
+  <div class="sub">Nexus Era · Open World Survival</div>
+  <div class="version">Stats from <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener" style="color:#667">survival.grudge-studio.com</a> · 8-step combat · T1–T6 gear · GRUDOX</div>
   <div id="skin-picker">
     <div class="skin-picker-label">Voxel Body</div>
     <div id="skin-body-row"></div>
     <div class="skin-picker-label">Color Palette</div>
     <div id="skin-texture-row"></div>
   </div>
-  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Choose class, body, and palette</p>
+  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Bind your grudge — pick survivor, body, and palette</p>
   <div id="seed-row" style="position:relative;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
     <span style="font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase">World Seed</span>
     <input id="world-seed-input" type="number" style="width:120px;background:#0a0e14;border:1px solid #333;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
     <button type="button" class="hud-action-btn" style="pointer-events:auto" onclick="randomizeWorldSeed()">Random</button>
   </div>
-  <div class="class-grid" id="class-grid"></div>
-  <button class="gw-btn hidden" id="start-btn" onclick="startGame()">BEGIN SURVIVAL</button>
+  <div class="class-select-layout">
+    <div class="class-grid" id="class-grid"></div>
+    <aside class="class-preview" id="class-preview">
+      <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
+      <h3 id="preview-name">Choose Survivor</h3>
+      <div class="cp-val" id="preview-cp">—</div>
+      <div id="preview-stats"></div>
+      <p class="preview-hint" id="preview-hint">Every survivor uses the same 8 attributes, 37 derived stats, and combat pipeline as Grudges survival.</p>
+      <span class="perk-tag hidden" id="preview-perk"></span>
+    </aside>
+  </div>
+  <button class="gw-btn hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
 </div>
 
 <div id="game-hud" class="pre-game-hidden">
@@ -304,9 +340,10 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 </div>
 
 <div id="hud-actions">
-  <button class="hud-action-btn" onclick="toggleInventory()">Bag [I]</button>
-  <button class="hud-action-btn" onclick="toggleEquip()">Gear [G]</button>
-  <button class="hud-action-btn" onclick="toggleCraft()">Craft [C]</button>
+  <button class="hud-action-btn" onclick="openCommandCenter('inventory')">Bag [I]</button>
+  <button class="hud-action-btn" onclick="openCommandCenter('equipment')">Gear [G]</button>
+  <button class="hud-action-btn" onclick="openCommandCenter('craft')">Craft [C]</button>
+  <button class="hud-action-btn" onclick="openCommandCenter('character')">Hero [K]</button>
   <button class="hud-action-btn" onclick="summonAllyMenu()">Allies [T]</button>
 </div>
 
@@ -362,26 +399,72 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="stamina-wrap"><div id="stamina-track"><div id="stamina-fill" style="width:100%"></div></div></div>
 <div id="traversal-state">GROUND</div>
 
-<div id="world-loading" class="screen-overlay" style="z-index:55;display:none"><h1 style="font-size:28px">Forging World</h1><div class="sub" id="world-loading-msg">Seeding zones · placing camps · spawning nodes…</div></div>
+<div id="world-loading" class="gw-load-screen screen-overlay" style="display:none">
+  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="branding/load-screen-poster.jpg">
+    <source src="branding/load-screen.webm" type="video/webm">
+    <source src="branding/load-screen.mp4" type="video/mp4">
+  </video>
+  <div class="gw-load-scrim"></div>
+  <div class="gw-load-panel">
+    <img src="branding/logo-256.png" alt="" class="gw-load-logo" width="72" height="72" decoding="async">
+    <h1>Entering the Surface</h1>
+    <div id="world-loading-msg" class="gw-load-stage">Connecting to asset registry…</div>
+    <div class="gw-load-bar-track"><div id="world-loading-bar" class="gw-load-bar-fill"></div></div>
+    <div class="gw-load-meta">
+      <span id="world-loading-pct">0%</span>
+      <span id="world-loading-eta">—</span>
+      <span id="world-loading-tick">tick 0</span>
+    </div>
+    <div id="world-loading-asset" class="gw-load-asset"></div>
+  </div>
+</div>
 <div id="interact-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,80px);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e8a86e;pointer-events:none;z-index:15;opacity:0;transition:opacity 0.25s">[X] Open chest · [X] Talk to survivor</div>
-<div id="instructions">WASD:Move · LMB:Attack/Harvest · RMB:Parry · X:Loot chest/Talk · Q/E/R/F:Skills · B:Build · C:Craft · I/G:Bag/Gear · 10× world · zone camps</div>
+<div id="instructions">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener" style="color:#667">Stats Guide</a> · K:Main Panel · C:Craft · G:Equip · X:Craft Table · Frost Reach 105–135</div>
+
+<button id="gcc-fab" class="pre-game-hidden" title="Main Panel [K]">☰</button>
+<div id="grudge-command-center">
+  <div class="gcc-backdrop"></div>
+  <div class="gcc-shell gcc-mainpanel">
+    <aside class="gcc-aside-left" id="gcc-aside-left"></aside>
+    <div class="gcc-center-col">
+      <header class="gcc-header"><h1 id="gcc-panel-title">Main Panel</h1><button class="gcc-close" type="button">Close Esc</button></header>
+      <div class="gcc-center-body">
+        <div class="gcc-tab-content" id="gcc-tab-content"></div>
+        <nav class="gcc-tab-nav" id="gcc-tab-nav"></nav>
+      </div>
+    </div>
+    <aside class="gcc-aside-right" id="gcc-aside-right"></aside>
+  </div>
+</div>
 
 </div><!-- /game-hud -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
 <script src="js/grudge-env.js"></script>
+<script src="js/grudge-asset-config.js"></script>
 <script src="js/grudge-scale.js"></script>
 <script src="js/collision-layers.js"></script>
 <script src="js/terrain-collider.js"></script>
 <script src="js/collision-world.js"></script>
 <script src="js/vox-roll-anim.js"></script>
 <script src="js/world-engine.js"></script>
+<script src="js/cold-biom-manifest.js"></script>
+<script src="js/cold-biom-loader.js"></script>
+<script src="js/grudge-nexus-stats.js"></script>
+<script src="js/grudge-studio-ui.js"></script>
 <script src="js/grudge-codex-icons.js"></script>
 <script src="js/grudge-game-hud.js"></script>
 <script src="js/grudge-hud-icons.js"></script>
 <script src="js/grudge-items-loader.js"></script>
+<script src="js/grudge-asset-loader.js"></script>
+<script src="js/grudge-instanced-core.js"></script>
+<script src="js/grudge-instanced-fire.js"></script>
+<script src="js/grudge-world-fires.js"></script>
+<script src="js/grudge-explorer-combat.js"></script>
 <script>
 'use strict';
 
@@ -389,12 +472,25 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 // CLASS DEFINITIONS
 // ═══════════════════════════════════════════════════════════════
 const CLASSES = {
-  swordsman:{name:'Swordsman',emoji:'⚔️',color:'#e63d3d',desc:'+25% melee dmg · +20% HP · Starts with Sword+Axe',hpMult:1.20,meleeMult:1.25,startWeapons:['sword','axe']},
-  archer:   {name:'Archer',   emoji:'🏹',color:'#44bb44',desc:'+30% ranged dmg · +20% speed · Starts with Bow',speedMult:1.20,rangedMult:1.30,startWeapons:['sword','bow']},
-  mage:     {name:'Mage',     emoji:'🪄',color:'#aa44ff',desc:'+40% magic dmg · Staff starts charged · Blink ready',magicMult:1.40,startWeapons:['sword','staff']},
-  druid:    {name:'Druid',    emoji:'🌿',color:'#22cc88',desc:'2× resource harvest · Wolves passive · Nature affinity',resourceMult:2,startWeapons:['sword','bow']},
-  paladin:  {name:'Paladin',  emoji:'🛡️',color:'#ffdd44',desc:'+60% HP · Regen near built floors · Holy Shield',hpMult:1.60,regenNearFloor:true,startWeapons:['sword']},
-  necromancer:{name:'Necromancer',emoji:'💀',color:'#8844aa',desc:'Raise up to 3 fallen enemies · Soul Harvest kills restore HP',minionMax:3,soulHarvest:true,startWeapons:['staff']},
+  swordsman:{name:'Swordsman',emoji:'⚔️',color:'#e63d3d',role:'Frontline Raider',perkTree:'warrior',
+    desc:'Warrior tree · high melee & block · Sword + Axe',hpMult:1.20,meleeMult:1.25,startWeapons:['sword','axe']},
+  archer:   {name:'Archer',   emoji:'🏹',color:'#44bb44',role:'Surface Scout',perkTree:'hero',
+    desc:'Hero tree · ranged crit & captain auras · Bow',speedMult:1.20,rangedMult:1.30,startWeapons:['sword','bow']},
+  mage:     {name:'Mage',     emoji:'🪄',color:'#aa44ff',role:'Tech-Mystic',perkTree:'smarts',
+    desc:'Smarts tree · spell power & CDR · Staff',magicMult:1.40,startWeapons:['sword','staff']},
+  druid:    {name:'Druid',    emoji:'🌿',color:'#22cc88',role:'Wild Maker',perkTree:'maker',
+    desc:'Maker tree · harvest & deployables · Bow',resourceMult:2,startWeapons:['sword','bow']},
+  paladin:  {name:'Paladin',  emoji:'🛡️',color:'#ffdd44',role:'Shield-Brother',perkTree:'warrior',
+    desc:'Warrior tree · max HP & block · Holy shield',hpMult:1.60,regenNearFloor:true,startWeapons:['sword']},
+  necromancer:{name:'Necromancer',emoji:'💀',color:'#8844aa',role:'Soul Binder',perkTree:'smarts',
+    desc:'Smarts tree · minions & drain · Staff',minionMax:3,soulHarvest:true,startWeapons:['staff']},
+};
+
+const PERK_TREE_LABELS = {
+  warrior:'Warrior · STR · VIT',
+  hero:'Hero · TAC · WIS',
+  smarts:'Smarts · INT · WIS',
+  maker:'Maker · END · DEX',
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -518,6 +614,11 @@ const ENEMY_TYPES = {
   doom_crow:       {name:'Doom Crow',      emoji:'🐦‍⬛',tier:3,hp:220, dmg:18, speed:8.5,score:55,  sc:0.8,body:0x222222,beh:'swoop',fantasy:'crow'},
   giganto_beast:   {name:'Giganto',        emoji:'👹',tier:6,hp:2800,dmg:100,speed:3.2,score:800, sc:2.5,body:0x664422,beh:'tank',fantasy:'giganto'},
   demise_revenant: {name:'Demise',         emoji:'☠️',tier:7,hp:3200,dmg:115,speed:4.0,score:950, sc:1.8,body:0x440066,beh:'berserker',fantasy:'demise',emit:true},
+  frost_raider:    {name:'Frost Raider',   emoji:'🪓',tier:5,hp:1100,dmg:58, speed:5.2,score:220, sc:1.35,body:0x88aacc,beh:'berserker',coldUnit:'viking_raider'},
+  viking_brute:    {name:'Viking Brute',   emoji:'⚔️',tier:6,hp:2200,dmg:88, speed:3.8,score:480, sc:1.9,body:0x99bbcc,beh:'tank',coldUnit:'viking_brute'},
+  ice_stalker:     {name:'Ice Stalker',    emoji:'🧊',tier:4,hp:520, dmg:42, speed:7.0,score:140, sc:1.1,body:0xaaddff,beh:'chase',coldUnit:'ice_wolf'},
+  snow_golem:      {name:'Snow Golem',     emoji:'⛄',tier:3,hp:380, dmg:30, speed:3.5,score:75,  sc:1.25,body:0xeeeeff,beh:'heavy',coldUnit:'snow_golem'},
+  glacier_wyrm:    {name:'Glacier Wyrm',   emoji:'🐉',tier:7,hp:3400,dmg:118,speed:3.8,score:1100,sc:2.5,body:0x66ccff,beh:'spitter',coldUnit:'frost_wyrm_cold',emit:true},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -531,10 +632,10 @@ const ITEM_DEFS = {
   frag_grenade: {name:'Frag Grenade',     icon:'💣', color:0x888800,effect:'explosive',dmg:200,radius:8},
   berserker:    {name:'Berserker Elixir', icon:'💢', color:0xff0066,effect:'berserker',duration:15,dmgMult:1.6,defMult:0.7},
   invuln_potion:{name:'Invulnerability',  icon:'🛡️', color:0xffdd00,effect:'invuln',   duration:5},
-  iron_helm:    {name:'Iron Helm',        icon:'⛑️', color:0x888899,effect:'equip',    slot:'head',armor:8},
-  leather_vest: {name:'Leather Vest',     icon:'🦺', color:0x8b5a2b,effect:'equip',    slot:'chest',armor:12},
-  boots:        {name:'Trail Boots',      icon:'👢', color:0x554433,effect:'equip',    slot:'feet',speed:1.08},
-  power_charm:  {name:'Power Charm',      icon:'🔮', color:0xaa44ff,effect:'equip',    slot:'trinket',dmg:1.12},
+  iron_helm:    {name:'Iron Helm',        icon:'⛑️', color:0x888899,effect:'equip',    slot:'head',armor:8,tier:'T2'},
+  leather_vest: {name:'Leather Vest',     icon:'🦺', color:0x8b5a2b,effect:'equip',    slot:'chest',armor:12,tier:'T2'},
+  boots:        {name:'Trail Boots',      icon:'👢', color:0x554433,effect:'equip',    slot:'feet',speed:1.08,tier:'T1'},
+  power_charm:  {name:'Power Charm',      icon:'🔮', color:0xaa44ff,effect:'equip',    slot:'trinket',dmg:1.12,tier:'T3'},
   ally_crow:    {name:'Scout Crow',       icon:'🐦‍⬛',color:0x333333,effect:'summon',  ally:'crow'},
   ally_spider:  {name:'Brood Spider',     icon:'🕷️',color:0x1a4a10,effect:'summon',  ally:'spider'},
   ally_snake:   {name:'Venom Snake',      icon:'🐍', color:0x8a7a44,effect:'summon',  ally:'snake'},
@@ -590,8 +691,9 @@ const BIOMES = [
   {name:'STARTER ISLAND',  minD:0,  maxD:28, ground:0x3a6a2a, fog:0x2a4a1a, tiers:[1,1,2],     label:'Starter Island'},
   {name:'FABLED SWAMP',    minD:28, maxD:55, ground:0x2a4a1a, fog:0x1a2a10, tiers:[2,3,3],     label:'Fabled Swamp'},
   {name:'CRUSADE RUINS',   minD:55, maxD:80, ground:0x554444, fog:0x3a2a2a, tiers:[3,4,4],     label:'Crusade Ruins'},
-  {name:'PIGLIN WASTELAND',minD:80, maxD:110,ground:0x7a5a2a, fog:0x4a3a1a, tiers:[4,5,5],     label:'Piglin Wasteland'},
-  {name:'DARK SANCTUM',    minD:110,maxD:999,ground:0x220033, fog:0x110022, tiers:[6,7,7],     label:'Dark Sanctum'},
+  {name:'PIGLIN WASTELAND',minD:80, maxD:105,ground:0x7a5a2a, fog:0x4a3a1a, tiers:[4,5,5],     label:'Piglin Wasteland'},
+  {name:'FROST REACH',     minD:105,maxD:135,ground:0xc8d8e8, fog:0x8899aa, tiers:[5,6,6],     label:'Frost Reach', coldBiom:true},
+  {name:'DARK SANCTUM',    minD:135,maxD:999,ground:0x220033, fog:0x110022, tiers:[6,7,7],     label:'Dark Sanctum'},
 ];
 
 const TIER_POOLS = {
@@ -599,8 +701,8 @@ const TIER_POOLS = {
   2:['cave_troll','dire_wolf','orc_scout','voxel_spider'],
   3:['velociraptor','orc_warrior','battle_spider','sand_serpent','doom_crow'],
   4:['rhino_charger','orc_berserker','fire_phantom','voxel_spider'],
-  5:['ghost_tiger','minotaur_guard','fire_drake','doom_crow'],
-  6:['frost_wyrm','juggernaut','giganto_beast'],
+  5:['ghost_tiger','minotaur_guard','fire_drake','frost_raider','ice_stalker'],
+  6:['frost_wyrm','juggernaut','giganto_beast','viking_brute','glacier_wyrm'],
   7:['shadow_dragon','creature_titan','demise_revenant'],
 };
 
@@ -634,7 +736,8 @@ let collisionWorld = null;
 let blockColliderIds = [];
 const PLAYER_COLL_RADIUS = 1.1;
 let enemies = [], bullets = [], particles = [], worldItems = [], resourceNodes = [], minions = [];
-let hp, maxHp, score, survivalTime, isGameOver, gameStarted;
+let hp, maxHp, score, survivalTime, isGameOver=false, gameStarted=false;
+let spawnGraceTimer = 0;
 let currentWeapon, attackTimer;
 let itemHotbar = [{},{},{},{},{},{}];
 let statusEffects = {};
@@ -646,6 +749,8 @@ let blockInstMesh, blockDirty = false;
 let dayTimer = 0, dayNumber = 1, isNight = false, nightRaidCount = 0, raidAlertTimer = 0;
 let DAY_LEN = 90, NIGHT_LEN = 60;
 let playerClass = null;
+let playerCombatant = null;
+let playerFightState = { lastDamagedBy: null, grudgeReady: true };
 let playerSkinBody = 'a';
 let playerSkinTexture = 'a';
 let level = 1, exp = 0, expToNext = 500;
@@ -653,8 +758,16 @@ let minigunActive = false, minigunTimer = 0, minigunFireTimer = 0;
 let lastSpawnTime = 0, spawnInterval = 2200;
 let nearResourceNode = null;
 let craftOpen = false, inventoryOpen = false, equipOpen = false, craftTab = 'consumables';
-let inventoryGrid = new Array(24).fill(null);
-let equipment = {head:null,chest:null,feet:null,trinket:null};
+let inventoryGrid = new Array(36).fill(null);
+const EQUIP_SLOT_ALIASES = {head:'helm',feet:'boots',trinket:'ring',charm:'ring'};
+const EQUIP_SLOT_LIST = ['helm','shoulder','chest','legs','boots','belt','mainHand','offHand','gloves','cape','ring','necklace'];
+function createEmptyEquipment(){const eq={};EQUIP_SLOT_LIST.forEach(s=>eq[s]=null);return eq;}
+let equipment = createEmptyEquipment();
+const ATTRIBUTE_POINTS_TOTAL = 160;
+let playerAttributes = null;
+let craftingStations = [];
+let craftTableTemplate = null;
+let craftPreviewRenderer = null, craftPreviewScene = null, craftPreviewCamera = null, craftPreviewMesh = null;
 let remotePlayers = new Map();
 let grudoxSocket = null, grudoxConnected = false, grudoxIntentTimer = 0;
 const keys = {};
@@ -666,6 +779,7 @@ let mmCanvas, mmCtx;
 let ambientLight, dirLight;
 let worldPlane;
 let worldEngine = null;
+let worldFires = null;
 let chestLootTable = {};
 let campSpawnQueue = [];
 let lastChunkUpdate = 0;
@@ -703,7 +817,7 @@ let stamina = 100, maxStamina = 100, staminaRegen = 25;
 let dodgeCd = 0, DODGE_CD = 0.8, DODGE_DIST = 8, DODGE_DUR = 0.25;
 let dodgeTimer = 0, dodgeDir = new THREE.Vector3();
 let rollCd = 0, ROLL_CD = 0.55, ROLL_DIST = 7, ROLL_DUR = 0.38, ROLL_IFRAMES = 0.35;
-let rollTimer = 0, rollDir = new THREE.Vector3();
+let rollTimer = 0, rollDir = new THREE.Vector3(), rollDistMult = 1;
 let lastDirTap = {KeyW:0, KeyS:0, KeyA:0, KeyD:0};
 const DIR_DOUBLE_TAP_MS = 280;
 let voxRollAnim = null, rollAnimPhase = 'none';
@@ -757,14 +871,14 @@ let fpsFrameCount = 0, fpsLastTime = performance.now(), fpsDisplay = 0;
 // ── VFX Sprite Engine State ──
 const vfxTexCache = {};
 let vfxSprites = [];
-const VFX_DEFS = {
+const VFX_DEFS = window.GrudgeAssets ? GrudgeAssets.buildVfxDefs() : {
   muzzle_front:{path:'vfx/muzzle/flash_front_',count:6,pad:2,fps:30,scale:3.0,dur:0.2},
   muzzle_side: {path:'vfx/muzzle/flash_side_',count:6,pad:2,fps:30,scale:2.5,dur:0.2},
   muzzle_long: {path:'vfx/muzzle/flash_long_',count:4,pad:2,fps:24,scale:2.0,dur:0.18},
   bone_burst_1:{path:'vfx/bones/vnbv_',indices:[0,3,6,9,12,15,18,21,24,27],fps:20,scale:3.5,dur:0.55},
   bone_burst_2:{path:'vfx/bones/vnbvx_',indices:[1,4,7,10,13,16,19,22,25,29],fps:20,scale:3.5,dur:0.55},
   bone_burst_3:{path:'vfx/bones/vnbvq_',indices:[0,3,6,9,12,15,18,21,24,27],fps:20,scale:3.5,dur:0.55},
-  // Procedural types (generated from Godot shader palettes at startup)
+  hit_spark:   {path:'vfx/bones/vnbv_',indices:[12,15,18,21],fps:24,scale:2.2,dur:0.28},
   flame_core:   {procedural:true,fps:12,scale:2.5,dur:0.4},
   flame_burst:  {procedural:true,fps:10,scale:4.0,dur:0.6},
   magic_cast:   {procedural:true,fps:14,scale:3.0,dur:0.35},
@@ -773,9 +887,15 @@ const VFX_DEFS = {
   frost_crystal:{procedural:true,fps:10,scale:3.0,dur:0.45},
   holy_radiance:{procedural:true,fps:10,scale:3.5,dur:0.5},
   nature_bloom: {procedural:true,fps:8,scale:3.0,dur:0.55},
-  zombie_burst: {path:'vfx/zombie/Character_Zombie3',count:1,pad:0,fps:12,scale:3.0,dur:0.4,single:true},
-  bone_melee:   {path:'vfx/zombie/Weapon_Melee',count:1,pad:0,fps:14,scale:2.2,dur:0.25,single:true},
+  zombie_burst: {path:'vfx/bones/vnbv_',indices:[0,3,6,9,12,15,18,21,24,27],fps:20,scale:3.5,dur:0.55},
+  bone_melee:   {path:'vfx/bones/vnbv_',indices:[12,15,18,21],fps:24,scale:2.2,dur:0.28},
 };
+function resolveVfxDef(type){
+  const def=VFX_DEFS[type];
+  if(!def) return null;
+  if(def.alias&&VFX_DEFS[def.alias]) return VFX_DEFS[def.alias];
+  return def;
+}
 const FANTASY_MODEL_MAP = {
   minecraft_spider:'models/fantasy/minecraft_spider_monster.glb',
   voxel_snake:'models/fantasy/voxel_snake.glb',
@@ -788,8 +908,12 @@ const ALLY_DEFS = {
   crow:  {name:'Scout Crow', emoji:'🐦‍⬛',hp:120,dmg:14,speed:7.5,range:12,model:'crow',beh:'fly'},
   spider:{name:'Brood Spider',emoji:'🕷️',hp:180,dmg:22,speed:5.5,range:2, model:'minecraft_spider',beh:'melee'},
   snake: {name:'Venom Snake', emoji:'🐍', hp:150,dmg:18,speed:6,  range:2.5,model:'voxel_snake',beh:'poison'},
+  viking_shield:{name:'Shield-Brother',emoji:'🛡️',hp:240,dmg:26,speed:5,range:2.5,coldUnit:'viking_ally',beh:'melee'},
+  snow_scout:  {name:'Snowman Scout', emoji:'⛄', hp:160,dmg:14,speed:4.5,range:8,coldUnit:'snowman_friend',beh:'ranged'},
 };
 const FANTASY_CACHE = {};
+const COLD_BIOM_CACHE = {};
+let coldBiomLoader = null;
 
 // ── FBX Skeleton Animation State ──
 let fbxLoader = null;
@@ -810,7 +934,12 @@ const ANIM_FILES = {
   'atk-sword-shield':'sword-shield-attack.fbx','block-ss':'sword-shield-block.fbx',
   'atk-bow':'bow-aim.fbx','atk-magic':'magic-1h-cast.fbx','atk-magic-2h':'magic-2h-attack.fbx',
   'atk-pistol':'pistol-idle.fbx','spell-cast':'spell-cast.fbx',
+  'atk-ss-1':'sword-shield-attack.fbx','atk-ss-2':'sword-attack-2.fbx','atk-ss-3':'sword-attack-3.fbx',
+  'atk-ss-4':'sword-attack-4.fbx','atk-ss-5':'sword-attack-5.fbx','atk-ss-6':'sword-attack-6.fbx',
+  'sword-outward':'sword-outward-slash.fbx','gs-slide':'gs-slide-attack.fbx',
+  'unarmed-punch':'unarmed-punch.fbx','unarmed-kick':'unarmed-kick.fbx','hurricane-kick':'hurricane-kick.fbx',
 };
+let explorerCombat = null;
 
 // ═══════════════════════════════════════════════════════════════
 // KENNEY SKIN PICKER UI
@@ -860,16 +989,59 @@ function updateSkinPickerUI(){
 })();
 
 // ═══════════════════════════════════════════════════════════════
-// CLASS SELECT UI
+// CLASS SELECT UI (Nexus Era — survival.grudge-studio.com stats)
 // ═══════════════════════════════════════════════════════════════
+function getClassNexusPreview(cid){
+  if(!window.NexusStats) return null;
+  return NexusStats.buildPlayerCombatant({classId:cid,level:1});
+}
+
+function updateClassPreview(cid){
+  const cls=CLASSES[cid];
+  const nameEl=document.getElementById('preview-name');
+  const cpEl=document.getElementById('preview-cp');
+  const statsEl=document.getElementById('preview-stats');
+  const perkEl=document.getElementById('preview-perk');
+  const hintEl=document.getElementById('preview-hint');
+  if(!cls||!nameEl) return;
+  const c=getClassNexusPreview(cid);
+  const s=c?c.stats:{};
+  nameEl.textContent=cls.name+' · '+cls.role;
+  nameEl.style.color=cls.color;
+  cpEl.textContent=c?'CP '+s.combatPower:'—';
+  if(statsEl&&c){
+    const rows=[
+      ['Max HP', s.maxHP],
+      ['Defense', s.defense+' (√mitigation)'],
+      ['Melee', s.meleeAttack],
+      ['Ranged', s.rangedAttack],
+      ['Spell', s.spellPower],
+      ['Block', s.blockChance.toFixed(0)+'% / '+s.blockFactor.toFixed(0)+'%'],
+      ['Crit', s.critChance.toFixed(0)+'% · '+s.critDamage.toFixed(0)+'% dmg'],
+      ['Drain', s.drainHealth.toFixed(0)+'%'],
+    ];
+    statsEl.innerHTML=rows.map(function(r){
+      return '<div class="stat-line"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>';
+    }).join('');
+  }
+  const treeId=cls.perkTree||(NexusStats&&NexusStats.CLASS_PERK_TREE[cid])||'warrior';
+  if(perkEl){
+    perkEl.textContent='Perk tree: '+(PERK_TREE_LABELS[treeId]||treeId);
+    perkEl.classList.remove('hidden');
+  }
+  if(hintEl) hintEl.textContent=cls.desc+' · Combat uses 8-step pipeline (block before crit).';
+}
+
 (function buildClassUI(){
   const grid = document.getElementById('class-grid');
   Object.keys(CLASSES).forEach(cid => {
     const cls = CLASSES[cid];
+    const preview=getClassNexusPreview(cid);
+    const cp=preview?preview.stats.combatPower:'—';
     const card = document.createElement('div');
     card.className = 'class-card';
     card.style.setProperty('--cc', cls.color);
-    card.innerHTML = '<div class="c-icon"></div><div class="c-name">'+cls.name+'</div><div class="c-desc">'+cls.desc+'</div>';
+    card.innerHTML = '<div class="c-icon"></div><div class="c-name">'+cls.name+'</div><div class="c-cp">CP '+cp+'</div><div class="c-desc">'+cls.desc+'</div>';
     const classIcon=window.GrudgeHudIcons?GrudgeHudIcons.classIconUrl(cid):null;
     setHudIcon(card.querySelector('.c-icon'),classIcon,cls.emoji);
     card.onclick = function(){
@@ -878,6 +1050,7 @@ function updateSkinPickerUI(){
       playerClass = cid;
       playerSkinBody = CLASS_MODEL_MAP[cid]||'a';
       updateSkinPickerUI();
+      updateClassPreview(cid);
       document.getElementById('start-btn').classList.remove('hidden');
     };
     grid.appendChild(card);
@@ -892,15 +1065,57 @@ function randomizeWorldSeed(){
   if(inp) inp.value=String(Math.floor(Math.random()*999999999));
 }
 
+function hideWorldLoading(){
+  const loadEl=document.getElementById('world-loading');
+  if(window.GrudgeAssetLoader&&GrudgeAssetLoader.unbindLoadScreen) GrudgeAssetLoader.unbindLoadScreen(loadEl);
+  else if(loadEl){loadEl.style.display='none';loadEl.classList.remove('is-active');}
+  document.body.classList.remove('is-world-loading');
+}
+
+function buildVfxLoadTasks(){
+  const tasks=[];
+  Object.keys(VFX_DEFS).forEach(function(type){
+    if(VFX_DEFS[type].alias||VFX_DEFS[type].procedural) return;
+    const def=resolveVfxDef(type);
+    if(!def) return;
+    const key=vfxCacheKey(def);
+    function pushFrame(suffix,label){
+      const url=(window.GrudgeAssets&&GrudgeAssets.vfxUrl)?GrudgeAssets.vfxUrl(def,suffix):(def.path+suffix);
+      tasks.push({key:key,label:label||type,url:url,fallback:def.path+suffix});
+    }
+    if(def.single) pushFrame('.png',type);
+    else if(def.indices) def.indices.forEach(function(idx){pushFrame(String(idx)+'.png',type+' '+idx);});
+    else for(let i=1;i<=def.count;i++) pushFrame(String(i).padStart(def.pad||2,'0')+'.png',type+' '+i);
+  });
+  return tasks;
+}
+
+function linkVfxAliases(){
+  Object.keys(VFX_DEFS).forEach(function(type){
+    if(!VFX_DEFS[type].alias) return;
+    const def=resolveVfxDef(type);
+    if(def) ensureVfxCache(type,def);
+  });
+}
+
 function startGame(){
   if(!playerClass) return;
+  isGameOver=false;
+  gameStarted=false;
+  spawnGraceTimer=0;
+  const goEl=document.getElementById('game-over');
+  if(goEl) goEl.classList.add('hidden');
   const seedInp=document.getElementById('world-seed-input');
   const worldSeed=parseInt(seedInp&&seedInp.value?seedInp.value:'',10)||(Date.now()%1000000000);
   if(seedInp&&!seedInp.value) seedInp.value=String(worldSeed);
   const loadEl=document.getElementById('world-loading');
-  if(loadEl) loadEl.style.display='block';
+  if(loadEl&&window.GrudgeAssetLoader) GrudgeAssetLoader.bindLoadScreen(loadEl);
+  else if(loadEl){loadEl.style.display='block';loadEl.classList.add('is-active');}
+  document.body.classList.add('is-world-loading');
   document.getElementById('class-screen').style.display='none';
   document.getElementById('game-hud').classList.remove('pre-game-hidden');
+  const gccFab=document.getElementById('gcc-fab');
+  if(gccFab) gccFab.classList.remove('pre-game-hidden');
   worldEngine=VoxWorld.createWorldEngine({seed:worldSeed,biomes:BIOMES,tierPools:TIER_POOLS});
   worldEngine.setChestHandler(function(chest){
     const lootId=GrudgeItems.rollChestLoot(chestLootTable,chest.tier,Math.random);
@@ -916,27 +1131,93 @@ function startGame(){
     if(stock.length) addToInventory(stock[Math.floor(Math.random()*stock.length)],1);
     showFlash(v.name+': "Take what you need — island trade is scarce."');
   });
-  GrudgeItems.loadGrudgeItems(ITEM_DEFS).then(function(bundle){
-    Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
-    chestLootTable=bundle.chestLoot||{};
-    initWeaponIcons();
-    initResourceIcons();
-    initBuildIcons();
-    updateSkillUI();
-    updateItemUI();
-    buildCraftUI();
-    preloadVFXTextures();
-    preloadKenneyTextures(function(){
-      preloadModels(function(){
-        preloadFantasyModels(function(){
-          initFBXSkeleton(function(){
-            init();
-            connectGrudox();
-            if(loadEl) loadEl.style.display='none';
+  worldEngine.setAllyOfferHandler(function(sv){
+    const kind=sv.coldUnit==='snowman_friend'?'snow_scout':'viking_shield';
+    spawnAlly(kind, playerMesh.position.clone().add(new THREE.Vector3(2,0,2)));
+    showFlash(sv.name+' joins your warband.');
+  });
+  function finishWorldEntry(){
+    linkVfxAliases();
+    init();
+    connectGrudox();
+    hideWorldLoading();
+  }
+
+  if(!window.GrudgeAssetLoader){
+    GrudgeItems.loadGrudgeItems(ITEM_DEFS).then(function(bundle){
+      Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
+      chestLootTable=bundle.chestLoot||{};
+      initWeaponIcons();initResourceIcons();initBuildIcons();
+      updateSkillUI();updateItemUI();buildCraftUI();
+      preloadVFXTextures();
+      preloadKenneyTextures(function(){
+        preloadModels(function(){
+          preloadFantasyModels(function(){
+            preloadColdBiomCache(function(){
+              initFBXSkeleton(finishWorldEntry);
+            });
           });
         });
       });
     });
+    return;
+  }
+
+  if(USE_VOX_ROLL&&!voxRollAnim&&window.VoxRollAnim){
+    voxRollAnim=VoxRollAnim.create({THREE:THREE,loader:new THREE.GLTFLoader()});
+  }
+
+  const loadCtx={
+    THREE:THREE,
+    ITEM_DEFS:ITEM_DEFS,
+    KENNEY_TEXTURE_LETTERS:KENNEY_TEXTURE_LETTERS,
+    KENNEY_BODY_LETTERS:KENNEY_BODY_LETTERS,
+    FANTASY_MODEL_MAP:FANTASY_MODEL_MAP,
+    TEXTURE_CACHE:TEXTURE_CACHE,
+    MODEL_CACHE:MODEL_CACHE,
+    FANTASY_CACHE:FANTASY_CACHE,
+    CREATURE_CACHE:CREATURE_CACHE,
+    COLD_BIOM_CACHE:COLD_BIOM_CACHE,
+    vfxTexCache:vfxTexCache,
+    animClipCache:animClipCache,
+    glbLoader:glbLoader,
+    voxRollAnim:voxRollAnim,
+    maxPerTick:4,
+    buildVfxLoadTasks:buildVfxLoadTasks,
+    generateProceduralVFX:generateProceduralVFX,
+    getCreatureNames:function(){return [...new Set(Object.values(CREATURE_MODEL_MAP))];},
+    get coldBiomLoader(){return coldBiomLoader;},
+    set coldBiomLoader(v){coldBiomLoader=v;},
+    get craftTableTemplate(){return craftTableTemplate;},
+    set craftTableTemplate(v){craftTableTemplate=v;},
+    onItemsLoaded:function(bundle){
+      Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
+      chestLootTable=bundle.chestLoot||{};
+      initWeaponIcons();initResourceIcons();initBuildIcons();
+      updateSkillUI();updateItemUI();buildCraftUI();
+    },
+    preloadCoreAnims:function(fbxLdr){
+      ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death'].forEach(function(name){
+        const file=ANIM_FILES[name];
+        if(!file) return;
+        const url=(window.GrudgeAssets&&GrudgeAssets.modelUrl)?GrudgeAssets.modelUrl('models/anims/'+file):'models/anims/'+file;
+        fbxLdr.load(url,function(a){
+          if(a.animations&&a.animations.length) animClipCache[name]=a.animations[0];
+        },undefined,function(){});
+      });
+    },
+    onProgress:function(s){GrudgeAssetLoader.updateLoadScreenUI(s);},
+    onComplete:function(){
+      kenneyTexturesLoaded=true;
+      modelsLoaded=true;
+      fbxSkeletonReady=!!window._fbxSkelTemplate;
+      finishWorldEntry();
+    }
+  };
+
+  GrudgeAssetLoader.runOpenWorldLoad(loadCtx).catch(function(err){
+    console.error('[GrudgeAssetLoader]',err);
+    finishWorldEntry();
   });
 }
 
@@ -946,9 +1227,23 @@ function startGame(){
 function init(){
   const cls = CLASSES[playerClass];
 
-  // Apply class bonuses to state
-  maxHp = Math.round(100 * (cls.hpMult||1));
-  hp = maxHp;
+  if(window.ColdBiomLoader&&!coldBiomLoader){
+    coldBiomLoader=ColdBiomLoader.create({
+      THREE:THREE,
+      objLoader:new THREE.OBJLoader(),
+      mtlLoader:new THREE.MTLLoader(),
+      gltfLoader:new THREE.GLTFLoader(),
+    });
+  }
+
+  // Nexus Era stats (survival.grudge-studio.com/stats-guide.html)
+  initPlayerAttributes();
+  applySkillPassives();
+  if(!Number.isFinite(maxHp)||maxHp<=0) maxHp=Math.round(100*(cls.hpMult||1));
+  if(!Number.isFinite(hp)||hp<=0) hp=maxHp;
+  spawnGraceTimer=15;
+  iFrames=true;
+  iFrameTimer=15;
   const baseSpeed = 16 * (cls.speedMult||1);
 
   // Apply start weapons
@@ -995,13 +1290,17 @@ function init(){
   collisionWorld = VoxCollision.create({THREE:THREE, raycaster:raycaster});
   window._collisionWorld = collisionWorld;
 
-  if(window.VoxRollAnim){
+  if(window.VoxRollAnim&&!voxRollAnim){
     voxRollAnim = VoxRollAnim.create({THREE:THREE, loader:new THREE.GLTFLoader()});
     voxRollAnim.load();
   }
 
   // World ground + mesh colliders
   buildWorld();
+
+  if (window.GrudgeWorldFires) {
+    worldFires = new GrudgeWorldFires(scene, { worldEngine, maxCount: 96 });
+  }
 
   // Block instanced mesh
   const bGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
@@ -1072,24 +1371,109 @@ function init(){
   resetSkillCDs();
   updateWeaponUI();
 
+  if(window.GrudgeExplorerCombat){
+    explorerCombat = GrudgeExplorerCombat.create({ meleeCooldown: 0.22 });
+  }
+
   gameStarted = true;
   wireHudClicks();
 
+  spawnCraftingTables();
+
+  if(window.GrudgeStudioUI){
+    GrudgeStudioUI.init({
+      weapons:WEAPONS, weaponOrder:WEAPON_ORDER,
+      enemyTypes:ENEMY_TYPES,
+      allyDefs:ALLY_DEFS,
+      blockDefs:BLOCK_DEFS,
+      craftPreviewUrl:'models/crafting_table.glb',
+      getCurrentWeapon:function(){return currentWeapon?currentWeapon.id:'sword';},
+      getPlayerState:function(){
+        const ns=playerCombatant&&playerCombatant.stats?playerCombatant.stats:{};
+        return{classId:playerClass,classDef:CLASSES[playerClass],level:level,hp:hp,maxHp:maxHp,score:score,
+          exp:exp,expToNext:expToNext,
+          nexusStats:Object.assign({},ns)};
+      },
+      getResources:function(){return resources;},
+      getInventoryGrid:function(){return inventoryGrid;},
+      getEquipment:function(){return equipment;},
+      getAttributes:function(){return playerAttributes||{};},
+      getAttributeRemaining:getAttributeRemaining,
+      adjustAttribute:adjustPlayerAttribute,
+      resetAttributes:resetPlayerAttributes,
+      getBuildType:function(){return buildType;},
+      isBuildMode:function(){return isBuildMode;},
+      getMinionCount:function(){return minions.length;},
+      canAfford:function(id){const r=RECIPES.find(x=>x.id===id);return r?canAfford(r.cost):false;},
+      craftRecipes:RECIPES.map(function(r){
+        return{id:r.id,name:r.name,emoji:r.emoji,tab:r.tab||'consumables',
+          costLabel:Object.entries(r.cost).map(function(e){return e[1]+({'wood':'🪵','stone':'🪨','ore':'⚙️'}[e[0]]||e[0]);}).join(' ')};
+      }),
+      onWeaponSelect:function(wid){if(WEAPONS[wid].owned) switchWeapon(wid);},
+      onCraft:function(id){craftItem(id);if(GrudgeStudioUI.isOpen())GrudgeStudioUI.renderAll();},
+      onInvSlot:function(idx){selectInvSlot(idx);},
+      onSelectBuild:function(bid){buildType=bid;updateBuildUI();},
+      onToggleBuild:function(){toggleBuildMode();},
+      onEquipRefresh:function(){updateEquipUI();},
+      onSkillUnlock:function(){applySkillPassives();},
+      onBindsChanged:function(){},
+      onOpen:function(){closeStudioPanels('gcc');},
+      renderCraftPreview:renderCraftTablePreview,
+      applyWeaponIcons:function(el){
+        el.querySelectorAll('.gcc-wpn').forEach(function(node){
+          const w=WEAPONS[node.dataset.wid];
+          if(!w) return;
+          const wi=node.querySelector('.wi');
+          setHudIcon(wi,weaponIconUrl(w.id),w.emoji);
+        });
+      },
+      applyInvIcons:function(el){
+        el.querySelectorAll('.gcc-inv-slot.filled').forEach(function(node){
+          const slot=inventoryGrid[+node.dataset.idx];
+          if(!slot) return;
+          const icon=node.querySelector('.gcc-inv-icon');
+          if(icon) setHudIcon(icon,itemIconUrl(slot.id),slot.icon);
+        });
+      },
+      applyEquipIcons:function(el){
+        el.querySelectorAll('.gcc-equip-box.filled').forEach(function(node){
+          const e=equipment[node.dataset.slot];
+          const glyph=node.querySelector('.gcc-equip-glyph');
+          if(!glyph||!e) return;
+          const itemKey=Object.keys(ITEM_DEFS).find(ik=>ITEM_DEFS[ik].name===e.id);
+          setHudIcon(glyph,itemKey?itemIconUrl(itemKey):null,e.icon);
+        });
+      },
+      applyCraftIcons:function(list){
+        list.querySelectorAll('.craft-row').forEach(function(row){
+          const btn=row.querySelector('.craft-btn');
+          if(!btn) return;
+          const rec=RECIPES.find(r=>r.id===btn.dataset.rid);
+          if(!rec) return;
+          setHudIcon(row.querySelector('.craft-icon-wrap'),itemIconUrl(rec.result.item),rec.emoji);
+        });
+      },
+    });
+    applySkillPassives();
+  }
+
   // Events
   window.addEventListener('keydown', e=>{
+    if(window.GrudgeStudioUI&&GrudgeStudioUI.handleKeyCapture(e)) return;
     keys[e.code] = true;
     if(e.code==='KeyW'||e.code==='KeyS'||e.code==='KeyA'||e.code==='KeyD') tryDirectionalRoll(e.code);
-    if(e.code==='KeyB') toggleBuildMode();
-    if(e.code==='KeyC') { e.preventDefault(); toggleCraft(); }
-    if(e.code==='KeyI') { e.preventDefault(); toggleInventory(); }
-    if(e.code==='KeyG') { e.preventDefault(); toggleEquip(); }
-    if(e.code==='KeyT') { e.preventDefault(); summonAllyMenu(); }
-    if(e.code==='KeyX') { e.preventDefault(); tryWorldInteract(); }
-    if(e.code==='KeyM') tryMineResource();
-    if(e.code==='KeyQ') activateSkill(0);
-    if(e.code==='KeyE') activateSkill(1);
-    if(e.code==='KeyR') activateSkill(2);
-    if(e.code==='KeyF') activateSkill(3);
+    if(keyIs('commandCenter',e.code)||e.code==='KeyK'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.toggle();return;}
+    if(keyIs('build',e.code)||e.code==='KeyB') toggleBuildMode();
+    if(keyIs('craft',e.code)||e.code==='KeyC'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.openPanel('craft');return;}
+    if(keyIs('inventory',e.code)||e.code==='KeyI'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.toggle(true);return;}
+    if(keyIs('equip',e.code)||e.code==='KeyG'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.openPanel('equipment');return;}
+    if(keyIs('allies',e.code)||e.code==='KeyT') { e.preventDefault(); summonAllyMenu(); }
+    if(keyIs('interact',e.code)||e.code==='KeyX') { e.preventDefault(); tryWorldInteract(); }
+    if(keyIs('mine',e.code)||e.code==='KeyM') tryMineResource();
+    if(keyIs('skill1',e.code)||e.code==='KeyQ') activateSkill(0);
+    if(keyIs('skill2',e.code)||e.code==='KeyE') activateSkill(1);
+    if(keyIs('skill3',e.code)||e.code==='KeyR') activateSkill(2);
+    if(keyIs('skill4',e.code)||e.code==='KeyF') activateSkill(3);
     if(e.code==='Digit1') useItem(0);
     if(e.code==='Digit2') useItem(1);
     if(e.code==='Digit3') useItem(2);
@@ -1097,6 +1481,7 @@ function init(){
     if(e.code==='Digit5') useItem(4);
     if(e.code==='Digit6') useItem(5);
     if(e.code==='Escape') {
+      if(GrudgeStudioUI&&GrudgeStudioUI.isOpen()){GrudgeStudioUI.toggle(false);return;}
       if(craftOpen||inventoryOpen||equipOpen) closeStudioPanels();
       else if(isBuildMode) toggleBuildMode();
     }
@@ -1163,6 +1548,10 @@ function genProcTexture(type){
   } else if(type==='wasteland'){
     ctx.fillStyle='#7a5a2a';ctx.fillRect(0,0,128,128);
     for(let i=0;i<120;i++){ctx.fillStyle=['#6a4a1a','#8a6a3a','#5a3a0a'][i%3];ctx.fillRect(Math.random()*128,Math.random()*128,3+Math.random()*5,2);}
+  } else if(type==='cold'){
+    ctx.fillStyle='#c8d8e8';ctx.fillRect(0,0,128,128);
+    for(let i=0;i<160;i++){ctx.fillStyle=['#eef4ff','#a8bcd4','#dce8f4','#ffffff'][i%4];ctx.fillRect(Math.random()*128,Math.random()*128,2+Math.random()*4,2);}
+    for(let i=0;i<40;i++){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillRect(Math.random()*128,Math.random()*128,1,3+Math.random()*5);}
   } else if(type==='dark'){
     ctx.fillStyle='#220033';ctx.fillRect(0,0,128,128);
     for(let i=0;i<80;i++){ctx.fillStyle=['#330044','#110022','#440066'][i%3];const x=Math.random()*128,y=Math.random()*128;ctx.beginPath();ctx.arc(x,y,2+Math.random()*3,0,Math.PI*2);ctx.fill();}
@@ -1175,7 +1564,7 @@ function genProcTexture(type){
 function buildWorld(){
   if(worldEngine){
     window._waterPlane=worldEngine.buildGround(scene,genProcTexture,THREE);
-    worldEngine.updateChunks(0,0,THREE,{spawnResourceNode:spawnResourceNode,buildSurvivor:buildSurvivorNPC});
+    worldEngine.updateChunks(0,0,THREE,getWorldHelpers());
     WATER_LEVEL=-1.2;
     return;
   }
@@ -1225,6 +1614,78 @@ function buildWorld(){
 function buildSurvivorNPC(sv){
   const g=cloneModel('e',1,'a')||buildVoxChar(0x8899aa,0x334455,GrudgeScale.voxScale(2));
   return g;
+}
+
+function buildColdSurvivorNPC(sv){
+  const g=new THREE.Group();
+  g.userData.coldUnit=sv.coldUnit;
+  if(coldBiomLoader&&sv.coldUnit){
+    coldBiomLoader.loadUnit(sv.coldUnit).then(function(m){
+      if(m){g.add(m);snapToGround(g,0);}
+    });
+  } else {
+    const fb=buildSurvivorNPC(sv);
+    if(fb) g.add(fb);
+  }
+  return g;
+}
+
+function spawnColdScatter(entry){
+  if(!coldBiomLoader||!entry.def) return;
+  coldBiomLoader.loadScatter(entry.def).then(function(g){
+    if(!g) return;
+    g.position.set(entry.x,0,entry.z);
+    scene.add(g);
+    snapToGround(g,0);
+    if(entry.kind==='rock'||entry.kind==='tree'){
+      registerEntityCollider('cold_'+entry.kind+'_'+entry.x.toFixed(0)+'_'+entry.z.toFixed(0),'node',g,null,{solid:entry.kind==='tree',trigger:false});
+    }
+  });
+}
+
+function spawnColdBuilding(b){
+  if(!coldBiomLoader||!b.coldBuilding) return;
+  const bd=b.coldBuilding;
+  const sc=bd.scale||0.012;
+  Promise.all([
+    coldBiomLoader.loadObjMtl(bd.wall+'.obj',bd.wall+'.mtl',sc),
+    coldBiomLoader.loadObjMtl(bd.floor+'.obj',bd.floor+'.mtl',sc),
+    coldBiomLoader.loadObjMtl(bd.roof+'.obj',bd.roof+'.mtl',sc),
+  ]).then(function(parts){
+    const g=new THREE.Group();
+    parts.forEach(function(p,i){if(p){p.position.y=i*1.5*sc*60;g.add(p);}});
+    g.position.set(b.x,0,b.z);
+    g.rotation.y=b.rot||0;
+    scene.add(g);
+    snapToGround(g,0);
+    registerEntityCollider('cold_build_'+b.x.toFixed(0)+'_'+b.z.toFixed(0),'building',g,null,{solid:true});
+  });
+}
+
+function preloadColdBiomCache(done){
+  if(!coldBiomLoader){if(done)done();return;}
+  const ids=Object.keys(ColdBiomManifest.UNITS);
+  let n=0;
+  ids.forEach(function(id){
+    coldBiomLoader.loadUnit(id).then(function(g){
+      if(g) COLD_BIOM_CACHE[id]=g;
+    }).finally(function(){n++;if(n>=ids.length&&done)done();});
+  });
+}
+
+function getWorldHelpers(){
+  return {
+    spawnResourceNode:spawnResourceNode,
+    buildSurvivor:buildSurvivorNPC,
+    buildColdSurvivor:buildColdSurvivorNPC,
+    spawnColdScatter:spawnColdScatter,
+    spawnColdBuilding:spawnColdBuilding,
+  };
+}
+
+function keyIs(action,code){
+  if(window.GrudgeStudioUI&&GrudgeStudioUI.getBind)return GrudgeStudioUI.getBind(action)===code;
+  return false;
 }
 
 function spawnResourceNodes(){
@@ -1488,7 +1949,7 @@ function activateSkill(slotIdx){
       const a = Math.random()*Math.PI*2;
       const r = Math.random()*(sk.radius||8);
       const tp = center.clone().add(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r));
-      setTimeout(()=>{ if(!isGameOver) aoeAttack(tp, 2, sk.dmg||40, 0x88ff44); }, i*80);
+      setTimeout(()=>{ if(!isGameOver) aoeAttack(tp, 2, sk.dmg||40, 0x88ff44, 0, {isSpell:true}); }, i*80);
     }
   } else if(sk.type==='explosive_proj'){
     fireBullet(pp.clone().add(new THREE.Vector3(0,1,0)), fw, {dmg:sk.dmg||80, speed:1.2, color:0xff6600, explosive:true, expRadius:sk.radius||5});
@@ -1511,7 +1972,7 @@ function activateSkill(slotIdx){
     spawnAoeRing(tp, 3, 0xcc44ff, 12);
     spawnVFXSprite('magic_cast',tp.clone().add(new THREE.Vector3(0,1,0)),{scale:3.5,duration:0.35});
   } else if(sk.type==='nova'){
-    aoeAttack(pp, sk.radius||12, sk.dmg||200, 0xff00ff, 0);
+    aoeAttack(pp, sk.radius||12, sk.dmg||200, 0xff00ff, 0, {isSpell:true});
     spawnAoeRing(pp, sk.radius||12, 0xcc00ff, 40);
     spawnVFXSprite('flame_burst',pp.clone().add(new THREE.Vector3(0,1,0)),{scale:8.0,duration:0.7});
     spawnVFXSprite('magic_cast',pp.clone().add(new THREE.Vector3(0,2,0)),{scale:5.0,duration:0.5});
@@ -1582,13 +2043,14 @@ function activateSkill(slotIdx){
   }
 }
 
-function aoeAttack(pos, range, dmg, color, knockback){
+function aoeAttack(pos, range, dmg, color, knockback, opts){
+  opts=opts||{};
   enemies.forEach(e=>{
     const d = pos.distanceTo(e.mesh.position);
     if(d<range){
       const dir = e.mesh.position.clone().sub(pos).normalize();
       if(knockback) { e.mesh.position.add(dir.clone().multiplyScalar(knockback)); }
-      damageEnemy(e, dmg, dir);
+      damageEnemy(e, dmg, dir, opts);
     }
   });
   spawnAoeRing(pos, range, color||0xff4400, 16);
@@ -1613,27 +2075,89 @@ function getAimTarget(){
   return target;
 }
 
+function tryExplorerMeleeAttack(){
+  if(!explorerCombat||!explorerCombat.canAttack()) return false;
+  const pp = playerMesh.position;
+  const fw = getAimDir();
+  if(fw.lengthSq()<0.0001) return false;
+  playerMesh.rotation.y = Math.atan2(fw.x, fw.z);
+  const dx=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']?1:0;
+  const moving = dx>0 && playerState==='ground';
+  const gaitSpeed = moving ? (keys['ShiftLeft']||keys['ShiftRight'] ? 1 : 0.55) : 0;
+  const isHeavy = currentWeapon.type==='heavy_melee';
+  const slashColor = isHeavy ? 0xff4400 : (currentWeapon.canBlock ? 0xccaa44 : 0xcccccc);
+  const began = explorerCombat.beginAttack({
+    weapon: currentWeapon,
+    aimDir: fw.clone(),
+    moving: moving,
+    gaitSpeed: gaitSpeed,
+    playerPos: pp,
+    onAnim: function(animName, info){
+      gcd = GCD_DURATION;
+      playerAttackPhase = 1.0;
+      explorerAttackStage = info.stage;
+      explorerAttackFinisher = info.finisher;
+      if(playerMixer && playerMesh) playAnimOnMesh(playerMesh, animName, info.moving ? 0.08 : 0.12);
+    },
+    onLunge: function(dir, dist, dur, impactAt, stage){
+      explorerCombat.startLunge(
+        playerMesh, dir, dist, dur, impactAt,
+        {x: pp.x, z: pp.z},
+        function(nx, nz){
+          if(collisionWorld){
+            const r = collisionWorld.resolveHorizontal(pp.x, pp.z, nx, nz, PLAYER_COLL_RADIUS, VoxLayers.MASKS.PLAYER_MOVE);
+            return {x: r.x, z: r.z};
+          }
+          return {x: nx, z: nz};
+        }
+      );
+      if(stage===0) spawnVFXSprite('beam_flash', pp.clone().add(new THREE.Vector3(0,1,0)), {scale: 2.2, duration: 0.18, tint: slashColor});
+    },
+    onResolveHit: function(hit){
+      const strike = hit.strike;
+      const dir = hit.dir;
+      const dmg = getNexusAttackBase(false, false) * (hit.finisher ? 1.35 : 1);
+      const center = playerMesh.position.clone().addScaledVector(dir, strike.reach).add(new THREE.Vector3(0, 1, 0));
+      const hitColor = hit.finisher ? 0xff2200 : slashColor;
+      spawnSlashArc(playerMesh.position, dir, strike.radius, hitColor, isHeavy);
+      enemies.forEach(function(e){
+        if(!e.alive) return;
+        const toE = e.mesh.position.clone().sub(center);
+        const dist = toE.length();
+        if(dist > strike.radius * 1.15) return;
+        toE.y = 0;
+        if(toE.lengthSq()>0.0001) toE.normalize();
+        const fwFlat = new THREE.Vector3(dir.x, 0, dir.z).normalize();
+        if(fwFlat.dot(toE) < (isHeavy ? 0.25 : 0.4)) return;
+        damageEnemy(e, dmg, toE);
+      });
+      spawnHitFlash(center, hitColor, hit.finisher ? 7 : 5);
+      if(hit.finisher) triggerShake(0.28, 0.14);
+      else if(isHeavy) triggerShake(0.18, 0.08);
+      registerComboHit();
+    },
+  });
+  if(began) attackCd = currentWeapon.cd || 0.3;
+  return began;
+}
+
 function tryAttack(){
   if(isGameOver||!gameStarted||attackCd>0) return;
   if(playerState==='dodging'||playerState==='rolling'||playerState==='dashing'||playerState==='climbing') return;
+
+  if(currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee'){
+    if(tryExplorerMeleeAttack()) return;
+    if(explorerCombat && !explorerCombat.canAttack()) return;
+  }
+
   attackCd = currentWeapon.cd||0.3;
   const cls = CLASSES[playerClass];
   const pp = playerMesh.position;
   const fw = getAimDir();
 
-  let dmg = currentWeapon.dmg||30;
-  // Class multipliers
-  if((currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee')&&cls.meleeMult) dmg*=cls.meleeMult;
-  if((currentWeapon.type==='projectile'||currentWeapon.type==='auto')&&cls.rangedMult) dmg*=cls.rangedMult;
-  if(currentWeapon.type==='magic'&&cls.magicMult) dmg*=cls.magicMult;
-
-  // Status effect bonuses
-  if(statusEffects.rage) dmg *= (statusEffects.rage.mult||1.35);
-  if(statusEffects.berserker) dmg *= (statusEffects.berserker.dmgMult||1.6);
-
-  // Level bonus
-  dmg *= (1 + (level-1)*0.1);
-  dmg = Math.round(dmg);
+  const isSpell=currentWeapon.type==='magic';
+  const isRanged=currentWeapon.type==='projectile'||currentWeapon.type==='auto';
+  let dmg=getNexusAttackBase(isSpell,isRanged);
 
   // Trigger GCD
   gcd = GCD_DURATION;
@@ -1647,9 +2171,7 @@ function tryAttack(){
   if(currentWeapon.type==='melee'||currentWeapon.type==='heavy_melee'){
     const isHeavy = currentWeapon.type==='heavy_melee';
     const slashColor = isHeavy ? 0xff4400 : (currentWeapon.canBlock ? 0xccaa44 : 0xcccccc);
-    // Animated slash arc with directional cone damage + push
     spawnSlashArc(pp, fw, currentWeapon.range||4, slashColor, isHeavy);
-    // Cone damage (replaces radial aoeAttack for melee)
     enemies.forEach(e=>{
       if(!e.alive) return;
       const toE=e.mesh.position.clone().sub(pp);
@@ -1669,20 +2191,20 @@ function tryAttack(){
     if(currentWeapon.type==='projectile'){
       // Arrow: gravity arc, directional knockback
       fireBullet(weaponTip, fw, {
-        dmg, speed:currentWeapon.speed||1.8, color:0xddff44, kind:'arrow',
+        dmg, speed:currentWeapon.speed||1.8, color:0xddff44, kind:'arrow', ranged:true,
         gravity:4, knockback:2.5, impactType:'spark', impactColor:0xddff44
       });
     } else if(currentWeapon.type==='magic'){
       // Magic: slight homing, fire/frost impact + cast flare
       spawnVFXSprite('magic_cast',weaponTip.clone(),{scale:2.2,duration:0.25});
       fireBullet(weaponTip, fw, {
-        dmg, speed:currentWeapon.speed||0.9, color:0xcc44ff, kind:'shard',
+        dmg, speed:currentWeapon.speed||0.9, color:0xcc44ff, kind:'shard', isSpell:true,
         homing:3, knockback:1, impactType:'fire', impactColor:0xcc44ff
       });
     } else if(currentWeapon.type==='auto'){
       // Gun: fast, spark impact, muzzle flash
       fireBullet(weaponTip, fw, {
-        dmg, speed:currentWeapon.speed||2.1, color:0xffdd00, kind:'bolt',
+        dmg, speed:currentWeapon.speed||2.1, color:0xffdd00, kind:'bolt', ranged:true,
         knockback:0.5, impactType:'spark', impactColor:0xffaa00
       });
       spawnHitFlash(weaponTip, 0xffaa00, 4);
@@ -1758,8 +2280,90 @@ function fireBullet(pos, dir, opts){
   if(grudoxConnected) sendGrudox({type:'projectile',projectile:{x:pos.x,z:pos.z,dx:dir.x,dz:dir.z,kind,color:col}});
 }
 
-function damageEnemy(e, dmg, dir){
+function normalizeEquipSlot(slot){return EQUIP_SLOT_ALIASES[slot]||slot;}
+function sumPlayerAttributes(attrs){
+  if(!attrs) return 0;
+  return Object.values(attrs).reduce((a,b)=>a+(b||0),0);
+}
+function initPlayerAttributes(){
+  if(!playerClass||!window.NexusStats) return;
+  playerAttributes=Object.assign({},NexusStats.CLASS_ATTRS[playerClass]);
+}
+function getAttributeRemaining(){
+  if(!playerAttributes) return 0;
+  return Math.max(0,ATTRIBUTE_POINTS_TOTAL-sumPlayerAttributes(playerAttributes));
+}
+function adjustPlayerAttribute(key,delta){
+  if(!playerAttributes) return;
+  const cur=playerAttributes[key]||0;
+  if(delta>0){
+    if(getAttributeRemaining()<=0||cur>=99) return;
+    playerAttributes[key]=cur+1;
+  }else{
+    if(cur<=4) return;
+    playerAttributes[key]=cur-1;
+  }
+  rebuildPlayerNexus();
+}
+function resetPlayerAttributes(){initPlayerAttributes();rebuildPlayerNexus();}
+
+function rebuildPlayerNexus(){
+  if(!playerClass||!window.NexusStats) return;
+  if(!playerAttributes) initPlayerAttributes();
+  const passFn=window.GrudgeStudioUI&&(GrudgeStudioUI.getPassives||GrudgeStudioUI.getPassiveBonuses);
+  const pass=typeof passFn==='function'?passFn(playerClass):{};
+  playerCombatant=NexusStats.buildPlayerCombatant({
+    classId:playerClass,level:level,attributes:playerAttributes,equipment:equipment,perks:pass,
+    hpRatio:maxHp>0?hp/maxHp:1,
+    alliesNearby:minions.length>0,
+    fightState:playerFightState,
+  });
+  maxHp=Math.max(1,playerCombatant.stats.maxHP||100);
+  if(!Number.isFinite(hp)||hp<=0) hp=maxHp;
+  else hp=Math.min(hp,maxHp);
+  maxStamina=Math.max(maxStamina,playerCombatant.stats.maxStamina||100);
+}
+
+function getNexusAttackBase(isSpell,isRanged){
+  rebuildPlayerNexus();
+  if(!playerCombatant) return currentWeapon.dmg||30;
+  const w=currentWeapon;
+  const weaponScale=(w.dmg||30)/30;
+  let base=isSpell?playerCombatant.stats.spellPower:(isRanged?playerCombatant.stats.rangedAttack:playerCombatant.stats.meleeAttack);
+  base=Math.floor(base*weaponScale);
+  if(statusEffects.rage) base*=statusEffects.rage.mult||1.35;
+  if(statusEffects.berserker) base*=statusEffects.berserker.dmgMult||1.6;
+  return Math.max(1,Math.round(base));
+}
+
+function ensureEnemyNexus(e){
+  if(!e||!window.NexusStats) return;
+  if(!e.nexus) e.nexus=NexusStats.buildEnemyCombatant(e.def,e.typeId,e);
+}
+
+function damageEnemy(e, rawDmg, dir, opts){
+  opts=opts||{};
   if(!e||!e.alive) return;
+  ensureEnemyNexus(e);
+  let dmg=rawDmg;
+  let blocked=false,critical=false;
+  let effects={};
+  if(window.NexusStats&&playerCombatant){
+    rebuildPlayerNexus();
+    if(playerFightState.grudgeReady&&playerFightState.lastDamagedBy===e.typeId){
+      opts.forceCrit=true;
+      playerFightState.grudgeReady=false;
+    }
+    const result=NexusStats.resolveHit(playerCombatant,e.nexus,{
+      baseDamage:rawDmg,isSpell:!!opts.isSpell,ranged:!!opts.ranged,
+      variance:opts.variance!==false,forceCrit:!!opts.forceCrit,
+    });
+    dmg=result.damage;
+    blocked=result.blocked;
+    critical=result.critical;
+    effects=result.effects||{};
+    if(effects.healthDrained) hp=Math.min(maxHp,hp+effects.healthDrained);
+  }
   e.hp -= dmg;
   e.flashTimer = 0.12;
   // Knockback via physics velocity (decelerates over time)
@@ -1776,7 +2380,9 @@ function damageEnemy(e, dmg, dir){
     e.hbTex.needsUpdate=true;
   }
   spawnHitFlash(e.mesh.position, 0xff3300, 4);
-  spawnDmgNumber(e.mesh.position.clone().add(new THREE.Vector3(0,3,0)), Math.round(dmg), dmg>100?'#ff0':'#f40');
+  const dmgColor=critical?'#ffee44':blocked?'#88bbdd':dmg>100?'#ff0':'#f40';
+  const dmgLabel=(critical?'CRIT ':blocked?'BLOCK ':'')+Math.round(dmg);
+  spawnDmgNumber(e.mesh.position.clone().add(new THREE.Vector3(0,3,0)), dmgLabel, dmgColor);
   registerComboHit();
   if(dmg>80) triggerShake(0.2, 0.1);
   if(e.hp<=0) killEnemy(e);
@@ -1818,7 +2424,7 @@ function killEnemy(e){
     exp -= expToNext;
     level++;
     expToNext = Math.round(expToNext*1.5);
-    maxHp += 10;
+    rebuildPlayerNexus();
     hp = Math.min(maxHp, hp+20);
     showFlash('LEVEL '+level+'!');
   }
@@ -1829,9 +2435,33 @@ function raiseMinion(deadEnemy){
   spawnVFXSprite('zombie_burst',deadEnemy.mesh.position.clone().add(new THREE.Vector3(0,1,0)),{scale:3.5,duration:0.5,tint:0x8844aa});
 }
 
-function damagePlayer(dmg){
+function playerInSafeZone(){
+  if(!playerMesh||!collisionWorld||!collisionWorld.isInSafeZone) return false;
+  return collisionWorld.isInSafeZone(playerMesh.position.x,playerMesh.position.z);
+}
+
+function damagePlayer(rawDmg, attackerEnemy){
+  if(!gameStarted||isGameOver) return;
+  if(spawnGraceTimer>0) return;
+  if(playerInSafeZone()) return;
   if(statusEffects.invuln) return;
   if(iFrames) return;
+  let dmg=rawDmg;
+  if(attackerEnemy){
+    playerFightState.lastDamagedBy=attackerEnemy.typeId;
+    playerFightState.grudgeReady=true;
+    ensureEnemyNexus(attackerEnemy);
+    if(window.NexusStats&&playerCombatant){
+      rebuildPlayerNexus();
+      const result=NexusStats.resolveHit(attackerEnemy.nexus,playerCombatant,{baseDamage:rawDmg});
+      dmg=result.damage;
+      if(result.effects.reflected>0&&attackerEnemy.alive){
+        attackerEnemy.hp-=result.effects.reflected;
+        spawnDmgNumber(attackerEnemy.mesh.position.clone().add(new THREE.Vector3(0,2.5,0)),'REFLECT '+result.effects.reflected,'#cc88ff');
+        if(attackerEnemy.hp<=0) killEnemy(attackerEnemy);
+      }
+    }
+  }
   // Parry: near-zero damage + stun attacker
   if(isParrying && parryTimer>0){
     dmg *= PARRY_REDUCTION;
@@ -1855,6 +2485,7 @@ function damagePlayer(dmg){
 }
 
 function triggerGameOver(){
+  if(!gameStarted||spawnGraceTimer>0) return;
   isGameOver = true;
   const m = Math.floor(survivalTime/60), s = Math.floor(survivalTime%60);
   document.getElementById('go-stats').textContent = 'Survived: '+m+'m'+s+'s  ·  Eliminated: '+score+'  ·  Level: '+level+'  ·  Day: '+dayNumber;
@@ -1877,30 +2508,35 @@ function spawnEnemyAt(sx,sz,typeId,meta){
   if(!def) return null;
   const heightM=GrudgeScale.heightForEnemy(def,typeId);
   let mesh;
-  const fantasyKey=def.fantasy;
-  const fantasyTemplate=fantasyKey?FANTASY_CACHE[fantasyKey]:null;
-  if(fantasyTemplate){
-    mesh=fantasyTemplate.clone();
+  if(def.coldUnit&&COLD_BIOM_CACHE[def.coldUnit]){
+    mesh=COLD_BIOM_CACHE[def.coldUnit].clone(true);
     mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
-    const fsc=GrudgeScale.fantasyScale(fantasyKey,heightM);
-    mesh.scale.set(fsc,fsc,fsc);
-    tintModel(mesh,def.body);
   } else {
-    const creatureName=CREATURE_MODEL_MAP[typeId];
-    const creatureTemplate=creatureName?CREATURE_CACHE[creatureName]:null;
-    if(creatureTemplate){
-      mesh=creatureTemplate.clone();
+    const fantasyKey=def.fantasy;
+    const fantasyTemplate=fantasyKey?FANTASY_CACHE[fantasyKey]:null;
+    if(fantasyTemplate){
+      mesh=fantasyTemplate.clone();
       mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
-      const csc=GrudgeScale.creatureScale(creatureName,heightM);
-      mesh.scale.set(csc,csc,csc);
+      const fsc=GrudgeScale.fantasyScale(fantasyKey,heightM);
+      mesh.scale.set(fsc,fsc,fsc);
       tintModel(mesh,def.body);
     } else {
-      const isHumanoid=def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
-      const eLetter=ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
-      const eTex=KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
-      const enemyGlb=isHumanoid?cloneModel(eLetter,heightM/GrudgeScale.PLAYER_HEIGHT_M,eTex):null;
-      if(enemyGlb) mesh=enemyGlb;
-      else mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM));
+      const creatureName=CREATURE_MODEL_MAP[typeId];
+      const creatureTemplate=creatureName?CREATURE_CACHE[creatureName]:null;
+      if(creatureTemplate){
+        mesh=creatureTemplate.clone();
+        mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+        const csc=GrudgeScale.creatureScale(creatureName,heightM);
+        mesh.scale.set(csc,csc,csc);
+        tintModel(mesh,def.body);
+      } else {
+        const isHumanoid=def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
+        const eLetter=ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
+        const eTex=KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
+        const enemyGlb=isHumanoid?cloneModel(eLetter,heightM/GrudgeScale.PLAYER_HEIGHT_M,eTex):null;
+        if(enemyGlb) mesh=enemyGlb;
+        else mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM));
+      }
     }
   }
   snapToGround(mesh,0);
@@ -1930,9 +2566,12 @@ function spawnEnemyAt(sx,sz,typeId,meta){
   mesh.add(nlSprite);
   scene.add(mesh);
 
+  const nexus=window.NexusStats?NexusStats.buildEnemyCombatant(def,typeId):null;
+  const nexusHp=nexus?nexus.stats.maxHP:def.hp;
+  const nexusDmg=nexus?nexus.stats.meleeAttack:def.dmg;
   const enemy={
-    mesh,def,typeId,heightM,
-    hp:def.hp,maxHp:def.hp,dmg:def.dmg,
+    mesh,def,typeId,heightM,nexus,
+    hp:nexusHp,maxHp:nexusHp,dmg:nexusDmg,
     speed:def.speed,alive:true,
     flashTimer:0,attackCd:0,
     beh:def.beh,
@@ -2024,7 +2663,7 @@ function updateEnemies(dt){
       if(e.leashed){
         const toHome=new THREE.Vector3(e.homeX-ep.x,0,e.homeZ-ep.z).normalize();
         ep.add(toHome.multiplyScalar(e.speed*1.2*dt));
-        if(dist<2.5&&e.attackCd<=0){e.attackCd=1.2;damagePlayer(e.dmg);}
+        if(!playerInSafeZone()&&dist<2.5&&e.attackCd<=0){e.attackCd=1.2;damagePlayer(e.dmg,e);}
         return;
       }
       if(!e.aggro){
@@ -2083,10 +2722,10 @@ function updateEnemies(dt){
 
     snapToGround(e.mesh,0);
 
-    // Attack player
-    if(dist<2.0&&e.attackCd<=0){
+    // Attack player (never in starter safe zone)
+    if(!playerInSafeZone()&&dist<2.0&&e.attackCd<=0){
       e.attackCd=1.2;
-      damagePlayer(e.dmg);
+      damagePlayer(e.dmg,e);
     }
 
     // Face direction
@@ -2206,7 +2845,7 @@ function updateBullets(dt){
         // Physics knockback with deceleration
         const kbDir=e.mesh.position.clone().sub(bp).normalize();
         e.knockbackVel=kbDir.clone().multiplyScalar(b.knockback*8);
-        damageEnemy(e,b.dmg,kbDir);
+        damageEnemy(e,b.dmg,kbDir,{ranged:!!b.ranged,isSpell:!!b.isSpell});
         // Impact VFX
         spawnImpact(bp.clone(), b.impactType, b.impactColor, kbDir);
         if(b.explosive){ aoeAttack(bp,b.expRadius,b.dmg*0.5,0xff6600,2); spawnImpact(bp.clone(),'explosion',0xff4400,kbDir); }
@@ -2500,8 +3139,24 @@ function spawnWorldItem(pos,tier){
   worldItems.push({mesh,id,def,colId,spinAngle:Math.random()*Math.PI*2});
 }
 
+function getNearbyCraftStation(){
+  if(!playerMesh||!craftingStations.length) return null;
+  const p=playerMesh.position;
+  for(let i=0;i<craftingStations.length;i++){
+    const st=craftingStations[i];
+    if(p.distanceTo(st.pos)<st.radius) return st;
+  }
+  return null;
+}
+
 function tryWorldInteract(){
-  if(!worldEngine||!playerMesh) return;
+  if(!playerMesh) return;
+  const craftSt=getNearbyCraftStation();
+  if(craftSt){
+    if(window.GrudgeStudioUI) GrudgeStudioUI.openPanel('craft');
+    return;
+  }
+  if(!worldEngine) return;
   const p=playerMesh.position;
   if(worldEngine.tryOpenChest(p.x,p.z)) return;
   worldEngine.tryTalkSurvivor(p.x,p.z);
@@ -2509,11 +3164,20 @@ function tryWorldInteract(){
 
 function updateInteractHint(){
   const el=document.getElementById('interact-hint');
-  if(!el||!worldEngine||!playerMesh){if(el)el.style.opacity='0';return;}
+  if(!el||!playerMesh){if(el)el.style.opacity='0';return;}
+  if(getNearbyCraftStation()){
+    el.style.opacity='1';
+    el.textContent='[X] Crafting Table';
+    return;
+  }
+  if(!worldEngine){el.style.opacity='0';return;}
   const hint=worldEngine.getInteractHint(playerMesh.position.x,playerMesh.position.z);
   if(!hint){el.style.opacity='0';return;}
   el.style.opacity='1';
-  el.textContent=hint.type==='chest'?'[X] Open chest':hint.type==='vendor'?'[X] Trade with '+(hint.name||'vendor'):'[X] Talk to survivor';
+  if(hint.type==='chest') el.textContent='[X] Open chest';
+  else if(hint.type==='vendor') el.textContent='[X] Trade with '+(hint.name||'vendor');
+  else if(hint.type==='ally_offer') el.textContent='[X] Recruit '+(hint.name||'ally');
+  else el.textContent='[X] Talk to '+(hint.name||'survivor');
 }
 
 function updateWorldItems(dt){
@@ -2542,7 +3206,7 @@ function addToInventory(id, count){
     if(s&&s.id===id){s.count+=count;updateInventoryUI();return;}
   }
   for(let i=0;i<inventoryGrid.length;i++){
-    if(!inventoryGrid[i]){inventoryGrid[i]={id,icon:def.icon,count};updateInventoryUI();return;}
+    if(!inventoryGrid[i]){inventoryGrid[i]={id,icon:def.icon,count,name:def.name};updateInventoryUI();return;}
   }
 }
 
@@ -2579,11 +3243,14 @@ function applyItem(def){
 }
 
 function equipItem(slot, def){
-  equipment[slot]={id:def.name,icon:def.icon,def};
-  if(def.armor) maxHp=Math.round(100*(CLASSES[playerClass].hpMult||1))+getEquipBonus('armor');
+  const key=normalizeEquipSlot(slot);
+  if(!EQUIP_SLOT_LIST.includes(key)) return;
+  equipment[key]={id:def.name,icon:def.icon,def};
+  rebuildPlayerNexus();
   if(def.speed) statusEffects.equipSpeed={timer:999,mult:def.speed};
   updateEquipUI();
-  showFlash('Equipped '+def.name);
+  if(window.GrudgeStudioUI&&GrudgeStudioUI.isOpen()) GrudgeStudioUI.renderAll();
+  showFlash('Equipped '+def.name+' ('+(def.tier||'T1')+')');
 }
 
 function getEquipBonus(stat){
@@ -2602,14 +3269,19 @@ function spawnAlly(kind, pos, overrides){
   const maxAllies = (CLASSES[playerClass].minionMax||0)+4;
   if(minions.length>=maxAllies){showFlash('Ally roster full');return null;}
   let mesh;
-  const tmpl=FANTASY_CACHE[def.model];
-  if(tmpl){
-    mesh=tmpl.clone();
+  if(def.coldUnit&&COLD_BIOM_CACHE[def.coldUnit]){
+    mesh=COLD_BIOM_CACHE[def.coldUnit].clone(true);
     mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
-    const sc=(FANTASY_SCALE[def.model]||1)*0.5;
-    mesh.scale.set(sc,sc,sc);
   } else {
-    mesh=buildVoxChar(0x336655,0x112233,0.7);
+    const tmpl=def.model?FANTASY_CACHE[def.model]:null;
+    if(tmpl){
+      mesh=tmpl.clone();
+      mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+      const sc=(FANTASY_SCALE[def.model]||1)*0.5;
+      mesh.scale.set(sc,sc,sc);
+    } else {
+      mesh=buildVoxChar(0x336655,0x112233,0.7);
+    }
   }
   mesh.position.copy(pos||playerMesh.position);
   snapToGround(mesh,0);
@@ -2803,16 +3475,38 @@ function updateResourceNodes(dt){
 // ═══════════════════════════════════════════════════════════════
 // INVENTORY / EQUIPMENT / CRAFTING UI
 // ═══════════════════════════════════════════════════════════════
+function openCommandCenter(panel){
+  if(window.GrudgeStudioUI) GrudgeStudioUI.openPanel(panel||'equipment');
+}
+
 function closeStudioPanels(except){
+  if(except!=='gcc'&&window.GrudgeStudioUI&&GrudgeStudioUI.isOpen()) GrudgeStudioUI.toggle(false);
   if(except!=='craft'){craftOpen=false;document.getElementById('craft-panel').classList.remove('open');}
   if(except!=='inv'){inventoryOpen=false;document.getElementById('inventory-panel').classList.remove('open');}
   if(except!=='equip'){equipOpen=false;document.getElementById('equip-panel').classList.remove('open');}
 }
 
+function applySkillPassives(){
+  if(!playerClass) return;
+  const passFn=window.GrudgeStudioUI&&(GrudgeStudioUI.getPassives||GrudgeStudioUI.getPassiveBonuses);
+  const pass=typeof passFn==='function'?passFn(playerClass):{};
+  const cls=CLASSES[playerClass];
+  rebuildPlayerNexus();
+  if(!playerCombatant){
+    maxHp=Math.round(100*(cls.hpMult||1)*(1+(pass.hpMult||0)));
+    hp=Math.min(hp,maxHp);
+  }
+  DODGE_CD=Math.max(0.35,0.8*(1+(pass.dodgeCdMult||0)));
+  if(pass.speedMult) cls._speedBonus=1+(pass.speedMult||0);
+  else cls._speedBonus=1;
+  updateHUD();
+}
+
 function buildInventoryUI(){
   const grid=document.getElementById('inv-grid');
+  if(!grid) return;
   grid.innerHTML='';
-  for(let i=0;i<24;i++){
+  for(let i=0;i<36;i++){
     const el=document.createElement('div');
     el.className='inv-slot';
     el.dataset.idx=i;
@@ -2824,7 +3518,7 @@ function buildInventoryUI(){
 }
 
 function updateInventoryUI(){
-  for(let i=0;i<24;i++){
+  for(let i=0;i<36;i++){
     const slot=inventoryGrid[i];
     const el=document.getElementById('inv-i-'+i);
     const ct=document.getElementById('inv-c-'+i);
@@ -2861,10 +3555,11 @@ function buildEquipUI(){
 }
 
 function updateEquipUI(){
-  ['head','chest','feet','trinket'].forEach(k=>{
-    const e=equipment[k];
-    const icon=document.getElementById('eq-i-'+k);
-    const cell=document.getElementById('eq-'+k);
+  const legacy=[{k:'head',slot:'helm'},{k:'chest',slot:'chest'},{k:'feet',slot:'boots'},{k:'trinket',slot:'ring'}];
+  legacy.forEach(function(row){
+    const e=equipment[row.slot];
+    const icon=document.getElementById('eq-i-'+row.k);
+    const cell=document.getElementById('eq-'+row.k);
     const itemKey=e?Object.keys(ITEM_DEFS).find(ik=>ITEM_DEFS[ik].name===e.id):null;
     if(icon) setHudIcon(icon,itemKey?itemIconUrl(itemKey):null,e?e.icon:'');
     if(cell) cell.classList.toggle('filled',!!e);
@@ -3074,7 +3769,8 @@ function updatePlayer(dt){
     attackCd=Math.max(0,attackCd-dt);
     return;
   }
-  const baseSpeed = 16*(CLASSES[playerClass].speedMult||1);
+  const clsSpd=CLASSES[playerClass];
+  const baseSpeed = 16*(clsSpd.speedMult||1)*(clsSpd._speedBonus||1);
   let spd = baseSpeed * (statusEffects.speed ? statusEffects.speed.mult : 1);
   if(playerState==='swimming') spd*=swimSpeedMult;
   if(formBuff) spd*=(formBuff.speedMult||1);
@@ -3148,7 +3844,7 @@ function updateSpawning(dt){
   const pp=playerMesh.position;
   if(worldEngine){
     if(now-lastChunkUpdate>900){
-      worldEngine.updateChunks(pp.x,pp.z,THREE,{spawnResourceNode:spawnResourceNode,buildSurvivor:buildSurvivorNPC});
+      worldEngine.updateChunks(pp.x,pp.z,THREE,getWorldHelpers());
       worldEngine.updateCampAggro(pp.x,pp.z,enemies);
       lastChunkUpdate=now;
     }
@@ -3248,6 +3944,12 @@ function updateHUD(){
   const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
   const inSafe=collisionWorld&&collisionWorld.isInSafeZone(playerMesh.position.x,playerMesh.position.z);
   document.getElementById('biome-label').textContent=biome.name;
+  if(scene&&scene.fog&&biome.fog!=null){
+    const fogTarget=new THREE.Color(biome.fog);
+    scene.fog.color.lerp(fogTarget,0.03);
+    scene.fog.near=biome.coldBiom?65:55;
+    scene.fog.far=biome.coldBiom?210:220;
+  }
   const zp=document.getElementById('zone-pill');
   if(zp){
     zp.textContent=(inSafe?'Safe · ':'Zone · ')+biome.label+(worldEngine?' · seed '+worldEngine.getSeed():'');
@@ -3414,6 +4116,49 @@ function applyKenneyTexture(group, letter){
   });
 }
 
+function spawnCraftingTables(){
+  if(!scene||typeof THREE.GLTFLoader==='undefined') return;
+  if(!glbLoader) glbLoader=new THREE.GLTFLoader();
+  const spots=[{x:10,z:8},{x:-12,z:14},{x:6,z:-10}];
+  glbLoader.load('models/crafting_table.glb',function(gltf){
+    craftTableTemplate=gltf.scene;
+    craftTableTemplate.traverse(function(c){if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+    const sc=GrudgeScale?GrudgeScale.voxScale(1.15):1.15;
+    spots.forEach(function(sp){
+      const mesh=craftTableTemplate.clone(true);
+      mesh.scale.set(sc,sc,sc);
+      mesh.position.set(sp.x,0,sp.z);
+      snapToGround(mesh,0);
+      scene.add(mesh);
+      craftingStations.push({mesh:mesh,pos:mesh.position.clone(),radius:3.5});
+    });
+  },undefined,function(){});
+}
+
+function renderCraftTablePreview(){
+  const canvas=document.getElementById('gcc-craft-canvas');
+  if(!canvas||!craftTableTemplate) return;
+  if(!craftPreviewRenderer){
+    craftPreviewScene=new THREE.Scene();
+    craftPreviewCamera=new THREE.PerspectiveCamera(42,4/3,0.1,50);
+    craftPreviewRenderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+    craftPreviewRenderer.setSize(160,120);
+    craftPreviewRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    const dl=new THREE.DirectionalLight(0xffeedd,1.1);
+    dl.position.set(2.5,4,3);
+    craftPreviewScene.add(dl);
+    craftPreviewScene.add(new THREE.AmbientLight(0x554433,0.55));
+    craftPreviewMesh=craftTableTemplate.clone(true);
+    const psc=GrudgeScale?GrudgeScale.voxScale(1):1;
+    craftPreviewMesh.scale.set(psc,psc,psc);
+    craftPreviewScene.add(craftPreviewMesh);
+    craftPreviewCamera.position.set(2.2,1.8,2.4);
+    craftPreviewCamera.lookAt(0,0.7,0);
+  }
+  if(craftPreviewMesh) craftPreviewMesh.rotation.y+=0.025;
+  craftPreviewRenderer.render(craftPreviewScene,craftPreviewCamera);
+}
+
 function preloadModels(callback){
   if(typeof THREE.GLTFLoader==='undefined'){modelsLoaded=false;callback();return;}
   glbLoader = new THREE.GLTFLoader();
@@ -3528,6 +4273,33 @@ function animateAttack(parts, t, phase){
   if(!parts.armRight) return;
   const wt=currentWeapon?currentWeapon.type:'';
   const wid=currentWeapon?currentWeapon.id:'';
+  const stage=explorerAttackStage||0;
+  const fin=explorerAttackFinisher;
+  if(explorerCombat&&explorerCombat.isSwinging()&&(wt==='melee'||wt==='heavy_melee')){
+    if(stage===0){
+      const sw=Math.sin(phase*Math.PI*1.6)*1.4;
+      parts.armRight.rotation.x=-sw;
+      if(parts.torso){parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.35;parts.torso.rotation.x=-0.1*phase;}
+      if(parts.legLeft)parts.legLeft.rotation.x=0.25*phase;
+      if(parts.legRight)parts.legRight.rotation.x=-0.15*phase;
+      return;
+    }
+    if(stage===1){
+      const sw=Math.sin(phase*Math.PI)*2.0;
+      parts.armRight.rotation.x=-sw;
+      parts.armRight.rotation.z=Math.sin(phase*Math.PI)*0.25;
+      if(parts.armLeft)parts.armLeft.rotation.x=-0.35;
+      if(parts.torso)parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.3;
+      return;
+    }
+    if(fin||stage===2){
+      const up=phase>0.45?-Math.PI*0.95*(phase-0.45)*3.2:-Math.PI*0.35;
+      parts.armRight.rotation.x=up;
+      if(parts.armLeft)parts.armLeft.rotation.x=up*0.35;
+      if(parts.torso){parts.torso.rotation.x=phase>0.45?-0.25:0.15;parts.torso.rotation.y=Math.sin(phase*Math.PI)*0.2;}
+      return;
+    }
+  }
   if(wt==='heavy_melee'){
     // Overhead slam: arm goes up then crashes down
     const up=phase>0.5?-Math.PI*0.8*(phase-0.5)*4:-Math.PI*0.4+Math.sin((1-phase)*12)*1.5;
@@ -3824,6 +4596,8 @@ function spawnScatterBurst(pos, color, count, radius, life){
 let playerSkelParts = null;
 let playerAnimTime = 0;
 let playerAttackPhase = 0;
+let explorerAttackStage = 0;
+let explorerAttackFinisher = false;
 
 function updateSkeletonAnims(dt){
   playerAnimTime+=dt;
@@ -3849,8 +4623,9 @@ function updateSkeletonAnims(dt){
       animateClimb(playerSkelParts, playerAnimTime);
     } else if(playerState==='jumping'||playerState==='falling'){
       animateJump(playerSkelParts, playerVelY);
-    } else if(playerAttackPhase>0){
-      animateAttack(playerSkelParts, playerAnimTime, playerAttackPhase);
+    } else if(playerAttackPhase>0||(explorerCombat&&explorerCombat.isSwinging())){
+      const phase=playerAttackPhase>0?playerAttackPhase:(explorerCombat?1-explorerCombat.state.swingTimer/0.5:0);
+      animateAttack(playerSkelParts, playerAnimTime, Math.min(1,Math.max(0,phase)));
       // Weapon-specific decay speed: fast weapons recover faster
       const decayRate=currentWeapon.type==='auto'?8:(currentWeapon.id==='dagger'?6:(currentWeapon.type==='heavy_melee'?2:3));
       playerAttackPhase=Math.max(0,playerAttackPhase-dt*decayRate);
@@ -3961,7 +4736,7 @@ function updateTraversal(dt){
       break;
     case 'rolling':
       rollTimer-=dt;
-      pp.add(rollDir.clone().multiplyScalar((ROLL_DIST/ROLL_DUR)*dt));
+      pp.add(rollDir.clone().multiplyScalar((ROLL_DIST*rollDistMult/ROLL_DUR)*dt));
       pp.y=getGroundY(pp.x,pp.z);
       if(rollDir.lengthSq()>0.01) playerMesh.rotation.y=Math.atan2(rollDir.x,rollDir.z);
       if(rollTimer<=0){
@@ -4054,12 +4829,15 @@ function tryDirectionalRoll(code){
   else if(code==='KeyA') dx=-1;
   else if(code==='KeyD') dx=1;
   rollDir.set(dx,0,dz);
+  const passFn=window.GrudgeStudioUI&&(GrudgeStudioUI.getPassives||GrudgeStudioUI.getPassiveBonuses);
+  const pass=typeof passFn==='function'?passFn(playerClass):{};
   rollTimer=ROLL_DUR;
   rollCd=ROLL_CD;
   playerState='rolling';
   rollAnimPhase='none';
   iFrames=true;
-  iFrameTimer=ROLL_IFRAMES;
+  iFrameTimer=ROLL_IFRAMES+(pass.rollIFrameAdd||0);
+  rollDistMult=1+(pass.rollDistMult||0);
   if(voxRollAnim&&playerMixer) voxRollAnim.playDodge(playerMixer,'up',0.05);
   spawnScatterBurst(playerMesh.position,0xaaccff,10,2.2,0.35);
 }
@@ -4105,6 +4883,7 @@ function animate(){
   if(!gameStarted||isGameOver){ renderer.render(scene,camera); return; }
 
   const dt=Math.min(clock.getDelta(),0.05);
+  if(spawnGraceTimer>0) spawnGraceTimer=Math.max(0,spawnGraceTimer-dt);
   survivalTime+=dt;
 
   // Tick skill CDs
@@ -4141,8 +4920,13 @@ function animate(){
   updateTrails(dt);
   updateSlashArcs(dt);
   updateTraversal(dt);
+  if(explorerCombat) explorerCombat.update(dt);
   updateSkeletonAnims(dt);
   updateVFXSprites(dt);
+  if (worldFires && playerMesh) {
+    worldFires.update(camera, survivalTime, playerMesh.position.x, playerMesh.position.z);
+    if (survivalTime < 0.5) worldFires.setSpawnBonfire(playerMesh.position.x, playerMesh.position.z);
+  }
   updateGrudox(dt);
   updateInteractHint();
   updateEnergyOrbs(dt);
@@ -4276,24 +5060,35 @@ function takeScreenshot(){
 // ═══════════════════════════════════════════════════════════════
 // VFX SPRITE BILLBOARD ENGINE
 // ═══════════════════════════════════════════════════════════════
+function vfxCacheKey(def){return def&&def.path?def.path:'proc';}
+function ensureVfxCache(type,def){
+  const key=vfxCacheKey(def);
+  if(!vfxTexCache[key]) vfxTexCache[key]=[];
+  vfxTexCache[type]=vfxTexCache[key];
+  return key;
+}
 function preloadVFXTextures(){
   const loader=new THREE.TextureLoader();
   Object.keys(VFX_DEFS).forEach(type=>{
-    const def=VFX_DEFS[type];
-    vfxTexCache[type]=[];
-    if(def.procedural) return; // generated below
-    if(def.single){
-      loader.load(def.path+'.png',tex=>{vfxTexCache[type].push(tex);},undefined,()=>{});
-    } else if(def.indices){
-      def.indices.forEach(idx=>{
-        loader.load(def.path+idx+'.png',tex=>{vfxTexCache[type].push(tex);},undefined,()=>{});
+    if(VFX_DEFS[type].alias) return;
+    const def=resolveVfxDef(type);
+    if(!def||def.procedural) return;
+    const key=ensureVfxCache(type,def);
+    if(vfxTexCache[key].length) return;
+    const loadFrame=function(suffix){
+      const url=(window.GrudgeAssets&&GrudgeAssets.vfxUrl)?GrudgeAssets.vfxUrl(def,suffix):(def.path+suffix);
+      loader.load(url,function(tex){vfxTexCache[key].push(tex);},undefined,function(){
+        loader.load(def.path+suffix,function(tex){vfxTexCache[key].push(tex);});
       });
-    } else {
-      for(let i=1;i<=def.count;i++){
-        const num=String(i).padStart(def.pad||2,'0');
-        loader.load(def.path+num+'.png',tex=>{vfxTexCache[type].push(tex);},undefined,()=>{});
-      }
-    }
+    };
+    if(def.single) loadFrame('.png');
+    else if(def.indices) def.indices.forEach(idx=>loadFrame(String(idx)+'.png'));
+    else for(let i=1;i<=def.count;i++) loadFrame(String(i).padStart(def.pad||2,'0')+'.png');
+  });
+  Object.keys(VFX_DEFS).forEach(type=>{
+    if(!VFX_DEFS[type].alias) return;
+    const def=resolveVfxDef(type);
+    if(def) ensureVfxCache(type,def);
   });
   // Generate procedural VFX textures from Godot shader palettes
   generateProceduralVFX();
@@ -4368,9 +5163,10 @@ function generateProceduralVFX(){
 
 function spawnVFXSprite(type, worldPos, opts){
   opts=opts||{};
-  const def=VFX_DEFS[type];
+  const def=resolveVfxDef(type);
   if(!def) return;
-  const textures=vfxTexCache[type];
+  const key=vfxCacheKey(def);
+  const textures=vfxTexCache[key]||vfxTexCache[type];
   if(!textures||textures.length===0) return;
   const mat=new THREE.SpriteMaterial({
     map:textures[0],transparent:true,opacity:1,
@@ -4433,7 +5229,8 @@ function initFBXSkeleton(callback){
     }
     fbxSkeletonReady=true;
     // Preload core locomotion clips in background
-    ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death'].forEach(name=>{
+    ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death',
+     'atk-ss-1','atk-ss-2','atk-ss-3','atk-ss-4','atk-ss-5','atk-ss-6','unarmed-punch','unarmed-kick','hurricane-kick'].forEach(name=>{
       const file=ANIM_FILES[name];
       if(!file)return;
       fbxLoader.load('models/anims/'+file,function(a){
@@ -4487,7 +5284,7 @@ function buildSkinnedVoxChar(bodyColor, pantsColor, scale){
 
 function playAnimOnMesh(mesh, animName, crossfade){
   crossfade=crossfade||0.2;
-  const mixer=mesh&&mesh.userData&&mesh.userData._mixer;
+  const mixer=(mesh&&mesh.userData&&mesh.userData._mixer)||playerMixer;
   if(!mixer)return;
   const clip=animClipCache[animName];
   if(!clip){
@@ -4504,13 +5301,14 @@ function playAnimOnMesh(mesh, animName, crossfade){
     return;
   }
   const action=mixer.clipAction(clip);
-  if(mesh.userData._currentAction&&mesh.userData._currentAction!==action){
+  const ud=mesh.userData||(mesh.userData={});
+  if(ud._currentAction&&ud._currentAction!==action){
     action.reset().play();
-    mesh.userData._currentAction.crossFadeTo(action,crossfade,true);
-  } else if(!mesh.userData._currentAction){
+    ud._currentAction.crossFadeTo(action,crossfade,true);
+  } else if(!ud._currentAction){
     action.reset().play();
   }
-  mesh.userData._currentAction=action;
+  ud._currentAction=action;
 }
 
 // initial UI call
@@ -4522,3 +5320,4 @@ updateSkillUI();
 </script>
 </body>
 </html>
+

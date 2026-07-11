@@ -1,8 +1,23 @@
 *.zip
 *.psd
 # *.fbx — needed for Mixamo animations
-three-js-basic-character-customisation/*.fbx
 three-js-basic-character-customisation/
 bosslogo.png
 Grudge Warlords - Ultimate Character Builder_files/
-grudge-skill-tree/assets/*.zip
+Grudge Warlords - Ultimate Character Builder.html
+grudge-skill-tree/
+# Heavy offline sources not referenced by runtime CSS/JS (~120MB)
+ui/hud/skills/**
+ui/hud/psd-export/**
+_prod_index.html
+_asset_unpack/
+_hud_unpack/
+server/node_modules/
+**/node_modules/
+# Large root demos / unused GLBs
+bbmodel_fps_character*.glb
+skeleton_in_storm_pirates_of_the_caribbean.glb
+sanji_fighting_style.glb
+bolt_action_pistol.glb
+grudge-guide.html
+grudge-warlords-vox.html

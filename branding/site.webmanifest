@@ -1,0 +1,21 @@
+{
+  "name": "VoxGrudge — Grudge Warlords Open World",
+  "short_name": "VoxGrudge",
+  "description": "Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e14",
+  "theme_color": "#e86a1a",
+  "icons": [
+    {
+      "src": "/branding/logo-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/branding/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

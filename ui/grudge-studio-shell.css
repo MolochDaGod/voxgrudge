@@ -1,0 +1,67 @@
+/**
+ * Grudge Studio shell — lightweight chrome for VoxGrudge open world.
+ * Full CraftPix HUD lives in ui/hud/grudge-hud.css.
+ */
+:root {
+  --gs-bg: #0a0e14;
+  --gs-panel: rgba(8, 10, 18, 0.92);
+  --gs-border: #2a2e3a;
+  --gs-blood: #e63d3d;
+  --gs-amber: #e8a86e;
+  --gs-text: #e8ecf4;
+  --gs-muted: #667;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--gs-bg);
+  color: var(--gs-text);
+}
+
+.gs-panel {
+  background: var(--gs-panel);
+  border: 1px solid var(--gs-border);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.gs-btn {
+  pointer-events: auto;
+  cursor: pointer;
+  border: 1px solid var(--gs-border);
+  background: rgba(20, 14, 18, 0.95);
+  color: var(--gs-text);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.gs-btn:hover {
+  border-color: var(--gs-blood);
+  box-shadow: 0 0 12px rgba(230, 61, 61, 0.25);
+}
+
+.gs-btn.primary {
+  border-color: var(--gs-amber);
+  color: var(--gs-amber);
+}
+
+/* Survivor / class select helpers used by grudge-studio-ui.js */
+.survivor-card,
+.class-card {
+  pointer-events: auto;
+}
+
+#grudox-pill.live {
+  border-color: #3d8;
+  color: #6f6;
+}
+
+#grudox-pill.offline {
+  border-color: #444;
+  color: #666;
+}
