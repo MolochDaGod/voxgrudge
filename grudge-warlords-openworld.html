@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-    <!-- Fleet auth (Grudge ID) — do not replace with a parallel login system -->
-    <script src="https://client.grudge-studio.com/grudge-game-bootstrap.js"></script>
+    <!-- Fleet modular auth: GrudgeAuth.start({ mode:'popup'|'redirect'|'modal' }) -->
+    <script src="https://id.grudge-studio.com/grudge-game-bootstrap.js"></script>
+    <script>window.GRUDGE_AUTH_GATEWAY='https://id.grudge-studio.com';window.GRUDGE_AUTH_MODE='popup';</script>
     <!-- Puter user-pays cloud (kv/fs/auth) — same SDK as crafting / Warlords -->
     <script src="https://js.puter.com/v2/"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">

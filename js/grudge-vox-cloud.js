@@ -260,18 +260,19 @@
     }
   }
 
-  function loginGrudgeId() {
-    var ret = global.location.origin + global.location.pathname + (global.location.search || '');
-    // Prefer loginForce → /login?redirect_uri= (never drop return URL).
-    // loginPage uses sso-check which is fine when cookie works, but force is safer.
+  function loginGrudgeId(mode) {
+    // Modular fleet entry — return always = this origin (voxgrudge.vercel.app)
+    // mode: 'redirect' (default, optimal tokens) | 'popup' | 'modal'
+    var m = mode || global.GRUDGE_AUTH_MODE || 'redirect';
+    if (global.GrudgeAuth && typeof global.GrudgeAuth.start === 'function') {
+      global.GrudgeAuth.start({ mode: m, force: m === 'redirect' });
+      return;
+    }
     if (global.GrudgeAuth && typeof global.GrudgeAuth.loginForce === 'function') {
-      global.GrudgeAuth.loginForce(ret);
+      global.GrudgeAuth.loginForce();
       return;
     }
-    if (global.GrudgeAuth && typeof global.GrudgeAuth.loginPage === 'function') {
-      global.GrudgeAuth.loginPage(ret);
-      return;
-    }
+    var ret = global.location.origin + global.location.pathname + (global.location.search || '');
     global.location.href =
       'https://id.grudge-studio.com/login?redirect_uri=' +
       encodeURIComponent(ret) +
@@ -380,8 +381,12 @@
     if (brand && brand.nextSibling) screen.insertBefore(bar, brand.nextSibling);
     else screen.insertBefore(bar, screen.firstChild);
 
-    bar.querySelector('[data-vox-login]').addEventListener('click', function () {
-      loginGrudgeId();
+    bar.querySelector('[data-vox-login]').addEventListener('click', function (ev) {
+      // Default: popup (stay on game). Shift = full redirect · Alt = modal
+      var mode = 'popup';
+      if (ev.shiftKey) mode = 'redirect';
+      else if (ev.altKey) mode = 'modal';
+      loginGrudgeId(mode);
     });
     bar.querySelector('[data-vox-puter]').addEventListener('click', function () {
       ensurePuterSession(true).then(function (ok) {
