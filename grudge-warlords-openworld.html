@@ -23,6 +23,7 @@
 <meta property="og:type" content="website">
 <link rel="stylesheet" href="ui/grudge-studio-shell.css">
     <link rel="stylesheet" href="ui/hud/grudge-hud.css">
+<link rel="stylesheet" href="ui/hud/combat-hud.css">
 <link rel="stylesheet" href="ui/load-screen.css">
 <style>
 *{box-sizing:border-box}
@@ -231,6 +232,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 #parry-flash{position:absolute;inset:0;pointer-events:none;z-index:6;background:rgba(68,136,255,0);transition:background 0.1s}
 </style>
 <link rel="stylesheet" href="ui/hud/grudge-hud.css">
+<link rel="stylesheet" href="ui/hud/combat-hud.css">
 </head>
 <body>
 
@@ -305,21 +307,65 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 
 <div id="status-bar"></div>
 
-<div id="skill-bar">
-  <div class="skill-slot off-cd" id="skill-q"><div class="skill-icon" id="sq-icon">⚔️</div><div class="skill-key">Q</div><div class="skill-name" id="sq-name">Heroic Cleave</div><div class="skill-cd-overlay hidden" id="sq-cd">0</div></div>
-  <div class="skill-slot off-cd" id="skill-e"><div class="skill-icon" id="se-icon">🌑</div><div class="skill-key">E</div><div class="skill-name" id="se-name">Shadow Edge</div><div class="skill-cd-overlay hidden" id="se-cd">0</div></div>
-  <div class="skill-slot off-cd" id="skill-r"><div class="skill-icon" id="sr-icon">🩸</div><div class="skill-key">R</div><div class="skill-name" id="sr-name">Blood Rush</div><div class="skill-cd-overlay hidden" id="sr-cd">0</div></div>
-  <div class="skill-slot off-cd" id="skill-f"><div class="skill-icon" id="sf-icon">💀</div><div class="skill-key">F</div><div class="skill-name" id="sf-name">Execute</div><div class="skill-cd-overlay hidden" id="sf-cd">0</div></div>
+<!-- Player / Target unit frames (CraftPix) -->
+<div id="uf-player" class="unit-frame unit-frame--player" aria-label="Player frame">
+  <div class="uf-inner">
+    <div class="uf-avatar" id="uf-player-avatar">⚔</div>
+    <div class="uf-name" id="uf-player-name">WARLORD</div>
+    <div class="uf-bar uf-bar--hp"><i id="uf-player-hp" style="width:100%"></i><span class="uf-bar-text" id="uf-player-hp-text">100/100</span></div>
+    <div class="uf-bar uf-bar--mp"><i id="uf-player-mp" style="width:0%"></i><span class="uf-bar-text" id="uf-player-mp-text">0/100</span></div>
+    <div class="uf-level" id="uf-player-level">1</div>
+  </div>
+</div>
+<div id="uf-target" class="unit-frame unit-frame--target hidden" aria-label="Target frame">
+  <div class="uf-inner">
+    <div class="uf-avatar" id="uf-target-avatar">💀</div>
+    <div class="uf-name" id="uf-target-name">—</div>
+    <div class="uf-bar uf-bar--hp"><i id="uf-target-hp" style="width:100%"></i><span class="uf-bar-text" id="uf-target-hp-text">—</span></div>
+    <div class="uf-bar uf-bar--mp"><i id="uf-target-mp" style="width:0%"></i><span class="uf-bar-text" id="uf-target-mp-text"></span></div>
+    <div class="uf-level" id="uf-target-level">?</div>
+  </div>
+</div>
+<div id="uf-party" aria-label="Ally frames"></div>
+<div id="overhead-bars" aria-hidden="true"></div>
+
+<!-- Action bar: 6 skills LEFT + center globes + 6 items RIGHT -->
+<div id="action-bar" aria-label="Action bar">
+  <div class="ab-wing ab-wing--left" id="ab-skills">
+    <div class="ab-slot skill-slot off-cd" id="skill-q" data-skill-idx="0"><span class="ab-key">Q</span><div class="ab-icon skill-icon" id="sq-icon">⚔️</div><div class="ab-name skill-name" id="sq-name">Skill 1</div><div class="ab-cd skill-cd-overlay hidden" id="sq-cd">0</div></div>
+    <div class="ab-slot skill-slot off-cd" id="skill-e" data-skill-idx="1"><span class="ab-key">E</span><div class="ab-icon skill-icon" id="se-icon">🌑</div><div class="ab-name skill-name" id="se-name">Skill 2</div><div class="ab-cd skill-cd-overlay hidden" id="se-cd">0</div></div>
+    <div class="ab-slot skill-slot off-cd" id="skill-r" data-skill-idx="2"><span class="ab-key">R</span><div class="ab-icon skill-icon" id="sr-icon">🩸</div><div class="ab-name skill-name" id="sr-name">Skill 3</div><div class="ab-cd skill-cd-overlay hidden" id="sr-cd">0</div></div>
+    <div class="ab-slot skill-slot off-cd" id="skill-f" data-skill-idx="3"><span class="ab-key">F</span><div class="ab-icon skill-icon" id="sf-icon">💀</div><div class="ab-name skill-name" id="sf-name">Skill 4</div><div class="ab-cd skill-cd-overlay hidden" id="sf-cd">0</div></div>
+    <div class="ab-slot skill-slot off-cd" id="skill-v" data-skill-idx="4"><span class="ab-key">V</span><div class="ab-icon skill-icon" id="sv-icon">💨</div><div class="ab-name skill-name" id="sv-name">Dash</div><div class="ab-cd skill-cd-overlay hidden" id="sv-cd">0</div></div>
+    <div class="ab-slot skill-slot off-cd" id="skill-z" data-skill-idx="5"><span class="ab-key">Z</span><div class="ab-icon skill-icon" id="sz-icon">🛡</div><div class="ab-name skill-name" id="sz-name">Guard</div><div class="ab-cd skill-cd-overlay hidden" id="sz-cd">0</div></div>
+  </div>
+  <div class="ab-center">
+    <div class="ab-main-bg" aria-hidden="true"></div>
+    <div class="ab-globes">
+      <div class="ab-globe ab-globe--hp" title="Integrity">
+        <div class="ab-globe-fill"><i id="ab-hp-fill" style="height:100%"></i></div>
+        <div class="ab-globe-val" id="ab-hp-val">100</div>
+      </div>
+      <div class="ab-globe ab-globe--mp" title="Cube Energy">
+        <div class="ab-globe-fill"><i id="ab-mp-fill" style="height:0%"></i></div>
+        <div class="ab-globe-val" id="ab-mp-val">0</div>
+      </div>
+    </div>
+    <div class="ab-xp"><i id="ab-xp-fill" style="width:0%"></i><span class="ab-xp-label" id="ab-xp-label">Lv.1</span></div>
+  </div>
+  <div class="ab-wing ab-wing--right" id="ab-items">
+    <div class="ab-slot item-slot" id="isl-1" data-item-idx="0"><span class="ab-key">1</span><div class="ab-icon i-icon" id="ii-1"></div><div class="ab-count i-count" id="ic-1"></div></div>
+    <div class="ab-slot item-slot" id="isl-2" data-item-idx="1"><span class="ab-key">2</span><div class="ab-icon i-icon" id="ii-2"></div><div class="ab-count i-count" id="ic-2"></div></div>
+    <div class="ab-slot item-slot" id="isl-3" data-item-idx="2"><span class="ab-key">3</span><div class="ab-icon i-icon" id="ii-3"></div><div class="ab-count i-count" id="ic-3"></div></div>
+    <div class="ab-slot item-slot" id="isl-4" data-item-idx="3"><span class="ab-key">4</span><div class="ab-icon i-icon" id="ii-4"></div><div class="ab-count i-count" id="ic-4"></div></div>
+    <div class="ab-slot item-slot" id="isl-5" data-item-idx="4"><span class="ab-key">5</span><div class="ab-icon i-icon" id="ii-5"></div><div class="ab-count i-count" id="ic-5"></div></div>
+    <div class="ab-slot item-slot" id="isl-6" data-item-idx="5"><span class="ab-key">6</span><div class="ab-icon i-icon" id="ii-6"></div><div class="ab-count i-count" id="ic-6"></div></div>
+  </div>
 </div>
 
-<div id="item-bar">
-  <div class="item-slot" id="isl-1"><div class="i-num">1</div><div class="i-icon" id="ii-1"></div><div class="i-count" id="ic-1"></div></div>
-  <div class="item-slot" id="isl-2"><div class="i-num">2</div><div class="i-icon" id="ii-2"></div><div class="i-count" id="ic-2"></div></div>
-  <div class="item-slot" id="isl-3"><div class="i-num">3</div><div class="i-icon" id="ii-3"></div><div class="i-count" id="ic-3"></div></div>
-  <div class="item-slot" id="isl-4"><div class="i-num">4</div><div class="i-icon" id="ii-4"></div><div class="i-count" id="ic-4"></div></div>
-  <div class="item-slot" id="isl-5"><div class="i-num">5</div><div class="i-icon" id="ii-5"></div><div class="i-count" id="ic-5"></div></div>
-  <div class="item-slot" id="isl-6"><div class="i-num">6</div><div class="i-icon" id="ii-6"></div><div class="i-count" id="ic-6"></div></div>
-</div>
+<!-- Legacy ids kept empty for any old queries -->
+<div id="skill-bar" class="hidden" aria-hidden="true"></div>
+<div id="item-bar" class="hidden" aria-hidden="true"></div>
 
 <div id="weapon-bar">
   <div class="w-slot owned active" id="ws-sword"><div class="w-icon">⚔️</div><div class="w-name">Sword</div><div class="w-ammo">∞</div></div>
@@ -465,6 +511,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="js/grudge-studio-ui.js"></script>
 <script src="js/grudge-codex-icons.js"></script>
 <script src="js/grudge-game-hud.js"></script>
+<script src="js/vox-combat-hud.js"></script>
 <script src="js/grudge-hud-icons.js"></script>
 <script src="js/grudge-items-loader.js"></script>
 <script src="js/grudge-asset-loader.js"></script>
@@ -1124,6 +1171,7 @@ function startGame(){
   document.body.classList.add('is-world-loading');
   document.getElementById('class-screen').style.display='none';
   document.getElementById('game-hud').classList.remove('pre-game-hidden');
+  if(window.VoxCombatHud) VoxCombatHud.init();
   const gccFab=document.getElementById('gcc-fab');
   if(gccFab) gccFab.classList.remove('pre-game-hidden');
   worldEngine=VoxWorld.createWorldEngine({seed:worldSeed,biomes:BIOMES,tierPools:TIER_POOLS});
@@ -1489,6 +1537,9 @@ function init(){
     if(keyIs('skill2',e.code)||e.code==='KeyE') activateSkill(1);
     if(keyIs('skill3',e.code)||e.code==='KeyR') activateSkill(2);
     if(keyIs('skill4',e.code)||e.code==='KeyF') activateSkill(3);
+    if(e.code==='KeyV') tryDash();
+    if(e.code==='KeyZ'){ isBlocking=true; setTimeout(()=>{isBlocking=false;},450); }
+    if(e.code==='Tab'){ e.preventDefault(); if(window.VoxCombatHud) VoxCombatHud.cycleTarget(); }
     if(e.code==='Digit1') useItem(0);
     if(e.code==='Digit2') useItem(1);
     if(e.code==='Digit3') useItem(2);
@@ -1517,7 +1568,10 @@ function init(){
       if(e.button===0) placeBlock();
       if(e.button===2) removeBlock();
     } else {
-      if(e.button===0) tryAttack();
+      if(e.button===0){
+        if(window.VoxCombatHud) VoxCombatHud.tryPickTargetFromClick();
+        tryAttack();
+      }
       if(e.button===2) handleRMB();
     }
   });
@@ -2359,6 +2413,7 @@ function ensureEnemyNexus(e){
 function damageEnemy(e, rawDmg, dir, opts){
   opts=opts||{};
   if(!e||!e.alive) return;
+  if(window.VoxCombatHud && (!VoxCombatHud.getTarget() || !VoxCombatHud.getTarget().alive)) VoxCombatHud.setTarget(e);
   ensureEnemyNexus(e);
   let dmg=rawDmg;
   let blocked=false,critical=false;
@@ -3584,16 +3639,18 @@ function updateEquipUI(){
 
 function updateAllyRosterUI(){
   const list=document.getElementById('ally-list');
-  if(!list) return;
-  list.innerHTML='';
-  minions.forEach((m,i)=>{
-    const card=document.createElement('div');
-    card.className='ally-card';
-    const pct=Math.max(0,(m.hp||100)/(m.maxHp||100)*100);
-    card.innerHTML='<div class="an">'+(m.emoji||'💀')+' '+(m.name||'Ally')+'</div><div class="ab"><div class="abf" style="width:'+pct+'%"></div></div>';
-    card.onclick=()=>{if(m.mesh)camera.lookAt(m.mesh.position);};
-    list.appendChild(card);
-  });
+  if(list){
+    list.innerHTML='';
+    minions.forEach((m,i)=>{
+      const card=document.createElement('div');
+      card.className='ally-card';
+      const pct=Math.max(0,(m.hp||100)/(m.maxHp||100)*100);
+      card.innerHTML='<div class="an">'+(m.emoji||'💀')+' '+(m.name||'Ally')+'</div><div class="ab"><div class="abf" style="width:'+pct+'%"></div></div>';
+      card.onclick=()=>{if(m.mesh)camera.lookAt(m.mesh.position);};
+      list.appendChild(card);
+    });
+  }
+  if(window.VoxCombatHud) VoxCombatHud.refreshParty();
 }
 
 function setCraftTab(tab){
@@ -3947,14 +4004,21 @@ function updateMinimap(){
 // ═══════════════════════════════════════════════════════════════
 function updateHUD(){
   const hpPct=(hp/maxHp)*100;
-  document.getElementById('hp-fill').style.width=hpPct+'%';
-  document.getElementById('hp-val').textContent=Math.ceil(hp)+'/'+maxHp;
-  document.getElementById('score-val').textContent=String(score).padStart(4,'0');
+  const hpFill=document.getElementById('hp-fill');
+  if(hpFill) hpFill.style.width=hpPct+'%';
+  const hpVal=document.getElementById('hp-val');
+  if(hpVal) hpVal.textContent=Math.ceil(hp)+'/'+maxHp;
+  const scoreEl=document.getElementById('score-val');
+  if(scoreEl) scoreEl.textContent=String(score).padStart(4,'0');
   const m=Math.floor(survivalTime/60),s=Math.floor(survivalTime%60);
-  document.getElementById('timer-val').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  const timerEl=document.getElementById('timer-val');
+  if(timerEl) timerEl.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
   const expPct=(exp/expToNext)*100;
-  document.getElementById('exp-fill').style.width=expPct+'%';
-  document.getElementById('level-val').textContent='Lv.'+level+' — '+exp+'/'+expToNext;
+  const expFill=document.getElementById('exp-fill');
+  if(expFill) expFill.style.width=expPct+'%';
+  const levelEl=document.getElementById('level-val');
+  if(levelEl) levelEl.textContent='Lv.'+level+' — '+exp+'/'+expToNext;
+  if(window.VoxCombatHud) VoxCombatHud.tick();
 
   // Biome / zone / safe area
   const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
@@ -4013,7 +4077,10 @@ function wireHudClicks(){
     if(WEAPONS[id].owned) switchWeapon(id);
   }));
   ['q','e','r','f'].forEach((s,i)=>stopBoth(document.getElementById('skill-'+s),()=>activateSkill(i)));
+  stopBoth(document.getElementById('skill-v'),()=>tryDash());
+  stopBoth(document.getElementById('skill-z'),()=>{ isBlocking=true; setTimeout(()=>{isBlocking=false;},450); });
   for(let i=1;i<=6;i++) stopBoth(document.getElementById('isl-'+i),()=>useItem(i-1));
+  if(window.VoxCombatHud) VoxCombatHud.init();
 }
 
 function updateSkillUI(){
@@ -4022,12 +4089,21 @@ function updateSkillUI(){
   slots.forEach((s,i)=>{
     const sid=ids[i];
     const sk=sid?SKILLS[sid]:null;
-    if(!sk) return;
+    const slotEl=document.getElementById('skill-'+s);
+    if(!sk){
+      if(slotEl) slotEl.classList.add('empty');
+      return;
+    }
+    if(slotEl) slotEl.classList.remove('empty');
     const icon=document.getElementById('s'+s+'-icon');
     const name=document.getElementById('s'+s+'-name');
     setHudIcon(icon,skillIconUrl(sid),sk.icon);
     if(name) name.textContent=sk.name;
   });
+  const svName=document.getElementById('sv-name');
+  if(svName) svName.textContent='Dash';
+  const szName=document.getElementById('sz-name');
+  if(szName) szName.textContent='Guard';
 }
 
 function initWeaponIcons(){
