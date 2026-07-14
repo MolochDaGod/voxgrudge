@@ -72,6 +72,17 @@
       if (e && e.mesh) e.box = meshBox(e.mesh);
     }
 
+    /** Set explicit world AABB (preferred for moving enemies — avoids bad mesh bounds). */
+    function setBox(id, box) {
+      var e = entries.find(function (x) { return x.id === id; });
+      if (e && box) e.box = box;
+      return e || null;
+    }
+
+    function getEntry(id) {
+      return entries.find(function (x) { return x.id === id; }) || null;
+    }
+
     function raycastGround(x, z) {
       if (!terrain || !terrain.mesh) return null;
       _rayOrigin.set(x, 400, z);
@@ -187,6 +198,8 @@
       register: register,
       unregister: unregister,
       refreshBox: refreshBox,
+      setBox: setBox,
+      getEntry: getEntry,
       registerTerrain: registerTerrain,
       registerSafeZone: registerSafeZone,
       getGroundHeight: getGroundHeight,

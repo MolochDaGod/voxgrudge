@@ -72,6 +72,15 @@
     return scaleForHeight(heightM, native);
   }
 
+  /**
+   * Uniform scale factor so an object of measuredHeight becomes targetM tall.
+   * Caller measures mesh height (Box3) then applies scale.
+   */
+  function scaleToHeight(measuredHeight, targetM) {
+    if (!measuredHeight || measuredHeight < 1e-4) return 1;
+    return (targetM || PLAYER_HEIGHT_M) / measuredHeight;
+  }
+
   global.GrudgeScale = {
     PLAYER_HEIGHT_M,
     BOSS_MAX_HEIGHT_M,
@@ -83,5 +92,7 @@
     creatureScale,
     fantasyScale,
     scaleForHeight,
+    scaleToHeight,
+    ENEMY_HEIGHT_OVERRIDES,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

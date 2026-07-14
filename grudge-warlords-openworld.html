@@ -601,6 +601,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/grudge-instanced-fire.js"></script>
 <script src="js/grudge-world-fires.js"></script>
 <script src="js/grudge-explorer-combat.js"></script>
+<script src="js/enemy-combat.js"></script>
 <script src="js/player-controller.js"></script>
 <!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
 <script src="js/grudge-vox-cloud.js"></script>
@@ -2509,11 +2510,12 @@ function tryExplorerMeleeAttack(){
         if(!e.alive) return;
         const toE = e.mesh.position.clone().sub(center);
         const dist = toE.length();
-        if(dist > strike.radius * 1.15) return;
+        const er = e.radius || 0.5;
+        if(dist > strike.radius * 1.15 + er * 0.85) return;
         toE.y = 0;
         if(toE.lengthSq()>0.0001) toE.normalize();
         const fwFlat = new THREE.Vector3(dir.x, 0, dir.z).normalize();
-        if(fwFlat.dot(toE) < (isHeavy ? 0.25 : 0.4)) return;
+        if(fwFlat.dot(toE) < (isHeavy ? 0.2 : 0.35)) return;
         damageEnemy(e, dmg, toE);
       });
       spawnHitFlash(center, hitColor, hit.finisher ? 7 : 5);
@@ -2561,10 +2563,11 @@ function tryAttack(){
       if(!e.alive) return;
       const toE=e.mesh.position.clone().sub(pp);
       const dist=toE.length();
-      if(dist>(currentWeapon.range||4)*1.1) return;
+      const er=e.radius||0.5;
+      if(dist>(currentWeapon.range||4)*1.1+er*0.85) return;
       toE.y=0; toE.normalize();
       const fwFlat=new THREE.Vector3(fw.x,0,fw.z).normalize();
-      if(fwFlat.dot(toE)<(isHeavy?0.3:0.5)) return;
+      if(fwFlat.dot(toE)<(isHeavy?0.25:0.45)) return;
       damageEnemy(e, dmg, toE);
     });
     spawnHitFlash(weaponTip, slashColor, 5);
@@ -2660,7 +2663,11 @@ function fireBullet(pos, dir, opts){
     knockback:opts.knockback||1.5,
     impactType:opts.impactType||(kind==='glob'?'poison':kind==='shard'?'frost':'spark'),
     impactColor:opts.impactColor||col,
-    prevPositions:[], trailUpdate:0
+    prevPositions:[], trailUpdate:0,
+    fromEnemy:!!opts.fromEnemy,
+    ownerEnemy:opts.ownerEnemy||null,
+    ranged:!!opts.ranged,
+    isSpell:!!opts.isSpell,
   });
   if(grudoxConnected) sendGrudox({type:'projectile',projectile:{x:pos.x,z:pos.z,dx:dir.x,dz:dir.z,kind,color:col}});
 }
@@ -2777,6 +2784,7 @@ function damageEnemy(e, rawDmg, dir, opts){
 function killEnemy(e){
   if(!e.alive) return;
   e.alive = false;
+  disposeEnemyFx(e);
   scene.remove(e.mesh);
   score += e.def.score;
   exp += e.def.score;
@@ -2889,15 +2897,44 @@ function getBiome(x,z){
   return BIOMES[0];
 }
 
+/** Measure Y height of a mesh group and scale uniformly to target meters. */
+function fitEnemyMeshHeight(mesh, heightM){
+  if(!mesh||!heightM) return;
+  mesh.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(mesh);
+  const size=box.getSize(new THREE.Vector3());
+  const h=size.y||1;
+  const s=GrudgeScale.scaleToHeight(h, heightM);
+  mesh.scale.multiplyScalar(s);
+  // Re-center feet: after scale, bottom may not sit at y=0 local
+  mesh.updateMatrixWorld(true);
+  const box2=new THREE.Box3().setFromObject(mesh);
+  const footOffset=box2.min.y-mesh.position.y;
+  // Shift children up so local origin is at feet
+  if(Math.abs(footOffset)>0.01){
+    mesh.children.forEach(function(ch){ ch.position.y -= footOffset; });
+  }
+}
+
+function syncEnemyCollider(e){
+  if(!e||!e.colId||!collisionWorld||!e.collSpec) return;
+  const p=e.mesh.position;
+  const box=EnemyCombat.worldBoxFromSpec(p.x, p.y, p.z, e.collSpec);
+  if(collisionWorld.setBox) collisionWorld.setBox(e.colId, box);
+}
+
 function spawnEnemyAt(sx,sz,typeId,meta){
   meta=meta||{};
   const def=ENEMY_TYPES[typeId];
   if(!def) return null;
   const heightM=GrudgeScale.heightForEnemy(def,typeId);
   let mesh;
+  let scaled=false;
   if(def.coldUnit&&COLD_BIOM_CACHE[def.coldUnit]){
     mesh=COLD_BIOM_CACHE[def.coldUnit].clone(true);
     mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+    fitEnemyMeshHeight(mesh, heightM);
+    scaled=true;
   } else {
     const fantasyKey=def.fantasy;
     const fantasyTemplate=fantasyKey?FANTASY_CACHE[fantasyKey]:null;
@@ -2907,6 +2944,7 @@ function spawnEnemyAt(sx,sz,typeId,meta){
       const fsc=GrudgeScale.fantasyScale(fantasyKey,heightM);
       mesh.scale.set(fsc,fsc,fsc);
       tintModel(mesh,def.body);
+      scaled=true;
     } else {
       const creatureName=CREATURE_MODEL_MAP[typeId];
       const creatureTemplate=creatureName?CREATURE_CACHE[creatureName]:null;
@@ -2916,28 +2954,58 @@ function spawnEnemyAt(sx,sz,typeId,meta){
         const csc=GrudgeScale.creatureScale(creatureName,heightM);
         mesh.scale.set(csc,csc,csc);
         tintModel(mesh,def.body);
+        // Verify actual height and nudge if native bounds were wrong
+        fitEnemyMeshHeight(mesh, heightM);
+        scaled=true;
       } else {
         const isHumanoid=def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
         const eLetter=ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
         const eTex=KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
         const enemyGlb=isHumanoid?cloneModel(eLetter,heightM/GrudgeScale.PLAYER_HEIGHT_M,eTex):null;
-        if(enemyGlb) mesh=enemyGlb;
-        else mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM));
+        if(enemyGlb){ mesh=enemyGlb; scaled=true; }
+        else{ mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM)); scaled=true; }
       }
     }
   }
+  if(!mesh) return null;
+  if(!scaled) fitEnemyMeshHeight(mesh, heightM);
+
+  // Spawn at intended world position (was missing — enemies stacked at origin)
+  mesh.position.set(sx, 0, sz);
   snapToGround(mesh,0);
-  registerEntityCollider('enemy_'+typeId+'_'+sx.toFixed(0)+'_'+sz.toFixed(0),'enemy',mesh,def,{solid:false,trigger:false});
-  // Canvas health bar (replaces emoji)
+
+  const collSpec=(window.EnemyCombat
+    ? EnemyCombat.getColliderSpec(def, typeId, heightM)
+    : {radius:0.5,height:heightM,halfH:heightM*0.5,hx:0.5,hy:heightM*0.5,hz:0.5});
+  const colId='enemy_'+typeId+'_'+Date.now().toString(36)+'_'+Math.floor(Math.random()*1e5);
+  const worldBox=window.EnemyCombat
+    ? EnemyCombat.worldBoxFromSpec(mesh.position.x, mesh.position.y, mesh.position.z, collSpec)
+    : null;
+  if(collisionWorld){
+    collisionWorld.register({
+      id:colId,
+      kind:'enemy',
+      layer:VoxLayers.layerForKind('enemy',def),
+      mesh:mesh,
+      solid:false,
+      trigger:false,
+      def:def,
+      box:worldBox,
+      data:{typeId:typeId,radius:collSpec.radius},
+    });
+  }
+
+  // Canvas health bar + name — sit just above head (not 2× height)
   const hbCanvas = document.createElement('canvas'); hbCanvas.width=64; hbCanvas.height=10;
   const hbCtx = hbCanvas.getContext('2d');
   hbCtx.fillStyle='#222'; hbCtx.fillRect(0,0,64,10);
   hbCtx.fillStyle='#00ff00'; hbCtx.fillRect(1,1,62,8);
   const hbTex = new THREE.CanvasTexture(hbCanvas);
-  const hbMat = new THREE.SpriteMaterial({map:hbTex,transparent:true});
+  const hbMat = new THREE.SpriteMaterial({map:hbTex,transparent:true,depthTest:false});
   const hbSprite = new THREE.Sprite(hbMat);
-  hbSprite.scale.set(2.0, 0.3, 1);
-  const barY=heightM*2+0.5;
+  const barW=Math.max(1.4, Math.min(3.2, heightM*0.9));
+  hbSprite.scale.set(barW, 0.22, 1);
+  const barY=heightM+0.35;
   hbSprite.position.set(0,barY,0);
   mesh.add(hbSprite);
   const nlCanvas=document.createElement('canvas');nlCanvas.width=128;nlCanvas.height=24;
@@ -2946,13 +3014,16 @@ function spawnEnemyAt(sx,sz,typeId,meta){
   nlCtx.font='bold 14px sans-serif';nlCtx.fillStyle='#fff';nlCtx.textAlign='center';
   nlCtx.fillText(def.name,64,17);
   const nlTex=new THREE.CanvasTexture(nlCanvas);
-  const nlMat=new THREE.SpriteMaterial({map:nlTex,transparent:true});
+  const nlMat=new THREE.SpriteMaterial({map:nlTex,transparent:true,depthTest:false});
   const nlSprite=new THREE.Sprite(nlMat);
-  nlSprite.scale.set(3.0,0.5,1);
-  nlSprite.position.set(0,barY+0.5,0);
+  nlSprite.scale.set(Math.max(2.2, barW*1.4),0.4,1);
+  nlSprite.position.set(0,barY+0.38,0);
   mesh.add(nlSprite);
   scene.add(mesh);
 
+  const attackProfile=window.EnemyCombat
+    ? EnemyCombat.getAttackProfile(def.beh, def.tier, heightM)
+    : {windup:0.35,active:0.1,recovery:0.5,cd:1.2,range:2,engage:2.2,telegraph:'circle',dmgMult:1};
   const nexus=window.NexusStats?NexusStats.buildEnemyCombatant(def,typeId):null;
   const nexusHp=nexus?nexus.stats.maxHP:def.hp;
   const nexusDmg=nexus?nexus.stats.meleeAttack:def.dmg;
@@ -2960,7 +3031,7 @@ function spawnEnemyAt(sx,sz,typeId,meta){
     mesh,def,typeId,heightM,nexus,
     hp:nexusHp,maxHp:nexusHp,dmg:nexusDmg,
     speed:def.speed,alive:true,
-    flashTimer:0,attackCd:0,
+    flashTimer:0,attackCd:0.4+Math.random()*0.6,
     beh:def.beh,
     bleed:null,
     chargeVel:null,chargeTimer:0,
@@ -2974,6 +3045,14 @@ function spawnEnemyAt(sx,sz,typeId,meta){
     aggro:!!meta.isRaid,
     leashed:false,
     patrolAngle:Math.random()*Math.PI*2,
+    // Collider + ARPG attack state
+    colId, collSpec, radius:collSpec.radius,
+    attackProfile,
+    atkPhase:'idle',
+    atkTimer:0,
+    atkHit:false,
+    atkDir:null,
+    telegraph:null,
   };
   enemies.push(enemy);
   return enemy;
@@ -3000,20 +3079,234 @@ function spawnEnemy(isRaid){
   return spawnEnemyAt(sx,sz,typeId,{isRaid:!!isRaid,homeX:sx,homeZ:sz});
 }
 
+const PLAYER_BODY_RADIUS = 0.45;
+
+function disposeEnemyFx(e){
+  if(e.telegraph){
+    try{ e.telegraph.dispose(); }catch(_){}
+    e.telegraph=null;
+  }
+  if(e.colId && collisionWorld){
+    collisionWorld.unregister(e.colId);
+    e.colId=null;
+  }
+}
+
+function ensureEnemyTelegraph(e, profile, dir){
+  if(!window.EnemyCombat || !scene) return;
+  if(e.telegraph) return;
+  const kind=profile.telegraph||'circle';
+  const color=profile.projectile
+    ? (e.beh==='poison'?0x44ff00:0xff6622)
+    : (e.beh==='titan'?0xffcc00:0xff3344);
+  e.telegraph=EnemyCombat.createTelegraph(THREE, scene, kind, {
+    range: profile.range,
+    arcDeg: profile.arcDeg,
+    width: Math.max(1.0, (e.radius||0.5)*1.6),
+    color: color,
+  });
+}
+
+function updateEnemyAttack(e, dt, pp, dist, dir){
+  const profile=e.atkProfile||e.attackProfile||(window.EnemyCombat
+    ? EnemyCombat.getAttackProfile(e.beh, e.def&&e.def.tier, e.heightM)
+    : null);
+  if(!profile) return false;
+
+  if(e.atkPhase==='idle') return false;
+
+  e.atkTimer-=dt;
+  const groundY=e.mesh.position.y;
+  // Models / line telegraphs use -Z forward
+  const aim=e.atkDir||dir;
+  const faceYaw=Math.atan2(-aim.x, -aim.z);
+
+  // Telegraph progress during windup
+  if(e.atkPhase==='windup'){
+    const total=profile.windup||0.4;
+    const progress=1-Math.max(0, e.atkTimer)/total;
+    ensureEnemyTelegraph(e, profile, dir);
+    if(e.telegraph){
+      e.telegraph.update(progress, e.mesh.position.x, groundY, e.mesh.position.z, faceYaw);
+    }
+    // Slow movement while winding up
+    if(e.atkTimer<=0){
+      e.atkPhase='active';
+      e.atkTimer=profile.active||0.1;
+      e.atkHit=false;
+      if(e.telegraph && e.telegraph.setActiveFlash) e.telegraph.setActiveFlash();
+      // Leap / ghost reposition resolves at active start
+      if(profile.leap && e.atkLeapTarget){
+        const lx=e.atkLeapTarget.x-e.mesh.position.x;
+        const lz=e.atkLeapTarget.z-e.mesh.position.z;
+        const llen=Math.hypot(lx,lz)||1;
+        const jump=Math.min(profile.leapDist||7, llen);
+        e.mesh.position.x+= (lx/llen)*jump;
+        e.mesh.position.z+= (lz/llen)*jump;
+        snapToGround(e.mesh,0);
+      }
+      if(profile.ghostLeap && e.atkLeapTarget){
+        e.mesh.position.x=e.atkLeapTarget.x;
+        e.mesh.position.z=e.atkLeapTarget.z;
+        snapToGround(e.mesh,0);
+      }
+    }
+    return true;
+  }
+
+  if(e.atkPhase==='active'){
+    // Charge travels during active
+    if(profile.charge && e.chargeVel){
+      e.mesh.position.x+=e.chargeVel.x*dt;
+      e.mesh.position.z+=e.chargeVel.z*dt;
+    }
+    // Hit resolve once in active window
+    if(!e.atkHit){
+      e.atkHit=true;
+      resolveEnemyAttackHit(e, profile, pp, dist, dir);
+    }
+    if(e.atkTimer<=0){
+      e.atkPhase='recovery';
+      e.atkTimer=profile.recovery||0.5;
+      if(e.telegraph){ try{e.telegraph.dispose();}catch(_){} e.telegraph=null; }
+      e.chargeVel=null;
+    }
+    return true;
+  }
+
+  if(e.atkPhase==='recovery'){
+    if(e.atkTimer<=0){
+      e.atkPhase='idle';
+      e.attackCd=profile.cd||1.2;
+      e.atkProfile=null;
+      e.atkDir=null;
+      e.atkLeapTarget=null;
+    }
+    return true;
+  }
+  return false;
+}
+
+function resolveEnemyAttackHit(e, profile, pp, dist, dir){
+  if(playerInSafeZone()||isGameOver||!gameStarted) return;
+  if(iFrames) return;
+
+  const er=e.radius||0.5;
+  const pr=PLAYER_BODY_RADIUS;
+  const surface=window.EnemyCombat
+    ? EnemyCombat.surfaceDist(dist, er, pr)
+    : Math.max(0, dist-er-pr);
+
+  if(profile.projectile){
+    const aim=e.atkDir
+      ? new THREE.Vector3(e.atkDir.x,0,e.atkDir.z).normalize()
+      : dir.clone();
+    const muzzle=e.mesh.position.clone().add(new THREE.Vector3(0, Math.max(1.0, e.heightM*0.55), 0));
+    const col=e.beh==='poison'?0x44ff00:(e.beh==='titan'?0xffff00:0xff4400);
+    fireBullet(muzzle, aim, {
+      dmg:e.dmg*(profile.dmgMult||0.75),
+      speed:e.beh==='titan'?0.75:1.05,
+      color:col,
+      kind:'glob',
+      gravity:0,
+      fromEnemy:true,
+      ownerEnemy:e,
+      knockback:1.2,
+      impactType:e.beh==='poison'?'poison':'spark',
+    });
+    spawnVFXSprite('magic_cast', muzzle, {scale:1.6, duration:0.2, tint:col});
+    return;
+  }
+
+  // Melee / charge / leap / slam — body-radius aware range
+  const hitRange=profile.range||2;
+  let inRange=surface <= hitRange*0.15 + 0.35; // tight contact
+  if(profile.aoe || profile.telegraph==='circle'){
+    inRange = dist <= hitRange + pr;
+  } else if(profile.charge){
+    // Charge: cylinder along path — approximate with current proximity + forward cone
+    const toP=new THREE.Vector3(pp.x-e.mesh.position.x,0,pp.z-e.mesh.position.z);
+    const fwd=e.atkDir
+      ? new THREE.Vector3(e.atkDir.x,0,e.atkDir.z).normalize()
+      : dir.clone();
+    const lateral=toP.clone().sub(fwd.clone().multiplyScalar(toP.dot(fwd)));
+    inRange = toP.dot(fwd) > -0.5 && lateral.length() < Math.max(1.0, er*1.4) && dist < hitRange;
+  } else if(profile.telegraph==='arc'){
+    const toP=new THREE.Vector3(pp.x-e.mesh.position.x,0,pp.z-e.mesh.position.z).normalize();
+    const fwd=e.atkDir
+      ? new THREE.Vector3(e.atkDir.x,0,e.atkDir.z).normalize()
+      : dir.clone();
+    const cosA=Math.cos(((profile.arcDeg||75)*Math.PI/180)*0.5);
+    inRange = dist <= hitRange + pr && fwd.dot(toP) >= cosA;
+  } else {
+    inRange = dist <= hitRange + pr;
+  }
+
+  if(!inRange) return;
+
+  const dmg=e.dmg*(profile.dmgMult||1);
+  damagePlayer(dmg, e);
+  spawnHitFlash(pp.clone().add(new THREE.Vector3(0,1.2,0)), 0xff4422, 4);
+  // Brief hit-stop feel via shake on heavy hits
+  if((profile.dmgMult||1)>=1.3) triggerShake(0.22, 0.1);
+}
+
+function tryStartEnemyAttack(e, pp, dist, dir){
+  if(e.atkPhase && e.atkPhase!=='idle') return false;
+  if(e.attackCd>0) return false;
+  if(playerInSafeZone()) return false;
+  const profile=e.attackProfile||(window.EnemyCombat
+    ? EnemyCombat.getAttackProfile(e.beh, e.def&&e.def.tier, e.heightM)
+    : null);
+  if(!profile) return false;
+
+  const er=e.radius||0.5;
+  const engage=profile.engage||profile.range||2.2;
+  // Surface-aware engage so big enemies don't stand inside the player before swinging
+  const surface=window.EnemyCombat
+    ? EnemyCombat.surfaceDist(dist, er, PLAYER_BODY_RADIUS)
+    : dist;
+
+  if(profile.projectile){
+    if(dist > profile.range) return false;
+    if(dist < 2.5) return false; // back off first
+  } else if(profile.charge || profile.leap || profile.ghostLeap){
+    if(dist > engage) return false;
+    if(dist < 1.2) return false;
+  } else {
+    if(surface > engage) return false;
+  }
+
+  if(window.EnemyCombat){
+    EnemyCombat.beginAttack(e, dir, pp);
+  } else {
+    e.atkPhase='windup';
+    e.atkTimer=0.35;
+    e.atkDir=dir.clone();
+    e.atkHit=false;
+    e.atkProfile=profile;
+  }
+  e.atkProfile=profile;
+  // Freeze aim direction at windup start (player can dodge out)
+  e.atkDir=new THREE.Vector3(dir.x,0,dir.z).normalize();
+  ensureEnemyTelegraph(e, profile, dir);
+  return true;
+}
+
 function updateEnemies(dt){
   const pp = playerMesh.position;
 
-  enemies.forEach((e,idx)=>{
+  enemies.forEach((e)=>{
     if(!e.alive) return;
     const ep = e.mesh.position;
-    const toPlayer = pp.clone().sub(ep);
+    const toPlayer = new THREE.Vector3(pp.x-ep.x, 0, pp.z-ep.z);
     const dist = toPlayer.length();
-    const dir = toPlayer.normalize();
+    const dir = dist>1e-4 ? toPlayer.clone().multiplyScalar(1/dist) : new THREE.Vector3(0,0,1);
 
     // Flash
     if(e.flashTimer>0){
       e.flashTimer-=dt;
-      e.mesh.traverse(c=>{ if(c.isMesh&&c.material){ c.material.emissive = e.flashTimer>0?new THREE.Color(1,1,1):new THREE.Color(0,0,0); c.material.emissiveIntensity=e.flashTimer>0?2:0; } });
+      e.mesh.traverse(c=>{ if(c.isMesh&&c.material&&c.material.emissive){ c.material.emissive = e.flashTimer>0?new THREE.Color(1,1,1):new THREE.Color(0,0,0); c.material.emissiveIntensity=e.flashTimer>0?2:0; } });
     }
 
     // Bleed DoT
@@ -3030,17 +3323,25 @@ function updateEnemies(dt){
     // Physics knockback deceleration
     if(e.knockbackVel && e.knockbackVel.lengthSq()>0.01){
       ep.add(e.knockbackVel.clone().multiplyScalar(dt));
-      e.knockbackVel.multiplyScalar(Math.max(0, 1-dt*8)); // friction
+      e.knockbackVel.multiplyScalar(Math.max(0, 1-dt*8));
       if(e.knockbackVel.lengthSq()<0.01) e.knockbackVel=null;
     }
 
-    // Stun check
-    if(e.stunTimer&&e.stunTimer>0){e.stunTimer-=dt;return;}
+    // Stun — cancel windup, keep telegraph gone
+    if(e.stunTimer&&e.stunTimer>0){
+      e.stunTimer-=dt;
+      if(e.atkPhase && e.atkPhase!=='idle'){
+        if(window.EnemyCombat) EnemyCombat.clearAttack(e);
+        else { e.atkPhase='idle'; if(e.telegraph){try{e.telegraph.dispose();}catch(_){} e.telegraph=null;} }
+      }
+      snapToGround(e.mesh,0);
+      syncEnemyCollider(e);
+      return;
+    }
 
-    // Attack cooldown
     e.attackCd = Math.max(0, e.attackCd-dt);
 
-    // Camp AI — Albion-style aggro + leash + patrol (not endless chase)
+    // Camp AI — Albion-style aggro + leash + patrol
     if(e.campId){
       const inSafe=collisionWorld&&collisionWorld.isInSafeZone(pp.x,pp.z);
       const distHome=Math.hypot(ep.x-e.homeX,ep.z-e.homeZ);
@@ -3048,83 +3349,103 @@ function updateEnemies(dt){
       e.aggro=!inSafe&&distPlayer<(worldEngine?worldEngine.AGGRO_RADIUS:32);
       e.leashed=distHome>(worldEngine?worldEngine.LEASH_RADIUS:90);
       if(e.leashed){
+        if(e.atkPhase && e.atkPhase!=='idle'){
+          if(window.EnemyCombat) EnemyCombat.clearAttack(e);
+          else e.atkPhase='idle';
+        }
         const toHome=new THREE.Vector3(e.homeX-ep.x,0,e.homeZ-ep.z).normalize();
         ep.add(toHome.multiplyScalar(e.speed*1.2*dt));
-        if(!playerInSafeZone()&&dist<2.5&&e.attackCd<=0){e.attackCd=1.2;damagePlayer(e.dmg,e);}
+        snapToGround(e.mesh,0);
+        syncEnemyCollider(e);
         return;
       }
       if(!e.aggro){
+        if(e.atkPhase && e.atkPhase!=='idle'){
+          if(window.EnemyCombat) EnemyCombat.clearAttack(e);
+          else e.atkPhase='idle';
+        }
         e.patrolAngle=(e.patrolAngle||0)+dt*0.4;
         const pr=(worldEngine?worldEngine.PATROL_RADIUS:14)*0.45;
         const tx=e.homeX+Math.cos(e.patrolAngle)*pr;
         const tz=e.homeZ+Math.sin(e.patrolAngle)*pr;
         const toP=new THREE.Vector3(tx-ep.x,0,tz-ep.z);
         if(toP.length()>0.5) ep.add(toP.normalize().multiplyScalar(e.speed*0.35*dt));
+        snapToGround(e.mesh,0);
+        syncEnemyCollider(e);
         return;
       }
     }
 
-    // Behaviors
-    let moved = false;
-    if(e.beh==='chase'||e.beh==='heavy'||e.beh==='berserker'||e.beh==='swoop'||e.beh==='tank'){
-      const spd = e.beh==='berserker'&&dist<10 ? e.speed*1.5 : e.speed;
-      ep.add(dir.clone().multiplyScalar(spd*dt));
-      moved=true;
-    } else if(e.beh==='leaper'){
-      e.leapTimer-=dt;
-      if(e.leapTimer<=0){
-        e.leapTimer=e.leapCd;
-        ep.add(dir.clone().multiplyScalar(8));
-      } else {
-        ep.add(dir.clone().multiplyScalar(e.speed*0.5*dt));
-      }
-      moved=true;
-    } else if(e.beh==='ghost_leap'){
-      e.ghostLeapCd-=dt;
-      if(e.ghostLeapCd<=0){
-        e.ghostLeapCd=2+Math.random()*3;
-        ep.copy(pp.clone().add(new THREE.Vector3((Math.random()-0.5)*4,0,(Math.random()-0.5)*4)));
-      } else {
-        ep.add(dir.clone().multiplyScalar(e.speed*0.4*dt));
-      }
-      moved=true;
-    } else if(e.beh==='charger'){
-      if(!e.chargeVel||e.chargeTimer<=0){
-        e.chargeVel=dir.clone().multiplyScalar(e.speed*3);
-        e.chargeTimer=1.5;
-      }
-      e.chargeTimer-=dt;
-      ep.add(e.chargeVel.clone().multiplyScalar(dt));
-      moved=true;
-    } else if(e.beh==='spitter'||e.beh==='poison'||e.beh==='titan'){
-      if(dist>8){
-        ep.add(dir.clone().multiplyScalar(e.speed*0.6*dt));
-      }
-      if(e.attackCd<=0&&dist<25){
-        e.attackCd=2;
-        fireBullet(ep.clone().add(new THREE.Vector3(0,1.5,0)), dir, {dmg:e.dmg*0.7, speed:0.9, color:e.beh==='titan'?0xffff00:e.beh==='poison'?0x44ff00:0xff4400});
-      }
-      moved=true;
+    // Attack state machine (windup → active → recovery)
+    const busy=updateEnemyAttack(e, dt, pp, dist, dir);
+    const profile=e.atkProfile||e.attackProfile;
+    let moveMult=1;
+    if(busy && profile){
+      if(e.atkPhase==='windup') moveMult=profile.moveMultWindup!=null?profile.moveMultWindup:0.3;
+      else if(e.atkPhase==='active') moveMult=profile.moveMultActive!=null?profile.moveMultActive:0.1;
+      else if(e.atkPhase==='recovery') moveMult=0.2;
     }
+
+    // Movement behaviors (respect attack lock)
+    let moved = false;
+    if(!busy || moveMult>0.05){
+      if(e.beh==='chase'||e.beh==='heavy'||e.beh==='berserker'||e.beh==='swoop'||e.beh==='tank'){
+        const spd = (e.beh==='berserker'&&dist<10 ? e.speed*1.5 : e.speed) * moveMult;
+        // Stop inside preferred melee band so big colliders don't clip the player
+        const stopAt=(e.radius||0.5)+PLAYER_BODY_RADIUS+0.15;
+        if(dist>stopAt){
+          ep.add(dir.clone().multiplyScalar(spd*dt));
+          moved=true;
+        }
+      } else if(e.beh==='leaper'||e.beh==='ghost_leap'){
+        // Approach only; leap is part of attack windup/active
+        if(dist>4){
+          ep.add(dir.clone().multiplyScalar(e.speed*0.55*moveMult*dt));
+          moved=true;
+        }
+      } else if(e.beh==='charger'){
+        // Approach until engage; charge is attack active
+        if(!busy && dist>5){
+          ep.add(dir.clone().multiplyScalar(e.speed*0.7*dt));
+          moved=true;
+        }
+      } else if(e.beh==='spitter'||e.beh==='poison'||e.beh==='titan'){
+        const prefer=profile&&profile.preferRange?profile.preferRange:(e.beh==='titan'?5:9);
+        if(dist>prefer+1.5){
+          ep.add(dir.clone().multiplyScalar(e.speed*0.6*moveMult*dt));
+          moved=true;
+        } else if(dist<prefer-2 && !busy){
+          // Kite back slightly
+          ep.add(dir.clone().multiplyScalar(-e.speed*0.45*dt));
+          moved=true;
+        }
+      }
+    }
+
+    // Try to open an attack when idle
+    if(!busy) tryStartEnemyAttack(e, pp, dist, dir);
 
     snapToGround(e.mesh,0);
+    syncEnemyCollider(e);
 
-    // Attack player (never in starter safe zone)
-    if(!playerInSafeZone()&&dist<2.0&&e.attackCd<=0){
-      e.attackCd=1.2;
-      damagePlayer(e.dmg,e);
-    }
-
-    // Face direction
-    if(moved&&dist>0.1){
-      e.mesh.rotation.y = Math.atan2(-dir.x, -dir.z);
+    // Face player (models use -Z forward)
+    if(dist>0.1){
+      const ad=(e.atkPhase==='windup'||e.atkPhase==='active') ? (e.atkDir||dir) : dir;
+      if(e.atkPhase==='windup'||e.atkPhase==='active'||moved){
+        e.mesh.rotation.y = Math.atan2(-ad.x, -ad.z);
+      }
     }
   });
 
   // Clean dead enemies
-  enemies = enemies.filter(e=>e.alive);
+  enemies = enemies.filter(e=>{
+    if(!e.alive){
+      disposeEnemyFx(e);
+      return false;
+    }
+    return true;
+  });
 
-  // Update minions
   updateMinions(dt);
 }
 
@@ -3226,19 +3547,30 @@ function updateBullets(dt){
 
     // Hit detection
     const bp=b.mesh.position;
-    enemies.forEach(e=>{
-      if(!e.alive||b.hit) return;
-      if(bp.distanceTo(e.mesh.position)<1.5){
-        // Physics knockback with deceleration
-        const kbDir=e.mesh.position.clone().sub(bp).normalize();
-        e.knockbackVel=kbDir.clone().multiplyScalar(b.knockback*8);
-        damageEnemy(e,b.dmg,kbDir,{ranged:!!b.ranged,isSpell:!!b.isSpell});
-        // Impact VFX
-        spawnImpact(bp.clone(), b.impactType, b.impactColor, kbDir);
-        if(b.explosive){ aoeAttack(bp,b.expRadius,b.dmg*0.5,0xff6600,2); spawnImpact(bp.clone(),'explosion',0xff4400,kbDir); }
-        if(!b.pierce){ projectileCleanup(b); b.hit=true; }
+    if(b.fromEnemy){
+      // Hostile projectile → player (body radius)
+      if(playerMesh && !isGameOver && !playerInSafeZone()){
+        const pd=bp.distanceTo(playerMesh.position.clone().add(new THREE.Vector3(0,1.0,0)));
+        if(pd < 1.15 + PLAYER_BODY_RADIUS){
+          damagePlayer(b.dmg, b.ownerEnemy||null);
+          spawnImpact(bp.clone(), b.impactType, b.impactColor, b.dir);
+          projectileCleanup(b); b.hit=true;
+        }
       }
-    });
+    } else {
+      enemies.forEach(e=>{
+        if(!e.alive||b.hit) return;
+        const er=e.radius||0.5;
+        if(bp.distanceTo(e.mesh.position)<1.2+er){
+          const kbDir=e.mesh.position.clone().sub(bp).normalize();
+          e.knockbackVel=kbDir.clone().multiplyScalar(b.knockback*8);
+          damageEnemy(e,b.dmg,kbDir,{ranged:!!b.ranged,isSpell:!!b.isSpell});
+          spawnImpact(bp.clone(), b.impactType, b.impactColor, kbDir);
+          if(b.explosive){ aoeAttack(bp,b.expRadius,b.dmg*0.5,0xff6600,2); spawnImpact(bp.clone(),'explosion',0xff4400,kbDir); }
+          if(!b.pierce){ projectileCleanup(b); b.hit=true; }
+        }
+      });
+    }
   });
   bullets=bullets.filter(b=>!b.hit&&b.life>0);
 }
