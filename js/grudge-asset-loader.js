@@ -263,13 +263,34 @@
       });
     });
 
-    // ── Crafting table + roll rig ──
+    // ── Crafting table + roll rig (optional — missing GLB must not block boot) ──
     q.add('models', 'Crafting table GLB', function () {
       return loadGltf(gltfLoader, assetUrl('models/crafting_table.glb')).then(function (gltf) {
         ctx.craftTableTemplate = gltf.scene;
         ctx.craftTableTemplate.traverse(function (c) {
           if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
         });
+      }).catch(function () {
+        // Procedural crate fallback so craft stations still spawn
+        if (!ctx.THREE) return;
+        var THREE = ctx.THREE;
+        var g = new THREE.Group();
+        var box = new THREE.Mesh(
+          new THREE.BoxGeometry(1.4, 0.9, 1.0),
+          new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.85 })
+        );
+        box.position.y = 0.45;
+        box.castShadow = true;
+        box.receiveShadow = true;
+        g.add(box);
+        var top = new THREE.Mesh(
+          new THREE.BoxGeometry(1.5, 0.12, 1.1),
+          new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.75 })
+        );
+        top.position.y = 0.96;
+        top.castShadow = true;
+        g.add(top);
+        ctx.craftTableTemplate = g;
       });
     });
     q.add('models', 'Vox roll / dodge rig', function () {

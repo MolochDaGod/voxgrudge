@@ -72,13 +72,23 @@
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Grudge-App", "value": "voxgrudge" }
+        { "key": "X-Grudge-App", "value": "voxgrudge" },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://*.grudge-studio.com https://*.vercel.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; connect-src 'self' https: wss: blob:; worker-src 'self' blob:"
+        }
       ]
     },
     {
       "source": "/models/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400, immutable" }
+      ]
+    },
+    {
+      "source": "/grudge-warlords-openworld.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=60, stale-while-revalidate=300" }
       ]
     }
   ]
