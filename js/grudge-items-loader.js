@@ -36,27 +36,41 @@
       });
     }
 
+    // Optional live catalog. /api/game/items is not always deployed — local JSON is SSOT.
+    // Quietly skip failed hosts so TerraForge boot does not spam 404s.
     try {
-      const apiRes = await fetch('https://api.grudge-studio.com/api/game/items?tier=0', { mode: 'cors' });
-      if (apiRes.ok) {
-        const apiData = await apiRes.json();
-        const list = Array.isArray(apiData) ? apiData : (apiData.items || []);
-        list.forEach(it => {
-          if (!it.id || merged[it.id]) return;
-          var codexIcon = null;
-          if (it.icon && typeof it.icon === 'string' && it.icon.indexOf('/icons/') >= 0) {
-            codexIcon = it.icon.replace(/^https?:\/\/[^/]+\//, '');
-          }
-          merged[it.id] = {
-            name: it.name || it.id,
-            icon: it.icon && it.icon.length <= 4 ? it.icon : '📦',
-            color: 0x888899,
-            effect: mapApiEffect(it),
-            grudgeType: it.type,
-            sellValue: it.sellValue || 1,
-            codexIcon: codexIcon,
-          };
-        });
+      const candidates = [];
+      try {
+        if (typeof location !== 'undefined' && location.origin) {
+          candidates.push(location.origin + '/api/game/items?tier=0');
+        }
+      } catch (_) {}
+      candidates.push('https://api.grudge-studio.com/api/game/items?tier=0');
+      for (const url of candidates) {
+        try {
+          const apiRes = await fetch(url, { mode: 'cors' });
+          if (!apiRes.ok) continue;
+          const apiData = await apiRes.json();
+          const list = Array.isArray(apiData) ? apiData : (apiData.items || []);
+          if (!list.length) continue;
+          list.forEach(it => {
+            if (!it.id || merged[it.id]) return;
+            var codexIcon = null;
+            if (it.icon && typeof it.icon === 'string' && it.icon.indexOf('/icons/') >= 0) {
+              codexIcon = it.icon.replace(/^https?:\/\/[^/]+\//, '');
+            }
+            merged[it.id] = {
+              name: it.name || it.id,
+              icon: it.icon && it.icon.length <= 4 ? it.icon : '📦',
+              color: 0x888899,
+              effect: mapApiEffect(it),
+              grudgeType: it.type,
+              sellValue: it.sellValue || 1,
+              codexIcon: codexIcon,
+            };
+          });
+          break;
+        } catch (_) { /* try next host */ }
       }
     } catch (_) {}
 

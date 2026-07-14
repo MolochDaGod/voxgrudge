@@ -2,6 +2,30 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/models/kenney/Textures/:path*",
+      "destination": "/models/kenney/textures/:path*"
+    },
+    {
+      "source": "/assets/grudge-game/class-emblems/druid.webp",
+      "destination": "/assets/grudge-game/class-emblems/ranger.webp"
+    },
+    {
+      "source": "/assets/grudge-game/class-emblems/paladin.webp",
+      "destination": "/assets/grudge-game/class-emblems/warrior.webp"
+    },
+    {
+      "source": "/assets/grudge-game/class-emblems/necromancer.webp",
+      "destination": "/assets/grudge-game/class-emblems/mage.webp"
+    },
+    {
+      "source": "/assets/grudge-game/class-emblems/swordsman.webp",
+      "destination": "/assets/grudge-game/class-emblems/warrior.webp"
+    },
+    {
+      "source": "/assets/grudge-game/class-emblems/archer.webp",
+      "destination": "/assets/grudge-game/class-emblems/ranger.webp"
+    },
+    {
       "source": "/api/grudox",
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/grudox"
     },
@@ -75,7 +99,7 @@
         { "key": "X-Grudge-App", "value": "voxgrudge" },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://*.grudge-studio.com https://*.vercel.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; connect-src 'self' https: wss: blob:; worker-src 'self' blob:"
+          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://*.grudge-studio.com https://*.vercel.app https://id.grudge-studio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: blob:; media-src 'self' https: blob: data:; worker-src 'self' blob:; base-uri 'self'"
         }
       ]
     },

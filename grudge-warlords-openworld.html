@@ -7,7 +7,7 @@
     <script src="https://id.grudge-studio.com/grudge-game-bootstrap.js"></script>
     <script>window.GRUDGE_AUTH_GATEWAY='https://id.grudge-studio.com';window.GRUDGE_AUTH_MODE='popup';</script>
     <!-- Puter user-pays cloud (kv/fs/auth) — same SDK as crafting / Warlords -->
-    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://js.puter.com/v2/" crossorigin="anonymous"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Grudge Warlords — Open World Voxel Edition</title>
 <meta name="description" content="Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.">
@@ -466,7 +466,8 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <div id="traversal-state">GROUND</div>
 
 <div id="world-loading" class="gw-load-screen screen-overlay" style="display:none">
-  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="branding/load-screen-poster.jpg">
+  <!-- Video assets optional — poster/CSS gradient is enough when webm/mp4 are not shipped -->
+  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="branding/og-image.png" preload="none">
     <source src="branding/load-screen.webm" type="video/webm">
     <source src="branding/load-screen.mp4" type="video/mp4">
   </video>
@@ -506,6 +507,8 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 </div><!-- /game-hud -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- FBXLoader (r128) requires fflate for compressed binary props -->
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
@@ -3695,7 +3698,15 @@ function updateResourceNodes(dt){
 // INVENTORY / EQUIPMENT / CRAFTING UI
 // ═══════════════════════════════════════════════════════════════
 function openCommandCenter(panel){
-  if(window.GrudgeStudioUI) GrudgeStudioUI.openPanel(panel||'equipment');
+  if(!window.GrudgeStudioUI) return;
+  // init() replaces the bootstrap export with the full shell API
+  if(typeof GrudgeStudioUI.openPanel==='function'){
+    GrudgeStudioUI.openPanel(panel||'equipment');
+    return;
+  }
+  if(typeof GrudgeStudioUI.init==='function'&&typeof GrudgeStudioUI.toggle==='function'){
+    GrudgeStudioUI.toggle(true);
+  }
 }
 
 function closeStudioPanels(except){
@@ -4164,54 +4175,59 @@ function updateMinimap(){
   });
 
   // Draw player
-  mmCtx.fillStyle='#4488ff';
-  const px=cx+playerMesh.position.x*scale;
-  const py=cy+playerMesh.position.z*scale;
-  mmCtx.beginPath(); mmCtx.arc(px,py,3,0,Math.PI*2); mmCtx.fill();
+  if(playerMesh&&playerMesh.position){
+    mmCtx.fillStyle='#4488ff';
+    const px=cx+playerMesh.position.x*scale;
+    const py=cy+playerMesh.position.z*scale;
+    mmCtx.beginPath(); mmCtx.arc(px,py,3,0,Math.PI*2); mmCtx.fill();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // UI UPDATES
 // ═══════════════════════════════════════════════════════════════
 function updateHUD(){
-  const hpPct=(hp/maxHp)*100;
+  const hpPct=(maxHp>0?(hp/maxHp):0)*100;
   const hpFill=document.getElementById('hp-fill');
   if(hpFill) hpFill.style.width=hpPct+'%';
   const hpVal=document.getElementById('hp-val');
-  if(hpVal) hpVal.textContent=Math.ceil(hp)+'/'+maxHp;
+  if(hpVal) hpVal.textContent=Math.ceil(hp||0)+'/'+Math.ceil(maxHp||0);
   const scoreEl=document.getElementById('score-val');
-  if(scoreEl) scoreEl.textContent=String(score).padStart(4,'0');
-  const m=Math.floor(survivalTime/60),s=Math.floor(survivalTime%60);
+  if(scoreEl) scoreEl.textContent=String(score||0).padStart(4,'0');
+  const m=Math.floor((survivalTime||0)/60),s=Math.floor((survivalTime||0)%60);
   const timerEl=document.getElementById('timer-val');
   if(timerEl) timerEl.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-  const expPct=(exp/expToNext)*100;
+  const expPct=(expToNext>0?(exp/expToNext):0)*100;
   const expFill=document.getElementById('exp-fill');
   if(expFill) expFill.style.width=expPct+'%';
   const levelEl=document.getElementById('level-val');
-  if(levelEl) levelEl.textContent='Lv.'+level+' — '+exp+'/'+expToNext;
+  if(levelEl) levelEl.textContent='Lv.'+(level||1)+' — '+(exp||0)+'/'+(expToNext||1);
   if(window.VoxCombatHud) VoxCombatHud.tick();
 
-  // Biome / zone / safe area
-  const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
-  const inSafe=collisionWorld&&collisionWorld.isInSafeZone(playerMesh.position.x,playerMesh.position.z);
-  document.getElementById('biome-label').textContent=biome.name;
-  if(scene&&scene.fog&&biome.fog!=null){
-    const fogTarget=new THREE.Color(biome.fog);
-    scene.fog.color.lerp(fogTarget,0.03);
-    scene.fog.near=biome.coldBiom?65:55;
-    scene.fog.far=biome.coldBiom?210:220;
-  }
-  const zp=document.getElementById('zone-pill');
-  if(zp){
-    zp.textContent=(inSafe?'Safe · ':'Zone · ')+biome.label+(worldEngine?' · seed '+worldEngine.getSeed():'');
-    zp.style.color=inSafe?'#7ec8ff':'#8a7';
-    zp.style.borderColor=inSafe?'#4488aa':'#334';
+  // Biome / zone / safe area — playerMesh is created later in init(); skip until ready
+  if(playerMesh&&playerMesh.position&&typeof getBiome==='function'){
+    const px=playerMesh.position.x,pz=playerMesh.position.z;
+    const biome=getBiome(px,pz);
+    const inSafe=collisionWorld&&collisionWorld.isInSafeZone(px,pz);
+    const biomeLabel=document.getElementById('biome-label');
+    if(biomeLabel&&biome) biomeLabel.textContent=biome.name||'';
+    if(scene&&scene.fog&&biome&&biome.fog!=null){
+      const fogTarget=new THREE.Color(biome.fog);
+      scene.fog.color.lerp(fogTarget,0.03);
+      scene.fog.near=biome.coldBiom?65:55;
+      scene.fog.far=biome.coldBiom?210:220;
+    }
+    const zp=document.getElementById('zone-pill');
+    if(zp&&biome){
+      zp.textContent=(inSafe?'Safe · ':'Zone · ')+(biome.label||'')+(worldEngine?' · seed '+worldEngine.getSeed():'');
+      zp.style.color=inSafe?'#7ec8ff':'#8a7';
+      zp.style.borderColor=inSafe?'#4488aa':'#334';
+    }
   }
 
   // Skill cooldowns
   const slots=['Q','E','R','F'];
   const ids=['sq','se','sr','sf'];
-  const skArr=getWeaponSkills();
   slots.forEach((k,i)=>{
     const cd=skillCds[k]||0;
     const el=document.getElementById('skill-'+k.toLowerCase()+'-cd')||document.getElementById(ids[i]+'-cd');

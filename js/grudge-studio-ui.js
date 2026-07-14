@@ -698,7 +698,10 @@
     if (fab) fab.addEventListener('click', function () { toggle(true); });
     if (closeBtn) closeBtn.addEventListener('click', function () { toggle(false); });
 
-    global.GrudgeStudioUI = {
+    // Merge runtime API onto the bootstrap export so openPanel/toggle always exist
+    // after init (callers also use getPassives from the pre-init surface).
+    Object.assign(global.GrudgeStudioUI, {
+      init: init,
       toggle: toggle,
       openPanel: openPanel,
       isOpen: function () { return state.open; },
@@ -707,6 +710,7 @@
       getBind: function (id) { return state.binds[id] || DEFAULT_BINDS[id]; },
       setBind: function (id, code) { state.binds[id] = code; save(); renderPanel('hotkeys', opts); },
       getPassives: getPassiveBonuses,
+      getPassiveBonuses: getPassiveBonuses,
       unlockNode: unlockNode,
       getSkillPoints: function () { return state.skillPoints; },
       getSettings: function () { return state.settings; },
@@ -728,11 +732,16 @@
       getPerkTreeForClass: getPerkTreeForClass,
       MAIN_TABS: MAIN_TABS,
       EQUIP_SLOTS: EQUIP_SLOTS_LEFT.concat(EQUIP_SLOTS_RIGHT),
-    };
+      DEFAULT_BINDS: DEFAULT_BINDS,
+      NEXUS_PERK_TREES: NEXUS_PERK_TREES,
+    });
   }
 
   global.GrudgeStudioUI = {
     init: init,
+    openPanel: function () { /* call init() first — noop until shell mounts */ },
+    toggle: function () {},
+    isOpen: function () { return false; },
     getPassiveBonuses: getPassiveBonuses,
     getPassives: getPassiveBonuses,
     getPerkTreeForClass: getPerkTreeForClass,
