@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Grudge Warlords open-world voxel / TerraForge (CDN Three r128 track)",
   "scripts": {
     "setup": "node scripts/setup-dev.mjs",
     "dev": "node scripts/preflight-dev.mjs && node scripts/dev.mjs",
@@ -10,6 +11,7 @@
     "dev:server": "npm run dev --prefix server",
     "dev:check": "node scripts/health-dev.mjs",
     "verify:hud-icons": "node scripts/verify-hud-icons.mjs",
+    "verify:three": "node ../grudge-three-stack/scripts/verify-three-stack.mjs .",
     "sync:mine-loader": "node scripts/sync-mine-loader-assets.mjs",
     "sync:grudge-game-hud": "node scripts/sync-grudge-game-hud.mjs",
     "deploy:test": "node scripts/deploy-test.mjs",
@@ -18,5 +20,9 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "grudgeThreeTrack": "cdn-r128",
+  "optionalDependencies": {
+    "fflate": "^0.8.2"
   }
 }
