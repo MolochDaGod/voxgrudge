@@ -66,6 +66,14 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .class-preview .perk-tag{display:inline-block;margin-top:10px;padding:4px 8px;border-radius:4px;font-size:8px;letter-spacing:1px;text-transform:uppercase;background:rgba(68,136,255,0.12);border:1px solid #3a5080;color:#9bc}
 .class-preview .preview-hint{font-size:10px;color:#555;line-height:1.5;margin:0}
 .class-card .c-cp{font-size:10px;color:#e8a86e;margin-top:6px;font-weight:700}
+.char-select-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:min(92vw,720px);margin:0 auto 12px}
+.char-card{width:88px;background:rgba(10,14,20,0.92);border:2px solid #2a2e3a;border-radius:8px;padding:8px 6px;cursor:pointer;pointer-events:auto;transition:all .15s;text-align:center}
+.char-card:hover{border-color:#666;transform:translateY(-2px)}
+.char-card.sel{border-color:#e63d3d;box-shadow:0 0 16px rgba(230,61,61,.35)}
+.char-card .char-swatch{width:48px;height:48px;margin:0 auto 6px;border-radius:6px;border:1px solid #334;background-size:cover;background-position:center;image-rendering:pixelated}
+.char-card .char-name{font-size:11px;font-weight:800;color:#cde;letter-spacing:.04em}
+.char-card .char-tag{font-size:8px;color:#667;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+#cam-mode-pill{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:25;pointer-events:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8ab;background:rgba(6,10,18,.75);border:1px solid #334;padding:4px 12px;border-radius:999px}
 #hud{position:absolute;top:16px;left:16px;z-index:10;pointer-events:none;display:flex;flex-direction:column;gap:8px;min-width:190px}
 .stat-box{background:rgba(6,10,18,0.85);padding:8px 16px;border-radius:4px;border-left:3px solid #e63d3d;backdrop-filter:blur(8px)}
 .stat-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#e63d3d;margin-bottom:2px}
@@ -246,12 +254,15 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <div class="sub">Nexus Era · Open World Survival</div>
   <div class="version">Stats from <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener" style="color:#667">survival.grudge-studio.com</a> · 8-step combat · T1–T6 gear · GRUDOX</div>
   <div id="skin-picker">
-    <div class="skin-picker-label">Voxel Body</div>
+    <div class="skin-picker-label">Select Character</div>
+    <div id="char-select-row" class="char-select-row"></div>
+    <div class="skin-picker-label">Body Mesh (Kenney)</div>
     <div id="skin-body-row"></div>
     <div class="skin-picker-label">Color Palette</div>
     <div id="skin-texture-row"></div>
   </div>
-  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Bind your grudge — pick survivor, body, and palette</p>
+  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Select a character, survivor class, and palette — controller &amp; camera attach on enter</p>
+  <p style="color:#445;font-size:10px;letter-spacing:1px;margin:0 0 12px;position:relative">In-world: WASD move · Alt+drag or MMB orbit camera · C toggles TPS/ISO · Shift dash</p>
   <div id="seed-row" style="position:relative;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
     <span style="font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase">World Seed</span>
     <input id="world-seed-input" type="number" style="width:120px;background:#0a0e14;border:1px solid #333;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
@@ -270,6 +281,8 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   </div>
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
 </div>
+
+<div id="cam-mode-pill" class="pre-game-hidden">CAM · TPS · Alt+drag orbit · C cycle</div>
 
 <div id="game-hud" class="pre-game-hidden">
 
@@ -519,6 +532,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 <script src="js/grudge-instanced-fire.js"></script>
 <script src="js/grudge-world-fires.js"></script>
 <script src="js/grudge-explorer-combat.js"></script>
+<script src="js/player-controller.js"></script>
 <!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
 <script src="js/grudge-vox-cloud.js"></script>
 <script>
@@ -787,6 +801,9 @@ const RECIPES = [
 // ═══════════════════════════════════════════════════════════════
 let scene, camera, renderer, clock;
 let playerMesh, playerBodyMat, weaponMeshObj;
+/** @type {ReturnType<typeof PlayerController.create>|null} */
+let playerController = null;
+let selectedCharacterId = 'a';
 let floorMesh;
 let collisionWorld = null;
 let blockColliderIds = [];
@@ -1012,9 +1029,42 @@ function updateSkinPickerUI(){
   });
 }
 
+function selectCharacter(letter){
+  selectedCharacterId = letter;
+  playerSkinBody = letter;
+  updateSkinPickerUI();
+  document.querySelectorAll('.char-card').forEach(function(c){
+    c.classList.toggle('sel', c.dataset.letter===letter);
+  });
+  // If already in-world, hot-swap the controlled mesh
+  if(gameStarted && playerMesh && typeof swapPlayerCharacter==='function'){
+    try{ swapPlayerCharacter(letter, playerSkinTexture); }catch(e){ console.warn('[char]', e); }
+  }
+}
+
 (function buildSkinUI(){
   const bodyRow = document.getElementById('skin-body-row');
   const texRow = document.getElementById('skin-texture-row');
+  const charRow = document.getElementById('char-select-row');
+  const roster = (window.PlayerController && PlayerController.CHARACTER_ROSTER) ||
+    KENNEY_BODY_LETTERS.map(function(id){ return { id:id, name:'Body '+id.toUpperCase(), tag:'Mesh' }; });
+
+  if(charRow){
+    roster.forEach(function(ch){
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'char-card'+(ch.id===playerSkinBody?' sel':'');
+      card.dataset.letter = ch.id;
+      card.innerHTML =
+        '<div class="char-swatch" style="background-image:url(\'models/kenney/textures/texture-'+(ch.id)+'.png\')"></div>'+
+        '<div class="char-name">'+ch.name+'</div>'+
+        '<div class="char-tag">'+(ch.tag||'')+'</div>';
+      card.title = (ch.desc||ch.name)+' · mesh '+ch.id.toUpperCase();
+      card.onclick = function(){ selectCharacter(ch.id); };
+      charRow.appendChild(card);
+    });
+  }
+
   KENNEY_BODY_LETTERS.forEach(letter=>{
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -1022,10 +1072,7 @@ function updateSkinPickerUI(){
     btn.dataset.letter = letter;
     btn.textContent = letter.toUpperCase();
     btn.title = 'Body '+letter.toUpperCase();
-    btn.onclick = function(){
-      playerSkinBody = letter;
-      updateSkinPickerUI();
-    };
+    btn.onclick = function(){ selectCharacter(letter); };
     bodyRow.appendChild(btn);
   });
   KENNEY_TEXTURE_LETTERS.forEach(letter=>{
@@ -1038,6 +1085,9 @@ function updateSkinPickerUI(){
     sw.onclick = function(){
       playerSkinTexture = letter;
       updateSkinPickerUI();
+      if(gameStarted && playerMesh && typeof retexturePlayer==='function'){
+        try{ retexturePlayer(letter); }catch(e){}
+      }
     };
     texRow.appendChild(sw);
   });
@@ -1104,8 +1154,13 @@ function updateClassPreview(cid){
       document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
       card.classList.add('sel');
       playerClass = cid;
-      playerSkinBody = CLASS_MODEL_MAP[cid]||'a';
-      updateSkinPickerUI();
+      // Only auto-pick body mesh if user hasn't chosen a character card yet
+      if(!selectedCharacterId || selectedCharacterId===CLASS_MODEL_MAP[cid]){
+        selectCharacter(CLASS_MODEL_MAP[cid]||'a');
+      } else {
+        playerSkinBody = selectedCharacterId;
+        updateSkinPickerUI();
+      }
       updateClassPreview(cid);
       document.getElementById('start-btn').classList.remove('hidden');
     };
@@ -1396,12 +1451,19 @@ function init(){
       });
       if(rig){
         rig.scale.set(1.6,1.6,1.6);
+        // Remove placeholder if still in scene
+        if(playerMesh && playerMesh!==rig && playerMesh.parent) scene.remove(playerMesh);
         playerMesh = rig;
         playerSkelParts = null;
         playerMixer = rig.userData._voxRollMixer;
         scene.add(playerMesh);
         snapToGround(playerMesh,0);
         if(weaponMeshObj) playerMesh.add(weaponMeshObj);
+        if(playerController){
+          playerController.setTarget(playerMesh);
+          playerController.alignBehindCharacter();
+          playerController.forceSnap();
+        }
       }
     });
   }
@@ -1418,6 +1480,20 @@ function init(){
   snapToGround(playerMesh,0);
   weaponMeshObj = buildWeaponMesh('sword');
   if(!USE_VOX_ROLL) playerMesh.add(weaponMeshObj);
+
+  // Controller + camera locked to the selected character
+  if(window.PlayerController){
+    playerController = PlayerController.create({ THREE:THREE, camera:camera, mode:'tps', distance:12 });
+    playerController.setTarget(playerMesh);
+    playerController.bindDom(window);
+    playerController.alignBehindCharacter();
+    playerController.forceSnap();
+  }
+  const camPill = document.getElementById('cam-mode-pill');
+  if(camPill){
+    camPill.classList.remove('pre-game-hidden');
+    camPill.textContent = 'CAM · TPS · Alt+drag / MMB orbit · C cycle';
+  }
 
   // Minimap
   mmCanvas = document.getElementById('mm-canvas');
@@ -1525,9 +1601,15 @@ function init(){
     if(window.GrudgeStudioUI&&GrudgeStudioUI.handleKeyCapture(e)) return;
     keys[e.code] = true;
     if(e.code==='KeyW'||e.code==='KeyS'||e.code==='KeyA'||e.code==='KeyD') tryDirectionalRoll(e.code);
+    // C = cycle camera mode (TPS / ISO / FPS); Shift+C still opens craft via studio if needed
+    if(e.code==='KeyC' && !e.shiftKey && !e.ctrlKey && !e.altKey){
+      e.preventDefault();
+      cycleCameraMode();
+      return;
+    }
     if(keyIs('commandCenter',e.code)||e.code==='KeyK'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.toggle();return;}
     if(keyIs('build',e.code)||e.code==='KeyB') toggleBuildMode();
-    if(keyIs('craft',e.code)||e.code==='KeyC'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.openPanel('craft');return;}
+    if(keyIs('craft',e.code)||e.code==='KeyC'||(e.code==='KeyC'&&e.shiftKey)){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.openPanel('craft');return;}
     if(keyIs('inventory',e.code)||e.code==='KeyI'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.toggle(true);return;}
     if(keyIs('equip',e.code)||e.code==='KeyG'){e.preventDefault();if(GrudgeStudioUI)GrudgeStudioUI.openPanel('equipment');return;}
     if(keyIs('allies',e.code)||e.code==='KeyT') { e.preventDefault(); summonAllyMenu(); }
@@ -1563,12 +1645,14 @@ function init(){
   window.addEventListener('mousedown', e=>{
     if(e.button===0) keys['MouseButton0']=true;
     if(e.button===2) keys['MouseButton2']=true;
+    // Don't attack while orbiting camera (Alt+LMB / MMB)
+    if(playerController && playerController.isOrbiting && playerController.isOrbiting()) return;
     if(craftOpen) return;
     if(isBuildMode){
       if(e.button===0) placeBlock();
       if(e.button===2) removeBlock();
     } else {
-      if(e.button===0){
+      if(e.button===0 && !e.altKey){
         if(window.VoxCombatHud) VoxCombatHud.tryPickTargetFromClick();
         tryAttack();
       }
@@ -1581,13 +1665,17 @@ function init(){
   });
   window.addEventListener('wheel', e=>{
     if(craftOpen || isBuildMode) return;
+    // Shift+wheel = camera zoom when controller active
+    if(playerController && (e.shiftKey || e.altKey)){
+      if(playerController.onWheel(e, true)){ e.preventDefault(); return; }
+    }
     const dir = e.deltaY > 0 ? 1 : -1;
     let idx = WEAPON_ORDER.indexOf(currentWeapon.id);
     for(let i=0;i<WEAPON_ORDER.length;i++){
       idx = (idx+dir+WEAPON_ORDER.length)%WEAPON_ORDER.length;
       if(WEAPONS[WEAPON_ORDER[idx]].owned){ switchWeapon(WEAPON_ORDER[idx]); break; }
     }
-  });
+  }, { passive:false });
   window.addEventListener('contextmenu', e=>e.preventDefault());
   window.addEventListener('resize',()=>{
     camera.aspect = innerWidth/innerHeight;
@@ -2129,6 +2217,9 @@ function aoeAttack(pos, range, dmg, color, knockback, opts){
 // COMBAT
 // ═══════════════════════════════════════════════════════════════
 function getAimDir(){
+  if(playerController && playerMesh){
+    return playerController.getAimDir(raycaster, mouse);
+  }
   raycaster.setFromCamera(mouse, camera);
   const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
   const target = new THREE.Vector3();
@@ -2137,11 +2228,68 @@ function getAimDir(){
 }
 
 function getAimTarget(){
+  if(playerController && playerMesh){
+    const dir = playerController.getAimDir(raycaster, mouse);
+    return playerMesh.position.clone().add(dir.multiplyScalar(40));
+  }
   raycaster.setFromCamera(mouse, camera);
   const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
   const target = new THREE.Vector3();
   raycaster.ray.intersectPlane(plane, target);
   return target;
+}
+
+function cycleCameraMode(){
+  if(!playerController) return;
+  const order = ['tps','iso','fps'];
+  const cur = playerController.getMode();
+  const next = order[(order.indexOf(cur)+1)%order.length];
+  playerController.setMode(next);
+  playerController.alignBehindCharacter();
+  playerController.forceSnap();
+  const pill = document.getElementById('cam-mode-pill');
+  if(pill) pill.textContent = 'CAM · '+next.toUpperCase()+' · Alt+drag / MMB orbit · C cycle';
+  showFlash('Camera: '+next.toUpperCase());
+}
+
+/** Hot-swap the controlled character mesh (user selection). */
+function swapPlayerCharacter(letter, textureLetter){
+  if(!scene || !playerMesh) return;
+  const pos = playerMesh.position.clone();
+  const rotY = playerMesh.rotation.y;
+  const old = playerMesh;
+  const next = cloneModel(letter, 1, textureLetter || playerSkinTexture);
+  if(!next){
+    // Fallback procedural if Kenney not loaded yet
+    const fallback = buildVoxChar(0x5588cc, 0x224466, GrudgeScale.voxScale(GrudgeScale.PLAYER_HEIGHT_M));
+    scene.remove(old);
+    playerMesh = fallback;
+  } else {
+    scene.remove(old);
+    playerMesh = next;
+  }
+  playerMesh.position.copy(pos);
+  playerMesh.rotation.y = rotY;
+  scene.add(playerMesh);
+  snapToGround(playerMesh, 0);
+  playerSkelParts = getSkeletonParts ? getSkeletonParts(playerMesh) : null;
+  if(weaponMeshObj){
+    try{ old.remove(weaponMeshObj); }catch(e){}
+    playerMesh.add(weaponMeshObj);
+  }
+  if(playerController){
+    playerController.setTarget(playerMesh);
+    playerController.alignBehindCharacter();
+  }
+  playerSkinBody = letter;
+  selectedCharacterId = letter;
+  showFlash('Character: '+(letter||'').toUpperCase());
+}
+
+function retexturePlayer(textureLetter){
+  if(!playerMesh) return;
+  playerSkinTexture = textureLetter;
+  if(typeof applyKenneyTexture==='function') applyKenneyTexture(playerMesh, textureLetter);
 }
 
 function tryExplorerMeleeAttack(){
@@ -3832,12 +3980,18 @@ function updateStatusEffects(dt){
 // ═══════════════════════════════════════════════════════════════
 function updatePlayer(dt){
   if(isGameOver) return;
-  // Skip normal movement during traversal actions
+  // Keep controller attached to current mesh
+  if(playerController && playerMesh) playerController.setTarget(playerMesh);
+
+  // Skip normal movement during traversal actions — still update camera
   if(playerState==='dodging'||playerState==='rolling'||playerState==='dashing'||playerState==='climbing'){
-    camera.position.x=playerMesh.position.x;
-    camera.position.z=playerMesh.position.z+28;
-    camera.position.y=34;
-    camera.lookAt(playerMesh.position);
+    if(playerController) playerController.update(dt);
+    else {
+      camera.position.x=playerMesh.position.x;
+      camera.position.z=playerMesh.position.z+28;
+      camera.position.y=34;
+      camera.lookAt(playerMesh.position);
+    }
     dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
     attackCd=Math.max(0,attackCd-dt);
     return;
@@ -3848,15 +4002,23 @@ function updatePlayer(dt){
   if(playerState==='swimming') spd*=swimSpeedMult;
   if(formBuff) spd*=(formBuff.speedMult||1);
 
-  let dx=0,dz=0;
-  if(keys['KeyW']||keys['ArrowUp'])    dz-=1;
-  if(keys['KeyS']||keys['ArrowDown'])  dz+=1;
-  if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
-  if(keys['KeyD']||keys['ArrowRight']) dx+=1;
+  // Camera-relative move from PlayerController (falls back to world axes)
+  let dx=0, dz=0;
+  if(playerController){
+    const mv = playerController.getMoveInput(keys);
+    dx = mv.dx; dz = mv.dz;
+  } else {
+    if(keys['KeyW']||keys['ArrowUp'])    dz-=1;
+    if(keys['KeyS']||keys['ArrowDown'])  dz+=1;
+    if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
+    if(keys['KeyD']||keys['ArrowRight']) dx+=1;
+    if(dx!==0||dz!==0){
+      const len=Math.sqrt(dx*dx+dz*dz);
+      dx/=len; dz/=len;
+    }
+  }
 
   if(dx!==0||dz!==0){
-    const len=Math.sqrt(dx*dx+dz*dz);
-    dx/=len; dz/=len;
     const newX=playerMesh.position.x+dx*spd*dt;
     const newZ=playerMesh.position.z+dz*spd*dt;
     const newPos=new THREE.Vector3(newX,0,newZ);
@@ -3880,21 +4042,30 @@ function updatePlayer(dt){
         if(!checkBlockCollision(nz2)) playerMesh.position.z=newZ;
       }
     }
+    // Face movement when not aiming hard (still overridden by aim below)
+    if(playerController && playerController.getMode()==='tps'){
+      // keep facing aim; movement strafes around look
+    }
   }
 
   if(playerState==='ground'||playerState==='dodging'||playerState==='rolling'||playerState==='dashing'){
     snapToGround(playerMesh,0);
   }
 
-  // Face aim direction
+  // Face aim direction (mouse / camera)
   const aimDir=getAimDir();
-  if(aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
+  if(aimDir && aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
 
-  const camGround=getGroundY(playerMesh.position.x,playerMesh.position.z);
-  camera.position.x=playerMesh.position.x;
-  camera.position.z=playerMesh.position.z+28;
-  camera.position.y=34+camGround*0.25;
-  camera.lookAt(playerMesh.position.x,camGround+1.2,playerMesh.position.z);
+  // Camera locked to selected character
+  if(playerController){
+    playerController.update(dt);
+  } else {
+    const camGround=getGroundY(playerMesh.position.x,playerMesh.position.z);
+    camera.position.x=playerMesh.position.x;
+    camera.position.z=playerMesh.position.z+28;
+    camera.position.y=34+camGround*0.25;
+    camera.lookAt(playerMesh.position.x,camGround+1.2,playerMesh.position.z);
+  }
   const zonePill=document.getElementById('zone-pill');
   if(zonePill){
     const biome=getBiome(playerMesh.position.x,playerMesh.position.z);
