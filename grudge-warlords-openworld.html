@@ -74,6 +74,23 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .char-card .char-name{font-size:11px;font-weight:800;color:#cde;letter-spacing:.04em}
 .char-card .char-tag{font-size:8px;color:#667;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
 #cam-mode-pill{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:25;pointer-events:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8ab;background:rgba(6,10,18,.75);border:1px solid #334;padding:4px 12px;border-radius:999px}
+/* Custom game cursor / crosshair (per camera mode) */
+body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
+#game-cursor{position:fixed;left:0;top:0;width:36px;height:36px;margin:-18px 0 0 -18px;z-index:40;pointer-events:none;display:none;transform:translate(0,0);will-change:transform}
+#game-cursor.on{display:block}
+#game-cursor .gc-svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 2px rgba(0,0,0,.85))}
+#game-cursor.center{left:50%!important;top:50%!important;transform:none!important;margin:-18px 0 0 -18px}
+#game-cursor.style-iso-aim .gc-iso{display:block}
+#game-cursor.style-tps-reticle .gc-tps{display:block}
+#game-cursor.style-tps-look .gc-look{display:block}
+#game-cursor.style-fps-cross .gc-fps{display:block}
+#game-cursor.style-fps-ads .gc-ads{display:block}
+#game-cursor.style-combat-block .gc-block{display:block}
+#game-cursor.style-mine-pick .gc-mine{display:block}
+#game-cursor .gc-iso,#game-cursor .gc-tps,#game-cursor .gc-look,#game-cursor .gc-fps,#game-cursor .gc-ads,#game-cursor .gc-block,#game-cursor .gc-mine{display:none}
+#game-cursor.rmb-hint::after{content:attr(data-rmb);position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#8cf;white-space:nowrap;text-shadow:0 1px 2px #000;opacity:.9}
+#mouse-help{position:fixed;bottom:112px;left:50%;transform:translateX(-50%);z-index:25;pointer-events:none;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#667;background:rgba(6,10,18,.65);border:1px solid #2a2e3a;padding:3px 10px;border-radius:999px;display:none}
+#mouse-help.on{display:block}
 #hud{position:absolute;top:16px;left:16px;z-index:10;pointer-events:none;display:flex;flex-direction:column;gap:8px;min-width:190px}
 .stat-box{background:rgba(6,10,18,0.85);padding:8px 16px;border-radius:4px;border-left:3px solid #e63d3d;backdrop-filter:blur(8px)}
 .stat-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#e63d3d;margin-bottom:2px}
@@ -262,7 +279,7 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
     <div id="skin-texture-row"></div>
   </div>
   <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Select a character, survivor class, and palette — controller &amp; camera attach on enter</p>
-  <p style="color:#445;font-size:10px;letter-spacing:1px;margin:0 0 12px;position:relative">In-world: WASD move · Alt+drag or MMB orbit camera · C toggles TPS/ISO · Shift dash</p>
+  <p style="color:#445;font-size:10px;letter-spacing:1px;margin:0 0 12px;position:relative">In-world: WASD · C cycles TPS/ISO/FPS · mouse &amp; RMB change per camera mode · Shift dash</p>
   <div id="seed-row" style="position:relative;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
     <span style="font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase">World Seed</span>
     <input id="world-seed-input" type="number" style="width:120px;background:#0a0e14;border:1px solid #333;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
@@ -282,7 +299,55 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
 </div>
 
-<div id="cam-mode-pill" class="pre-game-hidden">CAM · TPS · Alt+drag orbit · C cycle</div>
+<div id="cam-mode-pill" class="pre-game-hidden">CAM · TPS · Hold RMB free-look · C cycle</div>
+<div id="mouse-help" class="pre-game-hidden">LMB attack · RMB free-look</div>
+
+<!-- Mode-specific mouse image (OS cursor hidden in-game) -->
+<div id="game-cursor" aria-hidden="true">
+  <svg class="gc-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+    <!-- ISO: ground-aim diamond + tip (Diablo-style) -->
+    <g class="gc-iso">
+      <path d="M18 4 L22 14 L18 12 L14 14 Z" fill="#e8f0ff" stroke="#1a2030" stroke-width="1"/>
+      <circle cx="18" cy="22" r="5" fill="none" stroke="#88ccff" stroke-width="1.6" opacity=".9"/>
+      <circle cx="18" cy="22" r="1.4" fill="#88ccff"/>
+      <path d="M18 17 V19 M18 25 V27 M13 22 H15 M21 22 H23" stroke="#88ccff" stroke-width="1.2" opacity=".7"/>
+    </g>
+    <!-- TPS idle: soft reticle that follows mouse -->
+    <g class="gc-tps">
+      <circle cx="18" cy="18" r="7" fill="none" stroke="#cde" stroke-width="1.4" opacity=".85"/>
+      <circle cx="18" cy="18" r="1.5" fill="#e63d3d"/>
+      <path d="M18 8 V12 M18 24 V28 M8 18 H12 M24 18 H28" stroke="#cde" stroke-width="1.3" opacity=".75"/>
+    </g>
+    <!-- TPS free-look: center dot (hold RMB) -->
+    <g class="gc-look">
+      <circle cx="18" cy="18" r="2" fill="#fff" opacity=".95"/>
+      <circle cx="18" cy="18" r="9" fill="none" stroke="#fff" stroke-width="1" opacity=".35"/>
+    </g>
+    <!-- FPS crosshair -->
+    <g class="gc-fps">
+      <path d="M18 6 V14 M18 22 V30 M6 18 H14 M22 18 H30" stroke="#eef" stroke-width="1.6" stroke-linecap="square"/>
+      <circle cx="18" cy="18" r="1.2" fill="#e63d3d"/>
+    </g>
+    <!-- FPS ADS (RMB held) -->
+    <g class="gc-ads">
+      <circle cx="18" cy="18" r="10" fill="none" stroke="#8cf" stroke-width="1.2" opacity=".7"/>
+      <circle cx="18" cy="18" r="4" fill="none" stroke="#8cf" stroke-width="1"/>
+      <path d="M18 10 V14 M18 22 V26 M10 18 H14 M22 18 H26" stroke="#8cf" stroke-width="1.4"/>
+      <circle cx="18" cy="18" r="1" fill="#fff"/>
+    </g>
+    <!-- Combat block glyph (optional override) -->
+    <g class="gc-block">
+      <path d="M10 12 L18 8 L26 12 V20 C26 26 18 30 18 30 S10 26 10 20 Z" fill="none" stroke="#6af" stroke-width="1.8"/>
+      <path d="M14 18 H22 M18 14 V22" stroke="#6af" stroke-width="1.4"/>
+    </g>
+    <!-- Mine pick -->
+    <g class="gc-mine">
+      <path d="M10 24 L16 10 L20 12 L14 26 Z" fill="#c96" stroke="#3a2a1a" stroke-width="1"/>
+      <path d="M18 11 L28 6 L30 10 L22 16 Z" fill="#aaa" stroke="#333" stroke-width="1"/>
+      <circle cx="18" cy="22" r="2" fill="#4a3" opacity=".8"/>
+    </g>
+  </svg>
+</div>
 
 <div id="game-hud" class="pre-game-hidden">
 
@@ -1487,17 +1552,14 @@ function init(){
 
   // Controller + camera locked to the selected character
   if(window.PlayerController){
-    playerController = PlayerController.create({ THREE:THREE, camera:camera, mode:'tps', distance:12 });
+    playerController = PlayerController.create({ THREE:THREE, camera:camera, mode:'tps', distance:12, baseFov:camera.fov||60 });
     playerController.setTarget(playerMesh);
-    playerController.bindDom(window);
+    playerController.bindDom(window, renderer && renderer.domElement);
     playerController.alignBehindCharacter();
     playerController.forceSnap();
   }
-  const camPill = document.getElementById('cam-mode-pill');
-  if(camPill){
-    camPill.classList.remove('pre-game-hidden');
-    camPill.textContent = 'CAM · TPS · Alt+drag / MMB orbit · C cycle';
-  }
+  refreshCamModeUi('tps');
+  enableGameCursor(true);
 
   // Minimap
   mmCanvas = document.getElementById('mm-canvas');
@@ -1645,33 +1707,47 @@ function init(){
   window.addEventListener('mousemove', e=>{
     mouse.x = (e.clientX/innerWidth)*2-1;
     mouse.y = -(e.clientY/innerHeight)*2+1;
+    updateGameCursorPos(e.clientX, e.clientY);
   });
   window.addEventListener('mousedown', e=>{
     if(e.button===0) keys['MouseButton0']=true;
     if(e.button===2) keys['MouseButton2']=true;
-    // Don't attack while orbiting camera (Alt+LMB / MMB)
-    if(playerController && playerController.isOrbiting && playerController.isOrbiting()) return;
-    if(craftOpen) return;
+    if(craftOpen || inventoryOpen || equipOpen) return;
+    // Don't attack while free-looking / orbiting (TPS hold RMB, Alt+LMB, MMB)
+    if(playerController && playerController.isOrbiting && playerController.isOrbiting() && e.button===0 && !e.altKey){
+      // still allow FPS attack while looking
+      if(!(playerController.getMode && playerController.getMode()==='fps')) return;
+    }
     if(isBuildMode){
       if(e.button===0) placeBlock();
       if(e.button===2) removeBlock();
-    } else {
-      if(e.button===0 && !e.altKey){
-        if(window.VoxCombatHud) VoxCombatHud.tryPickTargetFromClick();
-        tryAttack();
-      }
-      if(e.button===2) handleRMB();
+      return;
     }
+    if(e.button===0 && !e.altKey){
+      if(window.VoxCombatHud) VoxCombatHud.tryPickTargetFromClick();
+      tryAttack();
+    }
+    if(e.button===2) handleRMB(e);
   });
   window.addEventListener('mouseup', e=>{
     if(e.button===0) keys['MouseButton0']=false;
-    if(e.button===2){ keys['MouseButton2']=false; isBlocking=false; isParrying=false; }
+    if(e.button===2){
+      keys['MouseButton2']=false;
+      isBlocking=false;
+      isParrying=false;
+      if(playerController && playerController.releaseRmbCombat) playerController.releaseRmbCombat();
+      refreshGameCursorStyle();
+    }
   });
   window.addEventListener('wheel', e=>{
     if(craftOpen || isBuildMode) return;
-    // Shift+wheel = camera zoom when controller active
-    if(playerController && (e.shiftKey || e.altKey)){
-      if(playerController.onWheel(e, true)){ e.preventDefault(); return; }
+    const mode = playerController && playerController.getMode ? playerController.getMode() : 'tps';
+    // TPS/ISO: wheel zooms camera (Shift optional). FPS: always weapon cycle.
+    if(playerController && mode !== 'fps' && (e.shiftKey || e.altKey || mode === 'tps' || mode === 'iso')){
+      // Prefer zoom when shift/alt; plain wheel still weapon-cycles in combat ISO, zooms in TPS
+      if(mode === 'tps' || e.shiftKey || e.altKey){
+        if(playerController.onWheel(e, true)){ e.preventDefault(); return; }
+      }
     }
     const dir = e.deltaY > 0 ? 1 : -1;
     let idx = WEAPON_ORDER.indexOf(currentWeapon.id);
@@ -2248,12 +2324,100 @@ function cycleCameraMode(){
   const order = ['tps','iso','fps'];
   const cur = playerController.getMode();
   const next = order[(order.indexOf(cur)+1)%order.length];
+  if(cur === 'fps' && playerController.exitPointerLock) playerController.exitPointerLock();
   playerController.setMode(next);
   playerController.alignBehindCharacter();
   playerController.forceSnap();
-  const pill = document.getElementById('cam-mode-pill');
-  if(pill) pill.textContent = 'CAM · '+next.toUpperCase()+' · Alt+drag / MMB orbit · C cycle';
+  refreshCamModeUi(next);
+  refreshGameCursorStyle();
   showFlash('Camera: '+next.toUpperCase());
+}
+
+function refreshCamModeUi(mode){
+  mode = mode || (playerController && playerController.getMode && playerController.getMode()) || 'tps';
+  const pill = document.getElementById('cam-mode-pill');
+  const help = document.getElementById('mouse-help');
+  const hint = (playerController && playerController.getModeHint)
+    ? playerController.getModeHint()
+    : ('CAM · '+String(mode).toUpperCase());
+  if(pill){
+    pill.classList.remove('pre-game-hidden');
+    pill.textContent = 'CAM · '+hint;
+  }
+  const helpText = {
+    iso: 'LMB attack at cursor · RMB block / mine / parry',
+    tps: 'LMB attack · Hold RMB free-look · RMB near node = mine · Shield blocks',
+    fps: 'Click lock mouse · LMB fire · Hold RMB ADS / block · mine near node',
+  };
+  if(help){
+    help.classList.remove('pre-game-hidden');
+    help.classList.add('on');
+    help.textContent = helpText[mode] || helpText.tps;
+  }
+}
+
+function enableGameCursor(on){
+  const el = document.getElementById('game-cursor');
+  if(!el) return;
+  if(on){
+    el.classList.add('on');
+    document.body.classList.add('game-cursor-on');
+    if(renderer && renderer.domElement) renderer.domElement.classList.add('game-cursor-on');
+    refreshGameCursorStyle();
+  } else {
+    el.classList.remove('on');
+    document.body.classList.remove('game-cursor-on');
+    if(renderer && renderer.domElement) renderer.domElement.classList.remove('game-cursor-on');
+  }
+}
+
+function updateGameCursorPos(x, y){
+  const el = document.getElementById('game-cursor');
+  if(!el || !el.classList.contains('on')) return;
+  if(el.classList.contains('center')) return;
+  el.style.transform = 'translate('+x+'px,'+y+'px)';
+}
+
+function refreshGameCursorStyle(){
+  const el = document.getElementById('game-cursor');
+  if(!el || !gameStarted) return;
+  let style = 'tps-reticle';
+  let center = false;
+  let rmbLabel = '';
+  const mode = playerController && playerController.getMode ? playerController.getMode() : 'tps';
+
+  // Contextual overrides
+  if(nearResourceNode){
+    style = 'mine-pick';
+    center = mode === 'fps';
+    rmbLabel = 'RMB mine';
+  } else if(keys['MouseButton2'] && currentWeapon && currentWeapon.canBlock && mode !== 'tps'){
+    // ISO/FPS block glyph while holding
+    style = mode === 'fps' && playerController && playerController.isAds && playerController.isAds()
+      ? 'fps-ads' : 'combat-block';
+    center = mode === 'fps';
+    rmbLabel = 'blocking';
+  } else if(playerController && playerController.getCursorState){
+    const st = playerController.getCursorState();
+    style = st.style || style;
+    center = !!st.center;
+    if(st.ads) rmbLabel = 'ADS';
+    else if(st.freeLooking) rmbLabel = 'look';
+  } else {
+    if(mode === 'iso'){ style = 'iso-aim'; center = false; }
+    else if(mode === 'fps'){ style = 'fps-cross'; center = true; }
+  }
+
+  el.className = 'on style-'+style + (center ? ' center' : '');
+  if(rmbLabel){
+    el.classList.add('rmb-hint');
+    el.setAttribute('data-rmb', rmbLabel);
+  } else {
+    el.removeAttribute('data-rmb');
+  }
+  if(center){
+    el.style.transform = '';
+  }
 }
 
 /** Hot-swap the controlled character mesh (user selection). */
@@ -4064,9 +4228,14 @@ function updatePlayer(dt){
     snapToGround(playerMesh,0);
   }
 
-  // Face aim direction (mouse / camera)
-  const aimDir=getAimDir();
-  if(aimDir && aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
+  // Face aim direction (mouse / camera). FPS uses look yaw from controller.
+  if(playerController && playerController.getMode && playerController.getMode()==='fps' && playerController.getFaceYaw){
+    const fy = playerController.getFaceYaw();
+    if(fy != null) playerMesh.rotation.y = fy;
+  } else {
+    const aimDir=getAimDir();
+    if(aimDir && aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
+  }
 
   // Camera locked to selected character
   if(playerController){
@@ -5211,6 +5380,7 @@ function animate(){
   updateInteractHint();
   updateEnergyOrbs(dt);
   updateParry(dt);
+  refreshGameCursorStyle();
   if(playerMixer) playerMixer.update(dt);
   else if(voxRollAnim && playerMesh && playerMesh.userData._voxRollMixer) voxRollAnim.update(playerMesh.userData._voxRollMixer, dt);
 
@@ -5298,28 +5468,71 @@ function updateEnergyUI(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RMB CONTEXTUAL ACTION + PARRY
+// RMB — mode-specific best practices
+// ISO: combat RMB (mine → block → parry) — Diablo/PoE
+// TPS: mine first; shield hold = block (claims RMB, no free-look);
+//      else free-look (controller) — short open for parry only if not looking
+// FPS: mine first; else ADS (controller) + block if shield; else parry window
 // ═══════════════════════════════════════════════════════════════
-function handleRMB(){
+function handleRMB(e){
   if(isGameOver||!gameStarted) return;
-  // Priority 1: Near resource → mine
+  const mode = playerController && playerController.getMode ? playerController.getMode() : 'iso';
+
+  // Build mode handled by caller
+  // Priority 1 (all modes): harvest when in range
   if(nearResourceNode){
+    if(playerController && playerController.claimRmbCombat) playerController.claimRmbCombat();
     tryMineResource();
+    refreshGameCursorStyle();
     return;
   }
-  // Priority 2: Shield weapon → full block
-  if(currentWeapon.canBlock){
-    isBlocking=true;
+
+  if(mode === 'iso'){
+    // Classic isometric ARPG: RMB is always combat utility
+    if(playerController && playerController.claimRmbCombat) playerController.claimRmbCombat();
+    beginBlockOrParry();
+    refreshGameCursorStyle();
     return;
   }
-  // Priority 3: Parry attempt (any weapon)
-  if(parryCd<=0){
-    isParrying=true;
-    parryTimer=PARRY_WINDOW;
-    parryCd=PARRY_CD;
-    // Visual feedback
-    document.getElementById('parry-flash').style.background='rgba(68,136,255,0.15)';
-    setTimeout(()=>{if(!isParrying)document.getElementById('parry-flash').style.background='rgba(68,136,255,0)';},PARRY_WINDOW*1000);
+
+  if(mode === 'tps'){
+    // Shield equipped → Souls-style hold block (claims RMB so free-look does not start)
+    if(currentWeapon && currentWeapon.canBlock){
+      if(playerController && playerController.claimRmbCombat) playerController.claimRmbCombat();
+      isBlocking = true;
+      refreshGameCursorStyle();
+      return;
+    }
+    // Otherwise free-look is handled by PlayerController (RMB hold).
+    // No parry on free-look start — keeps camera clean.
+    refreshGameCursorStyle();
+    return;
+  }
+
+  // FPS: ADS via controller; block if shield; else parry try
+  if(currentWeapon && currentWeapon.canBlock){
+    if(playerController && playerController.claimRmbCombat) playerController.claimRmbCombat();
+    isBlocking = true;
+  } else {
+    beginBlockOrParry(true); // parry-only when no shield
+  }
+  refreshGameCursorStyle();
+}
+
+function beginBlockOrParry(parryOnly){
+  if(!parryOnly && currentWeapon && currentWeapon.canBlock){
+    isBlocking = true;
+    return;
+  }
+  if(parryCd <= 0){
+    isParrying = true;
+    parryTimer = PARRY_WINDOW;
+    parryCd = PARRY_CD;
+    const flash = document.getElementById('parry-flash');
+    if(flash){
+      flash.style.background = 'rgba(68,136,255,0.15)';
+      setTimeout(()=>{ if(!isParrying && flash) flash.style.background = 'rgba(68,136,255,0)'; }, PARRY_WINDOW * 1000);
+    }
   }
 }
 
