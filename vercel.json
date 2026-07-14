@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/vendor/puter.js",
+      "destination": "https://js.puter.com/v2/"
+    },
+    {
+      "source": "/vendor/puter/:path*",
+      "destination": "https://js.puter.com/:path*"
+    },
+    {
       "source": "/models/kenney/Textures/:path*",
       "destination": "/models/kenney/textures/:path*"
     },

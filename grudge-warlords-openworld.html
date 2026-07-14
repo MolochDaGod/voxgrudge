@@ -6,8 +6,8 @@
     <!-- Fleet modular auth: GrudgeAuth.start({ mode:'popup'|'redirect'|'modal' }) -->
     <script src="https://id.grudge-studio.com/grudge-game-bootstrap.js"></script>
     <script>window.GRUDGE_AUTH_GATEWAY='https://id.grudge-studio.com';window.GRUDGE_AUTH_MODE='popup';</script>
-    <!-- Puter user-pays cloud (kv/fs/auth) — same SDK as crafting / Warlords -->
-    <script src="https://js.puter.com/v2/" crossorigin="anonymous"></script>
+    <!-- Puter via same-origin proxy so embed CSP (script-src 'self') allows it -->
+    <script src="vendor/puter.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Grudge Warlords — Open World Voxel Edition</title>
 <meta name="description" content="Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.">
