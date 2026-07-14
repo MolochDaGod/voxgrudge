@@ -5,13 +5,16 @@
  *   GET  / /health /api/health     — health
  *   WS   /api/grudox               — open-world intent relay (existing)
  *   WS   /api/space                — Live Waters naval PvP (space-net protocol)
+ *   WS   /api/carrier              — Carrier combat + missiles (carrier-net protocol)
  *
  * Deploy: Railway service voxgrudge-grudox-room-production
+ * Optional: CARRIER_WEBHOOK_URL or DISCORD_WEBHOOK_URL for combat event posts
  */
 import http from "http";
 import { WebSocketServer } from "ws";
 import { randomUUID } from "crypto";
 import { getSpaceRoom } from "./space-room.js";
+import { getCarrierRoom } from "./carrier-room.js";
 
 const PORT = Number(process.env.PORT || 8787);
 const TICK_HZ = Number(process.env.TICK_HZ || 20);
@@ -48,6 +51,7 @@ function originAllowed(origin) {
 }
 
 const spaceRoom = getSpaceRoom();
+const carrierRoom = getCarrierRoom();
 
 const server = http.createServer((req, res) => {
   const origin = req.headers.origin || "";
@@ -66,12 +70,16 @@ const server = http.createServer((req, res) => {
         service: "voxgrudge-grudox-room",
         players: players.size,
         watersPlayers: spaceRoom.playerCount(),
+        carrierPlayers: carrierRoom.playerCount(),
         tickHz: TICK_HZ,
         paths: {
           openworld: "/api/grudox",
           waters: "/api/space",
+          carrier: "/api/carrier",
         },
         arenaHalf: 6000,
+        carrierArenaHalf: 12000,
+        webhooks: !!(process.env.CARRIER_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL),
       },
       origin,
     );
@@ -113,12 +121,32 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathOnly === "/api/carrier") {
+    json(
+      res,
+      200,
+      {
+        ok: true,
+        room: "carrier",
+        players: carrierRoom.playerCount(),
+        transport: "websocket",
+        path: "/api/carrier",
+        arenaHalf: 12000,
+        protocol: "carrier-net",
+        features: ["bolts", "missiles", "ai-hostiles", "mothership-turrets", "webhooks"],
+      },
+      origin,
+    );
+    return;
+  }
+
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end("not found");
 });
 
 const wssOpenworld = new WebSocketServer({ noServer: true });
 const wssSpace = new WebSocketServer({ noServer: true });
+const wssCarrier = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", (req, socket, head) => {
   const url = req.url || "";
@@ -133,6 +161,11 @@ server.on("upgrade", (req, socket, head) => {
 
   if (pathOnly === "/api/space" || pathOnly.startsWith("/api/space/")) {
     wssSpace.handleUpgrade(req, socket, head, (ws) => wssSpace.emit("connection", ws, req));
+    return;
+  }
+
+  if (pathOnly === "/api/carrier" || pathOnly.startsWith("/api/carrier/")) {
+    wssCarrier.handleUpgrade(req, socket, head, (ws) => wssCarrier.emit("connection", ws, req));
     return;
   }
 
@@ -159,6 +192,21 @@ wssSpace.on("connection", (ws) => {
 
   ws.on("close", () => spaceRoom.remove(id));
   ws.on("error", () => spaceRoom.remove(id));
+});
+
+// ── Carrier combat (/api/carrier) ───────────────────────────────────────────
+
+wssCarrier.on("connection", (ws) => {
+  const id = carrierRoom.add((data) => {
+    if (ws.readyState === 1) ws.send(data);
+  });
+
+  ws.on("message", (raw) => {
+    carrierRoom.handleMessage(id, raw);
+  });
+
+  ws.on("close", () => carrierRoom.remove(id));
+  ws.on("error", () => carrierRoom.remove(id));
 });
 
 // ── Open-world relay (/api/grudox) ──────────────────────────────────────────
@@ -262,6 +310,6 @@ setInterval(() => {
 
 server.listen(PORT, () => {
   console.log(
-    `[grudox-room] :${PORT} openworld=/api/grudox waters=/api/space arena=${6000 * 2}`,
+    `[grudox-room] :${PORT} openworld=/api/grudox waters=/api/space carrier=/api/carrier`,
   );
 });
