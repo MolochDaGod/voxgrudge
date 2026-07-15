@@ -63,12 +63,18 @@
         card.appendChild(b);
       }
       var icon = el("div", "vox-card__icon");
-      if (item.iconUrl) {
-        icon.style.backgroundImage = "url('" + item.iconUrl + "')";
+      var iconUrl = item.iconUrl;
+      if (iconUrl && global.VoxUiDeps && VoxUiDeps.absUrl) iconUrl = VoxUiDeps.absUrl(iconUrl);
+      if (iconUrl && global.VoxUiDeps && VoxUiDeps.setImage) {
+        VoxUiDeps.setImage(icon, iconUrl, item.fallbackUrl || (global.VoxUiDeps && VoxUiDeps.FALLBACK_ICON));
+      } else if (iconUrl) {
+        icon.style.backgroundImage = "url('" + iconUrl + "')";
       } else if (item.color) {
         icon.style.background = item.color;
         icon.style.borderRadius = "8px";
       }
+      icon.style.backgroundSize = "cover";
+      icon.style.backgroundPosition = "center";
       card.appendChild(icon);
       card.appendChild(el("div", "vox-card__title", item.title || item.id));
       if (item.meta) card.appendChild(el("div", "vox-card__meta", item.meta));
@@ -331,12 +337,13 @@
       var emb = emblemMap[cid] || "warrior";
       var icon =
         (global.VoxUiDeps && VoxUiDeps.url("emblem." + emb)) ||
-        "assets/grudge-game/class-emblems/" + emb + ".webp";
+        "/assets/grudge-game/class-emblems/" + emb + ".webp";
       return {
         id: cid,
         title: c.name,
         meta: (c.role || "") + " · " + (c.desc || "").slice(0, 48),
         iconUrl: icon,
+        fallbackUrl: "/branding/logo-256.png",
         color: c.color,
         badge: "CLASS",
         raw: c,
@@ -361,29 +368,63 @@
   async function init(opts) {
     opts = opts || {};
     if (global.VoxUiDeps) {
+      VoxUiDeps.patchHudCssBase();
       VoxUiDeps.applyCssVars();
       var report = await VoxUiDeps.preload({
         group: "critical",
         onProgress: opts.onProgress,
       });
-      // background hud
       VoxUiDeps.preload({ group: "hud" }).catch(function () {});
+      VoxUiDeps.repairBrokenImages(document);
       var boot = document.getElementById("vox-boot-status");
       if (boot) {
         var chk = VoxUiDeps.check();
         if (chk.ok) {
-          boot.textContent = "UI kit ready · " + report.loaded + " PNG frames · carousel · unit frames";
+          boot.textContent = "UI ready · " + report.loaded + "/" + report.total + " PNGs · tabs · carousels · frames";
           boot.className = "ok";
         } else {
-          boot.textContent = "UI partial · missing " + chk.missing.slice(0, 4).join(", ");
-          boot.className = report.loaded > 5 ? "ok" : "bad";
+          boot.textContent =
+            "UI " + report.loaded + "/" + report.total + " · missing " + (chk.missing.slice(0, 3).join(", ") || "none");
+          boot.className = report.loaded > 8 ? "ok" : "bad";
         }
       }
     }
     var cs = document.getElementById("class-screen");
     if (cs) cs.classList.add("vox-ui-ready");
     mountUnitFrames();
+    initSectionTabs();
     return true;
+  }
+
+  /** Class-screen section tabs: Class | Hero | World */
+  function initSectionTabs() {
+    var bar = document.getElementById("vox-section-tabs");
+    if (!bar) return;
+    var panels = {
+      class: document.getElementById("vox-panel-class"),
+      hero: document.getElementById("vox-panel-hero"),
+      world: document.getElementById("vox-panel-world"),
+    };
+    function show(id) {
+      bar.querySelectorAll("button").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.section === id);
+      });
+      Object.keys(panels).forEach(function (k) {
+        if (panels[k]) panels[k].classList.toggle("active", k === id);
+      });
+      // reflow carousels when shown
+      if (global.requestAnimationFrame) {
+        requestAnimationFrame(function () {
+          window.dispatchEvent(new Event("resize"));
+        });
+      }
+    }
+    bar.querySelectorAll("button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        show(btn.dataset.section);
+      });
+    });
+    show("class");
   }
 
   global.VoxUiKit = {

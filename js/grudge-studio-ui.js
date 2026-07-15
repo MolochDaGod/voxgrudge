@@ -36,18 +36,46 @@
     mainHand: '⚔️', offHand: '🛡️', gloves: '🧤', cape: '🧣', ring: '💍', necklace: '📿',
   };
 
-  var MAIN_TABS = [
-    { id: 'equipment', label: 'Equipment' },
-    { id: 'attributes', label: 'Attributes' },
-    { id: 'skills', label: 'Class Skills' },
-    { id: 'weapons', label: 'Weapon Skills' },
-    { id: 'craft', label: 'Crafting' },
-    { id: 'building', label: 'Building' },
-    { id: 'bestiary', label: 'Bestiary' },
-    { id: 'allies', label: 'Allies' },
-    { id: 'hotkeys', label: 'Hotkeys' },
-    { id: 'settings', label: 'Settings' },
+  /** Smarter tabs — grouped, keyed, PNG chrome via .gcc-tab-btn */
+  var TAB_GROUPS = [
+    {
+      id: 'hero', label: 'Hero',
+      tabs: [
+        { id: 'equipment', label: 'Gear', short: 'Gear', icon: '🛡️', key: 'G', group: 'hero', desc: 'Paper doll, tiers, and slot bonuses' },
+        { id: 'attributes', label: 'Stats', short: 'Stats', icon: '◆', key: '—', group: 'hero', desc: '8 Nexus attributes · 160 points' },
+        { id: 'skills', label: 'Perks', short: 'Perks', icon: '✦', key: '—', group: 'hero', desc: 'Class perk tree and gateway nodes' },
+      ],
+    },
+    {
+      id: 'combat', label: 'Combat',
+      tabs: [
+        { id: 'weapons', label: 'Weapons', short: 'Arms', icon: '⚔', key: '—', group: 'combat', desc: 'Owned weapons and skill loadouts' },
+        { id: 'bestiary', label: 'Bestiary', short: 'Bestiary', icon: '☠', key: '—', group: 'combat', desc: 'Enemy tiers by biome distance' },
+        { id: 'allies', label: 'Allies', short: 'Allies', icon: '⚑', key: 'T', group: 'combat', desc: 'Warband and recruitable allies' },
+      ],
+    },
+    {
+      id: 'world', label: 'World',
+      tabs: [
+        { id: 'craft', label: 'Craft', short: 'Craft', icon: '⚒', key: 'C', group: 'world', desc: 'Consumables, gear, and station recipes' },
+        { id: 'building', label: 'Build', short: 'Build', icon: '▣', key: 'B', group: 'world', desc: 'Survival structures and place costs' },
+      ],
+    },
+    {
+      id: 'system', label: 'System',
+      tabs: [
+        { id: 'hotkeys', label: 'Hotkeys', short: 'Keys', icon: '⌨', key: '—', group: 'system', desc: 'Rebind movement, combat, and panels' },
+        { id: 'settings', label: 'Settings', short: 'Opts', icon: '⚙', key: '—', group: 'system', desc: 'Volume, camera, minimap, numbers' },
+      ],
+    },
   ];
+
+  var MAIN_TABS = TAB_GROUPS.reduce(function (acc, g) {
+    return acc.concat(g.tabs);
+  }, []);
+
+  var TAB_BY_ID = {};
+  MAIN_TABS.forEach(function (t) { TAB_BY_ID[t.id] = t; });
 
   var NEXUS_PERK_TREES = {
     warrior: {
@@ -628,8 +656,13 @@
     var el = document.getElementById('gcc-tab-content');
     var titleEl = document.getElementById('gcc-panel-title');
     if (!el) return;
-    var tab = MAIN_TABS.find(function (t) { return t.id === id; });
-    if (titleEl) titleEl.textContent = tab ? tab.label : id;
+    var tab = TAB_BY_ID[id] || MAIN_TABS.find(function (t) { return t.id === id; });
+    if (titleEl) {
+      titleEl.innerHTML = tab
+        ? '<span class="gcc-title-icon">' + (tab.icon || '') + '</span> ' + tab.label +
+          (tab.desc ? '<span class="gcc-title-desc">' + tab.desc + '</span>' : '')
+        : id;
+    }
 
     if (id === 'equipment') el.innerHTML = renderEquipment(opts);
     else if (id === 'attributes') el.innerHTML = renderAttributes(opts);
@@ -644,17 +677,34 @@
     else el.innerHTML = '<p class="gcc-hint">Panel not found.</p>';
 
     wirePanelEvents(id, opts);
+    // Repair any broken icon imgs after panel paint
+    if (global.VoxUiDeps && VoxUiDeps.repairBrokenImages) {
+      VoxUiDeps.repairBrokenImages(el);
+    }
   }
 
   function renderTabNav() {
     var nav = document.getElementById('gcc-tab-nav');
     if (!nav) return;
-    nav.innerHTML = MAIN_TABS.map(function (t) {
-      return '<button type="button" class="gcc-tab-btn' + (state.panel === t.id ? ' active' : '') + '" data-panel="' + t.id + '">' + t.label + '</button>';
+    nav.classList.add('gcc-tab-nav--smart');
+    nav.innerHTML = TAB_GROUPS.map(function (group) {
+      var activeInGroup = group.tabs.some(function (t) { return t.id === state.panel; });
+      return '<div class="gcc-tab-group' + (activeInGroup ? ' has-active' : '') + '" data-group="' + group.id + '">' +
+        '<div class="gcc-tab-group-label">' + group.label + '</div>' +
+        '<div class="gcc-tab-group-btns">' +
+        group.tabs.map(function (t) {
+          return '<button type="button" class="gcc-tab-btn' + (state.panel === t.id ? ' active' : '') +
+            '" data-panel="' + t.id + '" title="' + (t.desc || t.label) + (t.key && t.key !== '—' ? ' [' + t.key + ']' : '') + '">' +
+            '<span class="gcc-tab-ico">' + (t.icon || '') + '</span>' +
+            '<span class="gcc-tab-lbl">' + (t.short || t.label) + '</span>' +
+            '</button>';
+        }).join('') +
+        '</div></div>';
     }).join('');
     nav.querySelectorAll('.gcc-tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         state.panel = btn.dataset.panel;
+        try { localStorage.setItem(STORAGE_KEY + '_last_tab', state.panel); } catch (e) {}
         renderTabNav();
         renderPanel(state.panel, initOpts);
       });
@@ -672,8 +722,13 @@
     opts = opts || {};
     initOpts = opts;
     load();
+    try {
+      var last = localStorage.getItem(STORAGE_KEY + '_last_tab');
+      if (last && TAB_BY_ID[last]) state.panel = last;
+    } catch (e) { /* ignore */ }
     var root = document.getElementById('grudge-command-center');
     if (!root) return;
+    root.classList.add('gcc-smart-ui');
 
     var fab = document.getElementById('gcc-fab');
     var closeBtn = root.querySelector('.gcc-close');
@@ -683,13 +738,19 @@
       root.classList.toggle('open', state.open);
       if (state.open) {
         renderAll(opts);
+        if (global.VoxUiDeps && VoxUiDeps.repairBrokenImages) VoxUiDeps.repairBrokenImages(root);
         if (opts.onOpen) opts.onOpen();
       } else if (opts.onClose) opts.onClose();
     }
 
     function openPanel(id) {
       if (!id) return;
+      // Allow group open → first tab in group
+      var group = TAB_GROUPS.find(function (g) { return g.id === id; });
+      if (group) id = group.tabs[0].id;
+      if (!TAB_BY_ID[id]) return;
       state.panel = id;
+      try { localStorage.setItem(STORAGE_KEY + '_last_tab', state.panel); } catch (e) {}
       if (!state.open) toggle(true);
       else renderAll(opts);
     }
@@ -731,6 +792,7 @@
       matchBind: function (bindId, code) { return state.binds[bindId] === code; },
       getPerkTreeForClass: getPerkTreeForClass,
       MAIN_TABS: MAIN_TABS,
+      TAB_GROUPS: TAB_GROUPS,
       EQUIP_SLOTS: EQUIP_SLOTS_LEFT.concat(EQUIP_SLOTS_RIGHT),
       DEFAULT_BINDS: DEFAULT_BINDS,
       NEXUS_PERK_TREES: NEXUS_PERK_TREES,
@@ -748,5 +810,6 @@
     DEFAULT_BINDS: DEFAULT_BINDS,
     NEXUS_PERK_TREES: NEXUS_PERK_TREES,
     MAIN_TABS: MAIN_TABS,
+    TAB_GROUPS: TAB_GROUPS,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

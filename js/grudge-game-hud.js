@@ -6,9 +6,11 @@
   'use strict';
 
   var GRUDGE_API_BASE = 'https://molochdagod.github.io/ObjectStore';
-  var ASSET_BASE = 'assets/grudge-game/';
+  // Always absolute so icons work regardless of base URL / deep routes
+  var ASSET_BASE = '/assets/grudge-game/';
   var UI_BASE = ASSET_BASE + 'ui/';
   var CLASS_EMBLEM_BASE = ASSET_BASE + 'class-emblems/';
+  var LOCAL_FALLBACK = '/branding/logo-256.png';
 
   var GAME_TO_API_WEAPON = {
     sword: 'SWORD',
@@ -233,6 +235,10 @@
 
   function setHudIcon(el, url, fallbackEmoji) {
     if (!el) return;
+    // Prefer local absolute paths; rewrite relative
+    if (url && url.charAt(0) !== '/' && url.indexOf('http') !== 0 && url.indexOf('data:') !== 0) {
+      url = '/' + url.replace(/^\.?\//, '');
+    }
     var img = el.querySelector('.hud-icon-img');
     if (!img) {
       el.textContent = '';
@@ -244,13 +250,11 @@
       el.appendChild(img);
     }
     if (!url) {
-      img.removeAttribute('src');
-      img.style.display = 'none';
-      el.classList.remove('has-hud-icon');
-      el.textContent = fallbackEmoji || '';
-      return;
+      // Local emblem / logo before emoji
+      url = LOCAL_FALLBACK;
     }
     el.textContent = '';
+    el.appendChild(img);
     img.style.display = '';
     img.classList.add('is-loading');
     img.onload = function () {
@@ -259,9 +263,14 @@
     };
     img.onerror = function () {
       img.classList.remove('is-loading');
+      // Try local branding once, then emoji text
+      if (img.getAttribute('src') !== LOCAL_FALLBACK) {
+        img.setAttribute('src', LOCAL_FALLBACK);
+        return;
+      }
       img.style.display = 'none';
       el.classList.remove('has-hud-icon');
-      el.textContent = fallbackEmoji || '';
+      if (fallbackEmoji) el.textContent = fallbackEmoji;
     };
     if (img.getAttribute('src') !== url) img.setAttribute('src', url);
   }

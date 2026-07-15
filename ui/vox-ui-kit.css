@@ -3,22 +3,27 @@
  * Paths set at runtime by VoxUiDeps.applyCssVars(); fallbacks below.
  */
 :root {
-  --vox-png-window: url("../assets/grudge-game/ui/Window/Window_Background.png");
-  --vox-png-header: url("../assets/grudge-game/ui/Window/Window_Header_Background.png");
-  --vox-png-modal: url("../assets/grudge-game/ui/Modal_Box/ModalBox_Background.png");
-  --vox-png-btn-lg: url("../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background.png");
-  --vox-png-btn-lg-yellow: url("../assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background_Yellow.png");
-  --vox-png-btn-md: url("../assets/grudge-game/ui/Buttons/Rectangular/Medium/Button_RM_Background.png");
-  --vox-png-carousel-left: url("../assets/grudge-game/ui/Character_Select/Buttons/CharacterSelect_Arrow_Left_Background.png");
-  --vox-png-carousel-glow: url("../assets/grudge-game/ui/Character_Select/CharacterSelect_Glow.png");
-  --vox-png-unit: url("../assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Background.png");
-  --vox-png-unit-hp: url("../assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_HP_Fill_Red.png");
-  --vox-png-unit-mp: url("../assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_MP_Fill_Green.png");
-  --vox-png-party: url("../assets/grudge-game/ui/Unit_Frames/Party/UnitFrame_Party_Background.png");
-  --vox-png-party-hp: url("../assets/grudge-game/ui/Unit_Frames/Party/Bars/UnitFrame_Party_HP_Fill_Red.png");
-  --vox-png-slot: url("../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Background.png");
-  --vox-png-xp-track: url("../assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Background.png");
-  --vox-png-xp-fill: url("../assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Fill.png");
+  /* Absolute root paths — never break under /ui/* or /voxgrudge/ */
+  --vox-png-window: url("/assets/grudge-game/ui/Window/Window_Background.png");
+  --vox-png-header: url("/assets/grudge-game/ui/Window/Window_Header_Background.png");
+  --vox-png-modal: url("/assets/grudge-game/ui/Modal_Box/ModalBox_Background.png");
+  --vox-png-btn-lg: url("/assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background.png");
+  --vox-png-btn-lg-yellow: url("/assets/grudge-game/ui/Buttons/Rectangular/Large/Button_RL_Background_Yellow.png");
+  --vox-png-btn-md: url("/assets/grudge-game/ui/Buttons/Rectangular/Medium/Button_RM_Background.png");
+  --vox-png-carousel-left: url("/assets/grudge-game/ui/Character_Select/Buttons/CharacterSelect_Arrow_Left_Background.png");
+  --vox-png-carousel-glow: url("/assets/grudge-game/ui/Character_Select/CharacterSelect_Glow.png");
+  --vox-png-unit: url("/assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Background.png");
+  --vox-png-unit-hp: url("/assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_HP_Fill_Red.png");
+  --vox-png-unit-mp: url("/assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_MP_Fill_Green.png");
+  --vox-png-party: url("/assets/grudge-game/ui/Unit_Frames/Party/UnitFrame_Party_Background.png");
+  --vox-png-party-hp: url("/assets/grudge-game/ui/Unit_Frames/Party/Bars/UnitFrame_Party_HP_Fill_Red.png");
+  --vox-png-slot: url("/assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Background.png");
+  --vox-png-xp-track: url("/assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Background.png");
+  --vox-png-xp-fill: url("/assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Fill.png");
+  --vox-png-tab: url("/assets/grudge-game/ui/Spell_Book/Tabs/SpellBook_Tab_Background.png");
+  --vox-png-tab-active: url("/assets/grudge-game/ui/Spell_Book/Tabs/SpellBook_Tab_Background_Active.png");
+  --vox-png-menu: url("/assets/grudge-game/ui/Window/Menu/Window_Menu_Background.png");
+  --vox-png-menu-active: url("/assets/grudge-game/ui/Window/Menu/Window_Menu_Active.png");
 }
 
 /* ── PNG panel containers ─────────────────────────────────────── */
@@ -455,8 +460,153 @@
   max-width: 92vw;
 }
 
+/* ── Class screen section tabs (smarter UX) ───────────────────── */
+.vox-section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin: 0 auto 14px;
+  max-width: min(96vw, 720px);
+  position: relative;
+  z-index: 2;
+}
+.vox-section-tabs button {
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  min-width: 88px;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #c8b89a;
+  background-color: transparent;
+  background-image: var(--vox-png-tab);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  text-shadow: 0 1px 2px #000;
+  opacity: 0.85;
+  transition: filter 0.12s, opacity 0.12s, transform 0.12s;
+}
+.vox-section-tabs button:hover { opacity: 1; filter: brightness(1.1); }
+.vox-section-tabs button.active {
+  background-image: var(--vox-png-tab-active);
+  color: #fff6e0;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+.vox-section-panel { display: none; width: min(96vw, 980px); margin: 0 auto; }
+.vox-section-panel.active { display: block; }
+
+/* ── Main panel smart tabs (K menu) ───────────────────────────── */
+.gcc-tab-nav--smart {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: center;
+  padding: 8px 10px 12px !important;
+  background: rgba(0,0,0,0.25);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.gcc-tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.gcc-tab-group-label {
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #6a7a90;
+  text-align: center;
+  padding: 0 4px;
+}
+.gcc-tab-group.has-active .gcc-tab-group-label { color: #e8a86e; }
+.gcc-tab-group-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+.gcc-smart-ui .gcc-tab-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 56px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: var(--vox-png-menu);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  color: #b8a888;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.88;
+  transition: filter 0.12s, opacity 0.12s, transform 0.12s;
+}
+.gcc-smart-ui .gcc-tab-btn:hover {
+  opacity: 1;
+  filter: brightness(1.12);
+}
+.gcc-smart-ui .gcc-tab-btn.active {
+  background-image: var(--vox-png-menu-active);
+  color: #fff4d8;
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(232, 168, 110, 0.25);
+}
+.gcc-tab-ico { font-size: 13px; line-height: 1; }
+.gcc-tab-lbl { line-height: 1.1; }
+.gcc-title-icon { margin-right: 6px; opacity: 0.9; }
+.gcc-title-desc {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  color: #7a8aa0;
+  margin-top: 2px;
+}
+
+/* Inventory / equip slots use PNG slot frames when available */
+.gcc-inv-slot,
+.gcc-equip-box {
+  background-image: var(--vox-png-slot);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  image-rendering: auto;
+}
+.gcc-inv-slot img.hud-icon-img,
+.gcc-equip-box img.hud-icon-img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+/* HUD icon safety */
+.hud-icon-img,
+.gg-icon {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.hud-icon-img.is-loading { opacity: 0.35; }
+
 /* Hide legacy crowded skin rows slightly on small screens */
 @media (max-width: 640px) {
   .vox-card { width: 112px; min-height: 118px; }
   .vox-unit-frame { width: 180px; height: 60px; }
+  .gcc-smart-ui .gcc-tab-btn { min-width: 48px; min-height: 40px; padding: 4px 6px; }
 }

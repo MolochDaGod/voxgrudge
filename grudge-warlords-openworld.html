@@ -285,20 +285,39 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
     <a href="https://grudox.grudge-studio.com/" target="_blank" rel="noopener">Grudox Fleet</a>
   </div>
 
-  <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 12px">
-    <div class="vox-container__header"><h2 class="vox-container__title">Survivor class</h2></div>
-    <div class="vox-container__body">
-      <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
-      <div class="class-grid" id="class-grid" style="display:none" aria-hidden="true"></div>
+  <nav id="vox-section-tabs" class="vox-section-tabs" aria-label="Setup sections">
+    <button type="button" data-section="class" class="active">1 · Class</button>
+    <button type="button" data-section="hero">2 · Hero</button>
+    <button type="button" data-section="world">3 · World</button>
+  </nav>
+
+  <div id="vox-panel-class" class="vox-section-panel active">
+    <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 12px">
+      <div class="vox-container__header"><h2 class="vox-container__title">Survivor class</h2></div>
+      <div class="vox-container__body">
+        <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
+        <div class="class-grid" id="class-grid" style="display:none" aria-hidden="true"></div>
+      </div>
     </div>
+    <aside class="vox-container class-preview" id="class-preview" style="width:min(96vw,420px);margin:0 auto">
+      <div class="vox-container__header"><h2 class="vox-container__title">Loadout preview</h2></div>
+      <div class="vox-container__body">
+        <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
+        <h3 id="preview-name">Choose Survivor</h3>
+        <div class="cp-val" id="preview-cp">—</div>
+        <div id="preview-stats"></div>
+        <p class="preview-hint" id="preview-hint">PNG frames + smart tabs · pick class then hero.</p>
+        <span class="perk-tag hidden" id="preview-perk"></span>
+      </div>
+    </aside>
   </div>
 
-  <div class="vox-shell-grid">
-    <div class="vox-container">
-      <div class="vox-container__header"><h2 class="vox-container__title">TVS hero · body · palette</h2></div>
+  <div id="vox-panel-hero" class="vox-section-panel">
+    <div class="vox-container" style="width:min(96vw,980px);margin:0 auto">
+      <div class="vox-container__header"><h2 class="vox-container__title">TVS hero · tint · Kenney fallback</h2></div>
       <div class="vox-container__body">
         <div id="skin-picker">
-          <div class="skin-picker-label">TVS Hero (carousel)</div>
+          <div class="skin-picker-label">TVS Hero (carousel · D1/R2)</div>
           <div id="tvs-hero-carousel" aria-label="TVS hero carousel"></div>
           <div id="tvs-unit-row" class="char-select-row" style="display:none"></div>
           <div class="skin-picker-label">Color Tint</div>
@@ -310,33 +329,24 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
         </div>
       </div>
     </div>
-    <aside class="vox-container class-preview" id="class-preview">
-      <div class="vox-container__header"><h2 class="vox-container__title">Loadout</h2></div>
+  </div>
+
+  <div id="vox-panel-world" class="vox-section-panel">
+    <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 8px">
+      <div class="vox-container__header"><h2 class="vox-container__title">World content · settlements</h2></div>
       <div class="vox-container__body">
-        <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
-        <h3 id="preview-name">Choose Survivor</h3>
-        <div class="cp-val" id="preview-cp">—</div>
-        <div id="preview-stats"></div>
-        <p class="preview-hint" id="preview-hint">PNG unit frames + carousel UI · TVS heroes from CDN.</p>
-        <span class="perk-tag hidden" id="preview-perk"></span>
-        <div id="seed-row" style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div id="settlement-carousel" aria-label="Settlement carousel"></div>
+        <div id="settlement-strip" aria-label="Settlement content modes" style="margin-top:8px"></div>
+        <div id="seed-row" style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
           <span style="font-size:9px;letter-spacing:2px;color:#889;text-transform:uppercase">World Seed</span>
           <input id="world-seed-input" type="number" style="width:110px;background:#0a0e14;border:1px solid #444;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
           <button type="button" class="vox-btn vox-btn--sm" onclick="randomizeWorldSeed()">Random</button>
         </div>
       </div>
-    </aside>
-  </div>
-
-  <div class="vox-container" style="width:min(96vw,980px);margin:14px auto 8px">
-    <div class="vox-container__header"><h2 class="vox-container__title">World content · settlements</h2></div>
-    <div class="vox-container__body">
-      <div id="settlement-carousel" aria-label="Settlement carousel"></div>
-      <div id="settlement-strip" aria-label="Settlement content modes" style="margin-top:8px"></div>
     </div>
   </div>
 
-  <p style="color:#667;font-size:10px;letter-spacing:1px;margin:8px 0;position:relative;text-align:center">WASD · C camera · RMB free-look · Esc pause · unit frames track player + AI targets</p>
+  <p style="color:#667;font-size:10px;letter-spacing:1px;margin:12px 0 8px;position:relative;text-align:center">In game: WASD · C camera · K main panel (smart tabs) · Esc pause · unit frames</p>
   <button class="vox-btn vox-btn--lg vox-btn--primary hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
 </div>
 
