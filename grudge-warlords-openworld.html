@@ -271,14 +271,18 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
   <div class="sub">Nexus Era · Open World Survival</div>
   <div class="version">Stats from <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener" style="color:#667">survival.grudge-studio.com</a> · 8-step combat · T1–T6 gear · GRUDOX</div>
   <div id="skin-picker">
-    <div class="skin-picker-label">Select Character</div>
+    <div class="skin-picker-label">TVS Hero (D1 / R2 · resources packs)</div>
+    <div id="tvs-unit-row" class="char-select-row"></div>
+    <div class="skin-picker-label">Color Tint</div>
+    <div id="tvs-tint-row" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
+    <div class="skin-picker-label">Legacy Kenney roster</div>
     <div id="char-select-row" class="char-select-row"></div>
-    <div class="skin-picker-label">Body Mesh (Kenney)</div>
+    <div class="skin-picker-label">Body Mesh (Kenney fallback)</div>
     <div id="skin-body-row"></div>
-    <div class="skin-picker-label">Color Palette</div>
+    <div class="skin-picker-label">Color Palette (Kenney fallback)</div>
     <div id="skin-texture-row"></div>
   </div>
-  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">Select a character, survivor class, and palette — controller &amp; camera attach on enter</p>
+  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">TVS voxel heroes from CDN · scale · texture · color · anim · <a href="tvs-showcase.html" style="color:#7ec8ff">open showcase</a></p>
   <p style="color:#445;font-size:10px;letter-spacing:1px;margin:0 0 12px;position:relative">In-world: WASD · C cycles TPS/ISO/FPS · mouse &amp; RMB change per camera mode · Shift dash</p>
   <div id="seed-row" style="position:relative;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
     <span style="font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase">World Seed</span>
@@ -582,6 +586,8 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/grudge-env.js"></script>
 <script src="js/grudge-asset-config.js"></script>
 <script src="js/grudge-scale.js"></script>
+<script src="js/tvs-voxel-assets.js"></script>
+<script src="js/tvs-unit-loader.js"></script>
 <script src="js/collision-layers.js"></script>
 <script src="js/terrain-collider.js"></script>
 <script src="js/collision-world.js"></script>
@@ -1085,10 +1091,15 @@ const ANIM_FILES = {
 let explorerCombat = null;
 
 // ═══════════════════════════════════════════════════════════════
-// KENNEY SKIN PICKER UI
+// KENNEY SKIN PICKER UI + TVS HERO PICKER (D1/R2)
 // ═══════════════════════════════════════════════════════════════
 const KENNEY_BODY_LETTERS = ['a','b','c','d','e','f','g','h','i','j'];
 const KENNEY_TEXTURE_LETTERS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r'];
+let playerTvsUnitId = null;
+let playerTvsUnit = null;
+let playerColorTint = 0xffffff;
+let tvsRosterCache = null;
+const TVS_TINTS = [0xffffff, 0xff6644, 0x44aaff, 0x55dd88, 0xffcc33, 0xcc66ff, 0xff88aa];
 
 function updateSkinPickerUI(){
   document.querySelectorAll('.skin-body-btn').forEach(btn=>{
@@ -1097,11 +1108,19 @@ function updateSkinPickerUI(){
   document.querySelectorAll('.skin-tex-btn').forEach(btn=>{
     btn.classList.toggle('sel', btn.dataset.letter===playerSkinTexture);
   });
+  document.querySelectorAll('.tvs-unit-btn').forEach(btn=>{
+    btn.classList.toggle('sel', btn.dataset.unitId===playerTvsUnitId);
+  });
+  document.querySelectorAll('.tvs-tint-btn').forEach(btn=>{
+    const hex = parseInt(btn.dataset.tint, 16);
+    btn.classList.toggle('sel', hex===playerColorTint);
+  });
 }
 
 function selectCharacter(letter){
   selectedCharacterId = letter;
   playerSkinBody = letter;
+  // Kenney pick keeps TVS as preferred if set; clear only when user wants legacy
   updateSkinPickerUI();
   document.querySelectorAll('.char-card').forEach(function(c){
     c.classList.toggle('sel', c.dataset.letter===letter);
@@ -1112,10 +1131,59 @@ function selectCharacter(letter){
   }
 }
 
+function selectTvsUnit(unit){
+  if(!unit) return;
+  playerTvsUnit = unit;
+  playerTvsUnitId = unit.unitId;
+  updateSkinPickerUI();
+  if(gameStarted && typeof swapPlayerTvsUnit==='function'){
+    try{ swapPlayerTvsUnit(unit); }catch(e){ console.warn('[tvs]', e); }
+  }
+}
+
+function applyTvsHeroForClass(cid){
+  if(!tvsRosterCache || !window.TvsUnitLoader) return;
+  const best = TvsUnitLoader.pickBestUnit(tvsRosterCache, cid);
+  if(best) selectTvsUnit(best);
+}
+
+function renderTvsUnitPicker(){
+  const row = document.getElementById('tvs-unit-row');
+  if(!row || !tvsRosterCache) return;
+  row.innerHTML = '';
+  const hint = playerClass && window.TvsUnitLoader ? TvsUnitLoader.classToHint(playerClass) : null;
+  let units = (tvsRosterCache.units||[]).slice();
+  if(hint){
+    units = units.filter(function(u){ return u.classHint===hint; }).concat(units.filter(function(u){ return u.classHint!==hint; }));
+  }
+  units.slice(0, 16).forEach(function(u){
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'char-card tvs-unit-btn'+(u.unitId===playerTvsUnitId?' sel':'');
+    card.dataset.unitId = u.unitId;
+    const short = (u.displayName||u.unitId).replace(/^Voxel\s+/i,'');
+    card.innerHTML =
+      '<div class="char-swatch" style="background:linear-gradient(135deg,#1a2438,#2a1a10);display:flex;align-items:center;justify-content:center;font-size:9px;color:#e8a86e">TVS</div>'+
+      '<div class="char-name">'+short+'</div>'+
+      '<div class="char-tag">'+(u.classHint||u.pack)+'</div>';
+    card.title = u.displayName+' · '+u.grudgeUuid;
+    card.onclick = function(){ selectTvsUnit(u); };
+    row.appendChild(card);
+  });
+  if(!playerTvsUnitId && units[0]){
+    const pref = playerClass && window.TvsUnitLoader
+      ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass)
+      : units[0];
+    if(pref){ playerTvsUnitId = pref.unitId; playerTvsUnit = pref; }
+  }
+  updateSkinPickerUI();
+}
+
 (function buildSkinUI(){
   const bodyRow = document.getElementById('skin-body-row');
   const texRow = document.getElementById('skin-texture-row');
   const charRow = document.getElementById('char-select-row');
+  const tintRow = document.getElementById('tvs-tint-row');
   const roster = (window.PlayerController && PlayerController.CHARACTER_ROSTER) ||
     KENNEY_BODY_LETTERS.map(function(id){ return { id:id, name:'Body '+id.toUpperCase(), tag:'Mesh' }; });
 
@@ -1161,7 +1229,35 @@ function selectCharacter(letter){
     };
     texRow.appendChild(sw);
   });
+  if(tintRow){
+    TVS_TINTS.forEach(function(hex){
+      const sw = document.createElement('button');
+      sw.type = 'button';
+      sw.className = 'skin-tex-btn tvs-tint-btn';
+      sw.dataset.tint = hex.toString(16).padStart(6,'0');
+      sw.style.background = '#'+sw.dataset.tint;
+      sw.title = 'Tint #'+sw.dataset.tint;
+      sw.onclick = function(){
+        playerColorTint = hex;
+        updateSkinPickerUI();
+        if(playerMesh && playerMesh.userData && playerMesh.userData.setColorTint){
+          playerMesh.userData.setColorTint(hex);
+        }
+      };
+      tintRow.appendChild(sw);
+    });
+  }
   updateSkinPickerUI();
+  if(window.TvsUnitLoader){
+    TvsUnitLoader.loadTvsRoster().then(function(r){
+      tvsRosterCache = r;
+      renderTvsUnitPicker();
+    }).catch(function(err){
+      console.warn('[VoxGrudge] TVS roster failed', err);
+      const row = document.getElementById('tvs-unit-row');
+      if(row) row.innerHTML = '<span style="color:#666;font-size:10px">TVS roster offline — Kenney fallback</span>';
+    });
+  }
 })();
 
 // ═══════════════════════════════════════════════════════════════
@@ -1231,6 +1327,8 @@ function updateClassPreview(cid){
         playerSkinBody = selectedCharacterId;
         updateSkinPickerUI();
       }
+      applyTvsHeroForClass(cid);
+      renderTvsUnitPicker();
       updateClassPreview(cid);
       document.getElementById('start-btn').classList.remove('hidden');
     };
@@ -1506,50 +1604,111 @@ function init(){
   ghostMesh.visible = false;
   scene.add(ghostMesh);
 
-  // Player — Kenney GLB, Collidion roll rig (?voxroll=1), or procedural vox boxes
-  const bodyLetter = playerSkinBody || CLASS_MODEL_MAP[playerClass]||'a';
-  const glbModel = !USE_VOX_ROLL ? cloneModel(bodyLetter, 1, playerSkinTexture) : null;
-  if(USE_VOX_ROLL && voxRollAnim){
-    voxRollAnim.whenReady(function(){
-      const kenneyTex = new THREE.TextureLoader().load('models/kenney/textures/texture-'+(playerSkinTexture||'a')+'.png');
-      kenneyTex.magFilter = THREE.NearestFilter;
-      kenneyTex.minFilter = THREE.NearestFilter;
-      const rig = voxRollAnim.buildRig({
-        replace: function(mesh, oldMat){
-          return new THREE.MeshStandardMaterial({map:kenneyTex, roughness:0.9});
-        }
-      });
-      if(rig){
-        rig.scale.set(1.6,1.6,1.6);
-        // Remove placeholder if still in scene
-        if(playerMesh && playerMesh!==rig && playerMesh.parent) scene.remove(playerMesh);
-        playerMesh = rig;
-        playerSkelParts = null;
-        playerMixer = rig.userData._voxRollMixer;
-        scene.add(playerMesh);
-        snapToGround(playerMesh,0);
-        if(weaponMeshObj) playerMesh.add(weaponMeshObj);
-        if(playerController){
-          playerController.setTarget(playerMesh);
-          playerController.alignBehindCharacter();
-          playerController.forceSnap();
-        }
-      }
-    });
-  }
-  if(glbModel){
-    playerMesh = glbModel;
-    playerSkelParts = getSkeletonParts(playerMesh);
-  } else if(!USE_VOX_ROLL) {
-    playerMesh = buildVoxChar(0x5588cc, 0x224466, GrudgeScale.voxScale(GrudgeScale.PLAYER_HEIGHT_M));
-  } else {
-    playerMesh = new THREE.Group();
-  }
+  // Player — prefer TVS voxel hero (D1/R2), else Kenney / voxroll / procedural
+  playerMesh = new THREE.Group();
   playerMesh.position.set(0, 0, 0);
   scene.add(playerMesh);
-  snapToGround(playerMesh,0);
   weaponMeshObj = buildWeaponMesh('sword');
-  if(!USE_VOX_ROLL) playerMesh.add(weaponMeshObj);
+
+  function finalizePlayerMesh(mesh, opts){
+    opts = opts || {};
+    const prevPos = playerMesh && playerMesh.position ? playerMesh.position.clone() : new THREE.Vector3();
+    if(playerMesh && playerMesh.parent) scene.remove(playerMesh);
+    playerMesh = mesh;
+    playerMesh.position.copy(prevPos);
+    scene.add(playerMesh);
+    snapToGround(playerMesh, 0);
+    if(opts.mixer) playerMixer = opts.mixer;
+    if(opts.skelParts !== undefined) playerSkelParts = opts.skelParts;
+    if(weaponMeshObj && !opts.skipWeapon){
+      try { playerMesh.add(weaponMeshObj); } catch(e) {}
+    }
+    if(playerController){
+      playerController.setTarget(playerMesh);
+      playerController.alignBehindCharacter();
+      playerController.forceSnap();
+    }
+  }
+
+  function spawnKenneyOrVoxFallback(){
+    const bodyLetter = playerSkinBody || CLASS_MODEL_MAP[playerClass]||'a';
+    const glbModel = !USE_VOX_ROLL ? cloneModel(bodyLetter, 1, playerSkinTexture) : null;
+    if(USE_VOX_ROLL && voxRollAnim){
+      voxRollAnim.whenReady(function(){
+        const kenneyTex = new THREE.TextureLoader().load('models/kenney/textures/texture-'+(playerSkinTexture||'a')+'.png');
+        kenneyTex.magFilter = THREE.NearestFilter;
+        kenneyTex.minFilter = THREE.NearestFilter;
+        const rig = voxRollAnim.buildRig({
+          replace: function(mesh, oldMat){
+            return new THREE.MeshStandardMaterial({map:kenneyTex, roughness:0.9});
+          }
+        });
+        if(rig){
+          rig.scale.set(1.6,1.6,1.6);
+          finalizePlayerMesh(rig, { mixer: rig.userData._voxRollMixer, skelParts: null });
+        }
+      });
+    }
+    if(glbModel){
+      finalizePlayerMesh(glbModel, { skelParts: getSkeletonParts(glbModel) });
+    } else if(!USE_VOX_ROLL) {
+      finalizePlayerMesh(buildVoxChar(0x5588cc, 0x224466, GrudgeScale.voxScale(GrudgeScale.PLAYER_HEIGHT_M)), { skelParts: null });
+    }
+  }
+
+  window.swapPlayerTvsUnit = async function(unit){
+    if(!window.TvsUnitLoader || !unit) return;
+    try {
+      const root = await TvsUnitLoader.loadTvsUnit(unit, {
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        height: GrudgeScale.PLAYER_HEIGHT_M || 2.0,
+        withTexture: true,
+        withAnims: true,
+        loadSidecars: true,
+        verify: true,
+        maxClips: 6,
+        colorTint: playerColorTint !== 0xffffff ? playerColorTint : null,
+      });
+      root.userData._tvsPlayer = true;
+      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null });
+    } catch(err){
+      console.warn('[VoxGrudge] swap TVS failed', err);
+    }
+  };
+
+  (async function spawnTvsPlayer(){
+    try {
+      if(!window.TvsUnitLoader) throw new Error('TvsUnitLoader missing');
+      if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
+      let unit = playerTvsUnit;
+      if(!unit && playerTvsUnitId) unit = TvsUnitLoader.findUnit(tvsRosterCache, playerTvsUnitId);
+      if(!unit) unit = TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass);
+      if(!unit) throw new Error('no TVS unit');
+      playerTvsUnit = unit;
+      playerTvsUnitId = unit.unitId;
+      const root = await TvsUnitLoader.loadTvsUnit(unit, {
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        height: GrudgeScale.PLAYER_HEIGHT_M || 2.0,
+        withTexture: true,
+        withAnims: true,
+        loadSidecars: true,
+        verify: true,
+        maxClips: 6,
+        colorTint: playerColorTint !== 0xffffff ? playerColorTint : null,
+      });
+      if(playerColorTint && playerColorTint !== 0xffffff && root.userData.setColorTint){
+        root.userData.setColorTint(playerColorTint);
+      }
+      root.userData._tvsPlayer = true;
+      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null });
+      console.info('[VoxGrudge] TVS player', unit.unitId, unit.grudgeUuid);
+    } catch(err){
+      console.warn('[VoxGrudge] TVS player fallback', err && err.message || err);
+      spawnKenneyOrVoxFallback();
+    }
+  })();
 
   // Controller + camera locked to the selected character
   if(window.PlayerController){
@@ -5713,8 +5872,21 @@ function animate(){
   updateEnergyOrbs(dt);
   updateParry(dt);
   refreshGameCursorStyle();
-  if(playerMixer) playerMixer.update(dt);
-  else if(voxRollAnim && playerMesh && playerMesh.userData._voxRollMixer) voxRollAnim.update(playerMesh.userData._voxRollMixer, dt);
+  if(playerMesh && playerMesh.userData && playerMesh.userData.updateMixer){
+    playerMesh.userData.updateMixer(dt);
+  } else if(playerMixer) {
+    playerMixer.update(dt);
+  } else if(voxRollAnim && playerMesh && playerMesh.userData._voxRollMixer) {
+    voxRollAnim.update(playerMesh.userData._voxRollMixer, dt);
+  }
+  // Drive TVS locomotion when moving
+  if(playerMesh && playerMesh.userData && playerMesh.userData._tvsPlayer && playerMesh.userData.playClip){
+    const moving = !!(keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']);
+    const want = (typeof playerAttackPhase==='number' && playerAttackPhase>0) ? 'attack' : (moving ? 'locomotion' : 'idle');
+    if(playerMesh.userData.currentAnim !== want && playerMesh.userData.animActions && playerMesh.userData.animActions[want]){
+      playerMesh.userData.playClip(want, 0.12);
+    }
+  }
 
   // Animate water plane
   if(window._waterPlane){
@@ -6107,9 +6279,27 @@ function buildSkinnedVoxChar(bodyColor, pantsColor, scale){
   return skel;
 }
 
+function mapAnimToTvsSemantic(animName){
+  const n=String(animName||'').toLowerCase();
+  if(!n || n==='idle') return 'idle';
+  if(n.indexOf('walk')>=0 || n.indexOf('run')>=0 || n.indexOf('sprint')>=0 || n.indexOf('locomotion')>=0) return 'locomotion';
+  if(n.indexOf('atk')>=0 || n.indexOf('attack')>=0 || n.indexOf('slash')>=0 || n.indexOf('punch')>=0 || n.indexOf('kick')>=0 || n.indexOf('magic')>=0 || n.indexOf('spell')>=0 || n.indexOf('bow')>=0 || n.indexOf('pistol')>=0) return 'attack';
+  if(n.indexOf('block')>=0 || n.indexOf('defend')>=0) return 'defend';
+  if(n.indexOf('jump')>=0 || n.indexOf('fall')>=0 || n.indexOf('land')>=0 || n.indexOf('dodge')>=0) return 'jump';
+  return null;
+}
+
 function playAnimOnMesh(mesh, animName, crossfade){
   crossfade=crossfade||0.2;
-  const mixer=(mesh&&mesh.userData&&mesh.userData._mixer)||playerMixer;
+  const ud=mesh&&mesh.userData?mesh.userData:{};
+  if(ud.playClip && ud.animActions){
+    const sem=mapAnimToTvsSemantic(animName) || animName;
+    if(ud.animActions[sem] || ud.animActions[animName]){
+      ud.playClip(ud.animActions[sem]?sem:animName, crossfade);
+      return;
+    }
+  }
+  const mixer=ud._mixer||playerMixer;
   if(!mixer)return;
   const clip=animClipCache[animName];
   if(!clip){
@@ -6126,7 +6316,6 @@ function playAnimOnMesh(mesh, animName, crossfade){
     return;
   }
   const action=mixer.clipAction(clip);
-  const ud=mesh.userData||(mesh.userData={});
   if(ud._currentAction&&ud._currentAction!==action){
     action.reset().play();
     ud._currentAction.crossFadeTo(action,crossfade,true);

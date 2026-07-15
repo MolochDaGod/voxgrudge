@@ -1,0 +1,738 @@
+{
+  "version": "2.0.0",
+  "generatedAt": "2026-07-12T11:27:03.157Z",
+  "description": "TVS voxel units with colliders, animations, and AI brains",
+  "cdnBase": "https://assets.grudge-studio.com",
+  "r2Prefix": "models/voxels/tvs",
+  "units": [
+    {
+      "unitId": "voxel-cathedral-crusader",
+      "displayName": "Voxel Cathedral Crusader",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-crusader.fbx",
+      "grudgeUuid": "011d6902-91c0-56dc-a730-947f8ed0abdd",
+      "pack": "voxel-cathedral",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-crusader.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-crusader.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-crusader.brain.json",
+      "brainId": "brain-voxel-cathedral-crusader",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/textures/voxel-cathedral-crusader-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-cathedral",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-cathedral-monk",
+      "displayName": "Voxel Cathedral Monk",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-monk.fbx",
+      "grudgeUuid": "e9d72510-3adf-5bf9-8daf-69840b914443",
+      "pack": "voxel-cathedral",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-monk.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-monk.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-monk.brain.json",
+      "brainId": "brain-voxel-cathedral-monk",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/textures/voxel-cathedral-monk-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-cathedral",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-cathedral-nun",
+      "displayName": "Voxel Cathedral Nun",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-nun.fbx",
+      "grudgeUuid": "da79efa6-53e1-58b6-892e-07487d9133a7",
+      "pack": "voxel-cathedral",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-nun.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-nun.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-nun.brain.json",
+      "brainId": "brain-voxel-cathedral-nun",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/textures/voxel-cathedral-nun-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-cathedral",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-cathedral-priest",
+      "displayName": "Voxel Cathedral Priest",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-priest.fbx",
+      "grudgeUuid": "01a0ea51-96aa-5353-ad5f-3d439b11ce47",
+      "pack": "voxel-cathedral",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-priest.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-priest.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/characters/voxel-cathedral-priest.brain.json",
+      "brainId": "brain-voxel-cathedral-priest",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/textures/voxel-cathedral-priest-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-cathedral",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-farm-farmer",
+      "displayName": "Voxel Farm Farmer",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmer.fbx",
+      "grudgeUuid": "c1ea7d52-d4a7-5e5b-b19e-410d2a4c7710",
+      "pack": "voxel-farm",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmer.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmer.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmer.brain.json",
+      "brainId": "brain-voxel-farm-farmer",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/voxel-farm-farmer-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-farm",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-farm-farmers-daughter",
+      "displayName": "Voxel Farm Farmers Daughter",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmers-daughter.fbx",
+      "grudgeUuid": "6cecceaf-e379-511d-89e8-b471258e1bed",
+      "pack": "voxel-farm",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmers-daughter.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmers-daughter.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farmers-daughter.brain.json",
+      "brainId": "brain-voxel-farm-farmers-daughter",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/voxel-farm-farmers-daughter-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-farm",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-farm-farm-hand",
+      "displayName": "Voxel Farm Farm Hand",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.fbx",
+      "grudgeUuid": "6a1c5432-3ee5-5487-b928-859ff71ee9e6",
+      "pack": "voxel-farm",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.brain.json",
+      "brainId": "brain-voxel-farm-farm-hand",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/voxel-farm-farm-hand-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-farm",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-knights-archer",
+      "displayName": "Voxel Knights Archer",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-archer.fbx",
+      "grudgeUuid": "8373e252-2bd5-59ac-a9a1-457ad32c5dfc",
+      "pack": "voxel-knights",
+      "classHint": "ranged",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-archer.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-archer.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-archer.brain.json",
+      "brainId": "brain-voxel-knights-archer",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-archer-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "ranged",
+        "voxel-knights",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-knights-captain",
+      "displayName": "Voxel Knights Captain",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-captain.fbx",
+      "grudgeUuid": "a001b249-af64-56f3-9be6-bc242cd38354",
+      "pack": "voxel-knights",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-captain.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-captain.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-captain.brain.json",
+      "brainId": "brain-voxel-knights-captain",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-captain-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-knights",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-knights-champion",
+      "displayName": "Voxel Knights Champion",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.fbx",
+      "grudgeUuid": "fab13ef7-a48b-5c05-a8cd-6010b94cd3e2",
+      "pack": "voxel-knights",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.brain.json",
+      "brainId": "brain-voxel-knights-champion",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-champion-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-knights",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-knights-commander",
+      "displayName": "Voxel Knights Commander",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-commander.fbx",
+      "grudgeUuid": "0cf2be4b-2b46-55b6-89f2-85acc2ac9a88",
+      "pack": "voxel-knights",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-commander.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-commander.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-commander.brain.json",
+      "brainId": "brain-voxel-knights-commander",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-commander-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-knights",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-knights-knight",
+      "displayName": "Voxel Knights Knight",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight.fbx",
+      "grudgeUuid": "ce36516d-b2cf-591b-9846-d83cdf61f1e3",
+      "pack": "voxel-knights",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight.brain.json",
+      "brainId": "brain-voxel-knights-knight",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-knight-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-knights",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-knights-knight-helm-down",
+      "displayName": "Voxel Knights Knight Helm Down",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight-helm-down.fbx",
+      "grudgeUuid": "8df69353-4cfc-5d6c-abf7-d47f6fa5ec8c",
+      "pack": "voxel-knights",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight-helm-down.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight-helm-down.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight-helm-down.brain.json",
+      "brainId": "brain-voxel-knights-knight-helm-down",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-knight-helm-down-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-knights",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-palace-guard",
+      "displayName": "Voxel Palace Guard",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-guard.fbx",
+      "grudgeUuid": "094022e9-b6de-523d-8dd1-71beaa633577",
+      "pack": "voxel-palace",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-guard.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-guard.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-guard.brain.json",
+      "brainId": "brain-voxel-palace-guard",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/textures/voxel-palace-guard-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-palace",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-palace-king",
+      "displayName": "Voxel Palace King",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-king.fbx",
+      "grudgeUuid": "35d23a7d-2c4e-57a8-b453-6b97dc57b20d",
+      "pack": "voxel-palace",
+      "classHint": "melee",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-king.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-king.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-king.brain.json",
+      "brainId": "brain-voxel-palace-king",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/textures/voxel-palace-king-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "melee",
+        "voxel-palace",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-palace-prince",
+      "displayName": "Voxel Palace Prince",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-prince.fbx",
+      "grudgeUuid": "c0513016-7372-5841-b66e-159e6dca089d",
+      "pack": "voxel-palace",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-prince.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-prince.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-prince.brain.json",
+      "brainId": "brain-voxel-palace-prince",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/textures/voxel-palace-prince-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-palace",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-palace-princess",
+      "displayName": "Voxel Palace Princess",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-princess.fbx",
+      "grudgeUuid": "ed6103e7-c284-5672-92d5-22b75839d193",
+      "pack": "voxel-palace",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-princess.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-princess.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-princess.brain.json",
+      "brainId": "brain-voxel-palace-princess",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/textures/voxel-palace-princess-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-palace",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-palace-queen",
+      "displayName": "Voxel Palace Queen",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-queen.fbx",
+      "grudgeUuid": "f10ed031-d0d6-520f-a94e-fff0abd20f4a",
+      "pack": "voxel-palace",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-queen.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-queen.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/characters/voxel-palace-queen.brain.json",
+      "brainId": "brain-voxel-palace-queen",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-palace/textures/voxel-palace-queen-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-palace",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-rangers-captain",
+      "displayName": "Voxel Rangers Captain",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-captain.fbx",
+      "grudgeUuid": "84360700-702a-5723-ac4b-19fb96475214",
+      "pack": "voxel-rangers",
+      "classHint": "ranged",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-captain.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-captain.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-captain.brain.json",
+      "brainId": "brain-voxel-rangers-captain",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-captain-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "ranged",
+        "voxel-rangers",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-rangers-hooded",
+      "displayName": "Voxel Rangers Hooded",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded.fbx",
+      "grudgeUuid": "ae740805-c424-5fbf-9169-ec0a9d4571dc",
+      "pack": "voxel-rangers",
+      "classHint": "ranged",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded.brain.json",
+      "brainId": "brain-voxel-rangers-hooded",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-hooded-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "ranged",
+        "voxel-rangers",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-rangers-hooded-with-stubble",
+      "displayName": "Voxel Rangers Hooded With Stubble",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded-with-stubble.fbx",
+      "grudgeUuid": "48d0cb53-c11c-556f-9e8c-fc89fcadd950",
+      "pack": "voxel-rangers",
+      "classHint": "ranged",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded-with-stubble.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded-with-stubble.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded-with-stubble.brain.json",
+      "brainId": "brain-voxel-rangers-hooded-with-stubble",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-hooded-with-stubble-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "ranged",
+        "voxel-rangers",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-rangers-long-hair",
+      "displayName": "Voxel Rangers Long Hair",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair.fbx",
+      "grudgeUuid": "2498066c-e823-536a-aee1-f4bf2fc4ce1f",
+      "pack": "voxel-rangers",
+      "classHint": "ranged",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair.brain.json",
+      "brainId": "brain-voxel-rangers-long-hair",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-long-hair-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "ranged",
+        "voxel-rangers",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-rangers-long-hair-and-beard",
+      "displayName": "Voxel Rangers Long Hair And Beard",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair-and-beard.fbx",
+      "grudgeUuid": "4de1f02f-fb83-5e08-913c-b58a1a7b027f",
+      "pack": "voxel-rangers",
+      "classHint": "ranged",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair-and-beard.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair-and-beard.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair-and-beard.brain.json",
+      "brainId": "brain-voxel-rangers-long-hair-and-beard",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-long-hair-and-beard-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "ranged",
+        "voxel-rangers",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-barmaid",
+      "displayName": "Voxel Village Barmaid",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-barmaid.fbx",
+      "grudgeUuid": "fa8194f9-3976-5081-b00b-c8774f75763f",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-barmaid.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-barmaid.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-barmaid.brain.json",
+      "brainId": "brain-voxel-village-barmaid",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-barmaid-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-butcher",
+      "displayName": "Voxel Village Butcher",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-butcher.fbx",
+      "grudgeUuid": "8762834b-70c7-5a14-9e76-77dc2199219b",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-butcher.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-butcher.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-butcher.brain.json",
+      "brainId": "brain-voxel-village-butcher",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-butcher-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-chef",
+      "displayName": "Voxel Village Chef",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-chef.fbx",
+      "grudgeUuid": "9f21dc3a-a2ae-5f73-9da7-ba96d19d3fc6",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-chef.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-chef.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-chef.brain.json",
+      "brainId": "brain-voxel-village-chef",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-chef-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-jeweller",
+      "displayName": "Voxel Village Jeweller",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-jeweller.fbx",
+      "grudgeUuid": "9261f83f-d72b-53dd-9f9e-dc7424994270",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-jeweller.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-jeweller.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-jeweller.brain.json",
+      "brainId": "brain-voxel-village-jeweller",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-jeweller-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-market-woman",
+      "displayName": "Voxel Village Market Woman",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-market-woman.fbx",
+      "grudgeUuid": "001b1feb-6f6d-5233-ae6a-af34d0a732b6",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-market-woman.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-market-woman.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-market-woman.brain.json",
+      "brainId": "brain-voxel-village-market-woman",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-market-woman-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-old-man",
+      "displayName": "Voxel Village Old Man",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-man.fbx",
+      "grudgeUuid": "4fda25b7-f0f0-5ed8-9a76-6d93ce8d62e6",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-man.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-man.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-man.brain.json",
+      "brainId": "brain-voxel-village-old-man",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-old-man-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-old-woman",
+      "displayName": "Voxel Village Old Woman",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-woman.fbx",
+      "grudgeUuid": "0ac5eafd-7e60-5511-bbea-8e6b2f96bd0d",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-woman.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-woman.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-old-woman.brain.json",
+      "brainId": "brain-voxel-village-old-woman",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-old-woman-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-pub-landlord",
+      "displayName": "Voxel Village Pub Landlord",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-pub-landlord.fbx",
+      "grudgeUuid": "b694f073-ea06-5b1e-86f4-61c65e4c438f",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-pub-landlord.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-pub-landlord.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-pub-landlord.brain.json",
+      "brainId": "brain-voxel-village-pub-landlord",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-pub-landlord-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-young-man",
+      "displayName": "Voxel Village Young Man",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-man.fbx",
+      "grudgeUuid": "f5e34fd8-800c-56c6-b5d5-39c3c990fd3c",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-man.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-man.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-man.brain.json",
+      "brainId": "brain-voxel-village-young-man",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-young-man-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-village-young-woman",
+      "displayName": "Voxel Village Young Woman",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-woman.fbx",
+      "grudgeUuid": "fe08cd4c-6d31-5a96-9d6b-a559756b4315",
+      "pack": "voxel-village",
+      "classHint": "civilian",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-woman.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-woman.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-young-woman.brain.json",
+      "brainId": "brain-voxel-village-young-woman",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-young-woman-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "civilian",
+        "voxel-village",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-wizards-master-witch",
+      "displayName": "Voxel Wizards Master Witch",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-witch.fbx",
+      "grudgeUuid": "3849626f-e652-55a2-99a4-0c03c97f091e",
+      "pack": "voxel-wizards",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-witch.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-witch.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-witch.brain.json",
+      "brainId": "brain-voxel-wizards-master-witch",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/textures/voxel-wizards-master-witch-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-wizards",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-wizards-master-wizard",
+      "displayName": "Voxel Wizards Master Wizard",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-wizard.fbx",
+      "grudgeUuid": "817efa1d-1f2c-50cd-b889-cae7dd1bb29b",
+      "pack": "voxel-wizards",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-wizard.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-wizard.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-master-wizard.brain.json",
+      "brainId": "brain-voxel-wizards-master-wizard",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/textures/voxel-wizards-master-wizard-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-wizards",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-wizards-warlock",
+      "displayName": "Voxel Wizards Warlock",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-warlock.fbx",
+      "grudgeUuid": "84e3ddae-8e8a-58f4-ae08-a0a398ddbc7e",
+      "pack": "voxel-wizards",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-warlock.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-warlock.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-warlock.brain.json",
+      "brainId": "brain-voxel-wizards-warlock",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/textures/voxel-wizards-warlock-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-wizards",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-wizards-witch",
+      "displayName": "Voxel Wizards Witch",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-witch.fbx",
+      "grudgeUuid": "2dd02014-9ec9-58f0-8e75-7c48f732732e",
+      "pack": "voxel-wizards",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-witch.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-witch.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-witch.brain.json",
+      "brainId": "brain-voxel-wizards-witch",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/textures/voxel-wizards-witch-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-wizards",
+        "character"
+      ]
+    },
+    {
+      "unitId": "voxel-wizards-wizard",
+      "displayName": "Voxel Wizards Wizard",
+      "modelUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-wizard.fbx",
+      "grudgeUuid": "e2ba113c-5e98-5305-b33c-6f700ba9e06c",
+      "pack": "voxel-wizards",
+      "classHint": "magic",
+      "colliderUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-wizard.collider.json",
+      "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-wizard.anims.json",
+      "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/characters/voxel-wizards-wizard.brain.json",
+      "brainId": "brain-voxel-wizards-wizard",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/textures/voxel-wizards-wizard-texture.png",
+      "tags": [
+        "tvs-voxel",
+        "magic",
+        "voxel-wizards",
+        "character"
+      ]
+    }
+  ],
+  "counts": {
+    "units": 38,
+    "melee": 8,
+    "ranged": 6,
+    "magic": 8,
+    "civilian": 16
+  }
+}

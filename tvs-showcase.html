@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TVS Voxel Showcase · VoxGrudge</title>
+<meta name="description" content="Review TVS voxel packs from resources/ — D1/R2 roster, scale, textures, color, animation.">
+<link rel="icon" href="branding/favicon.ico">
+<style>
+  :root {
+    --bg: #070a10;
+    --panel: #0e1420;
+    --line: #1e2a3c;
+    --ink: #e8eef8;
+    --mute: #7a8aa0;
+    --accent: #e86a1a;
+    --ok: #3dd6a5;
+    --bad: #e63d3d;
+    --magic: #9b7bff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #app { display: grid; grid-template-columns: 300px 1fr 280px; height: 100%; }
+  aside { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  aside.right { border-right: 0; border-left: 1px solid var(--line); }
+  header.brand { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+  header.brand h1 { margin: 0; font-size: 15px; letter-spacing: 1px; color: var(--accent); }
+  header.brand p { margin: 4px 0 0; font-size: 10px; color: var(--mute); line-height: 1.4; }
+  .toolbar { padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line); }
+  .toolbar select, .toolbar button, .toolbar input[type=color] {
+    background: #121a28; color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+    font-size: 11px; padding: 6px 8px; cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--accent); color: #fff; }
+  .toolbar button.active { background: rgba(232,106,26,0.18); border-color: var(--accent); color: #ffd0a8; }
+  .toolbar label { font-size: 9px; color: var(--mute); letter-spacing: 1px; text-transform: uppercase; display: flex; flex-direction: column; gap: 3px; }
+  .list { flex: 1; overflow: auto; padding: 8px; }
+  .pack-h { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--mute); margin: 10px 4px 6px; }
+  .unit {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 10px; border: 1px solid transparent;
+    border-radius: 8px; cursor: pointer; margin-bottom: 4px; background: #0b111c;
+  }
+  .unit:hover { border-color: #2a3a52; }
+  .unit.sel { border-color: var(--accent); background: rgba(232,106,26,0.1); box-shadow: 0 0 0 1px rgba(232,106,26,0.2); }
+  .unit .name { font-size: 12px; font-weight: 700; }
+  .unit .meta { font-size: 9px; color: var(--mute); }
+  .unit .hint { font-size: 9px; color: var(--magic); text-transform: uppercase; letter-spacing: 1px; align-self: center; }
+  #stage-wrap { position: relative; min-width: 0; }
+  #stage { width: 100%; height: 100%; display: block; }
+  #hud {
+    position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end;
+    pointer-events: none;
+  }
+  #hud > * { pointer-events: auto; }
+  .pill {
+    background: rgba(8,12,20,0.85); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px;
+    font-size: 11px; backdrop-filter: blur(8px);
+  }
+  .pill b { color: var(--ok); }
+  .pill.warn b { color: var(--bad); }
+  .pill .k { color: var(--mute); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .checks { padding: 12px; border-bottom: 1px solid var(--line); }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 11px; margin: 6px 0; color: var(--mute); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; flex-shrink: 0; }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 8px rgba(61,214,165,0.5); }
+  .dot.bad { background: var(--bad); }
+  .dot.run { background: #e8c45a; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+  .detail { padding: 12px; font-size: 11px; line-height: 1.5; overflow: auto; flex: 1; }
+  .detail code { display: block; background: #0a1018; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-size: 10px; color: #9fd; word-break: break-all; margin: 6px 0 12px; white-space: pre-wrap; }
+  .detail h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--mute); }
+  .swatches { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+  .sw { width: 28px; height: 28px; border-radius: 6px; border: 2px solid #2a3344; cursor: pointer; }
+  .sw:hover, .sw.sel { border-color: #fff; }
+  .anim-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .anim-btns button { background: #121a28; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 6px 10px; font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+  .anim-btns button:hover, .anim-btns button.on { border-color: var(--magic); color: #d8c8ff; }
+  a.back { color: var(--mute); font-size: 10px; text-decoration: none; letter-spacing: 1px; text-transform: uppercase; }
+  a.back:hover { color: var(--accent); }
+  #status { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: 1px; color: var(--mute); background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--line); max-width: 80%; text-align: center; }
+  #status.err { color: #ffb0b0; border-color: var(--bad); }
+  @media (max-width: 960px) {
+    #app { grid-template-columns: 1fr; grid-template-rows: 40vh 1fr auto; }
+    aside.right { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <header class="brand">
+      <h1>TVS Voxel Showcase</h1>
+      <p>Best assets from <code>resources/</code> via D1/R2 roster · scale · texture · color · anim</p>
+      <p style="margin-top:8px"><a class="back" href="index.html">← VoxGrudge game</a></p>
+    </header>
+    <div class="toolbar">
+      <label>Pack
+        <select id="pack-filter"><option value="">All packs</option></select>
+      </label>
+      <label>Class
+        <select id="class-filter">
+          <option value="">All</option>
+          <option value="melee">Melee</option>
+          <option value="ranged">Ranged</option>
+          <option value="magic">Magic</option>
+          <option value="civilian">Civilian</option>
+        </select>
+      </label>
+      <button type="button" id="btn-army">Army sample</button>
+      <button type="button" id="btn-verify">Verify CDN</button>
+    </div>
+    <div class="list" id="unit-list"></div>
+  </aside>
+
+  <div id="stage-wrap">
+    <canvas id="stage"></canvas>
+    <div id="status">Loading roster from assets.grudge-studio.com…</div>
+    <div id="hud">
+      <div class="pill" id="pill-scale"><span class="k">Scale</span><b>—</b></div>
+      <div class="pill" id="pill-tex"><span class="k">Texture</span><b>—</b></div>
+      <div class="pill" id="pill-anim"><span class="k">Anim</span><b>—</b></div>
+      <div class="pill" id="pill-uuid"><span class="k">D1 grudgeUuid</span><b style="font-size:10px">—</b></div>
+    </div>
+  </div>
+
+  <aside class="right">
+    <div class="checks" id="checks">
+      <div class="check"><span class="dot" id="c-roster"></span> Unit roster (CDN/D1)</div>
+      <div class="check"><span class="dot" id="c-fbx"></span> FBX magic-byte OK</div>
+      <div class="check"><span class="dot" id="c-tex"></span> Texture atlas bound</div>
+      <div class="check"><span class="dot" id="c-scale"></span> Height ~2.0m</div>
+      <div class="check"><span class="dot" id="c-anim"></span> Semantic clips</div>
+      <div class="check"><span class="dot" id="c-color"></span> Color editable</div>
+    </div>
+    <div class="detail" id="detail">
+      <h3>Selected</h3>
+      <p id="sel-name" style="margin:0;font-weight:800;font-size:14px">—</p>
+      <p id="sel-meta" style="margin:4px 0 0;color:var(--mute);font-size:10px">Pick a unit</p>
+      <h3 style="margin-top:16px">Color tint</h3>
+      <div class="swatches" id="swatches"></div>
+      <label style="font-size:10px;color:var(--mute)">Custom
+        <input type="color" id="color-pick" value="#ffffff" style="width:100%;height:32px;border:0;background:transparent;cursor:pointer">
+      </label>
+      <button type="button" id="btn-reset-color" style="margin-top:8px;width:100%;background:#121a28;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:8px;cursor:pointer">Reset color</button>
+      <h3 style="margin-top:16px">Animations</h3>
+      <div class="anim-btns" id="anim-btns"></div>
+      <h3 style="margin-top:16px">D1 / R2 metadata</h3>
+      <code id="meta-json">{}</code>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="js/tvs-voxel-assets.js"></script>
+<script src="js/tvs-unit-loader.js"></script>
+<script>
+(function () {
+  var canvas = document.getElementById('stage');
+  var statusEl = document.getElementById('status');
+  var roster = null;
+  var currentRoot = null;
+  var armyRoots = [];
+  var clock = new THREE.Clock();
+  var selectedUnit = null;
+
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x0a101c, 1);
+  renderer.shadowMap.enabled = true;
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0a101c, 12, 40);
+
+  var camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  camera.position.set(0, 1.6, 5.2);
+
+  var amb = new THREE.AmbientLight(0xb0c4de, 0.55);
+  scene.add(amb);
+  var sun = new THREE.DirectionalLight(0xffe8c8, 1.15);
+  sun.position.set(4, 10, 6);
+  sun.castShadow = true;
+  scene.add(sun);
+  var fill = new THREE.DirectionalLight(0x6688ff, 0.35);
+  fill.position.set(-5, 3, -4);
+  scene.add(fill);
+
+  // Ground grid
+  var grid = new THREE.GridHelper(20, 20, 0x2a3a50, 0x152030);
+  grid.position.y = 0.001;
+  scene.add(grid);
+  var floor = new THREE.Mesh(
+    new THREE.CircleGeometry(8, 48),
+    new THREE.MeshStandardMaterial({ color: 0x121a28, roughness: 0.95, metalness: 0 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Height reference stick (2m)
+  var refGeo = new THREE.BoxGeometry(0.05, 2, 0.05);
+  var refMat = new THREE.MeshBasicMaterial({ color: 0x3dd6a5 });
+  var ref = new THREE.Mesh(refGeo, refMat);
+  ref.position.set(-1.6, 1, 0);
+  scene.add(ref);
+  var refLabel = makeLabel('2.0m');
+  refLabel.position.set(-1.6, 2.15, 0);
+  scene.add(refLabel);
+
+  function makeLabel(text) {
+    var c = document.createElement('canvas');
+    c.width = 128; c.height = 32;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#3dd6a5';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, 64, 22);
+    var tex = new THREE.CanvasTexture(c);
+    var mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    var spr = new THREE.Sprite(mat);
+    spr.scale.set(0.8, 0.2, 1);
+    return spr;
+  }
+
+  function resize() {
+    var w = canvas.clientWidth || canvas.parentElement.clientWidth;
+    var h = canvas.clientHeight || canvas.parentElement.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / Math.max(1, h);
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Orbit-ish mouse
+  var yaw = 0.35, pitch = 0.15, dist = 5.2, dragging = false, lx = 0, ly = 0;
+  canvas.addEventListener('pointerdown', function (e) { dragging = true; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointerup', function () { dragging = false; });
+  canvas.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    yaw -= (e.clientX - lx) * 0.01;
+    pitch = Math.max(-0.4, Math.min(0.8, pitch + (e.clientY - ly) * 0.01));
+    lx = e.clientX; ly = e.clientY;
+  });
+  canvas.addEventListener('wheel', function (e) {
+    dist = Math.max(2.5, Math.min(12, dist + e.deltaY * 0.01));
+    e.preventDefault();
+  }, { passive: false });
+
+  function setStatus(msg, err) {
+    statusEl.textContent = msg;
+    statusEl.className = err ? 'err' : '';
+  }
+
+  function setCheck(id, state) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'dot' + (state === true ? ' ok' : state === false ? ' bad' : state === 'run' ? ' run' : '');
+  }
+
+  function clearStage() {
+    if (currentRoot) {
+      scene.remove(currentRoot);
+      currentRoot = null;
+    }
+    armyRoots.forEach(function (r) { scene.remove(r); });
+    armyRoots = [];
+  }
+
+  function measureHeight(obj) {
+    obj.updateMatrixWorld(true);
+    var box = new THREE.Box3().setFromObject(obj);
+    return box.max.y - box.min.y;
+  }
+
+  function updatePills(root, unit) {
+    var h = root ? measureHeight(root) : 0;
+    var scaleOk = h > 1.6 && h < 2.5;
+    document.getElementById('pill-scale').innerHTML = '<span class="k">Scale</span><b>' + (h ? h.toFixed(2) + 'm' : '—') + '</b>';
+    document.getElementById('pill-scale').className = 'pill' + (scaleOk || !h ? '' : ' warn');
+    document.getElementById('pill-tex').innerHTML = '<span class="k">Texture</span><b>' + (root && root.userData.textureUrl ? 'bound' : '—') + '</b>';
+    var animKeys = root && root.userData.animActions ? Object.keys(root.userData.animActions) : [];
+    document.getElementById('pill-anim').innerHTML = '<span class="k">Anim</span><b>' + (animKeys.length ? animKeys.join(', ') : '—') + '</b>';
+    document.getElementById('pill-uuid').innerHTML = '<span class="k">D1 grudgeUuid</span><b style="font-size:10px">' + ((unit && unit.grudgeUuid) || '—') + '</b>';
+    setCheck('c-scale', scaleOk);
+    setCheck('c-tex', !!(root && root.userData.textureUrl));
+    setCheck('c-anim', animKeys.length > 0);
+    setCheck('c-color', !!(root && root.userData.setColorTint));
+  }
+
+  function fillDetail(unit, root) {
+    document.getElementById('sel-name').textContent = unit ? unit.displayName : '—';
+    document.getElementById('sel-meta').textContent = unit
+      ? unit.pack + ' · ' + unit.classHint + ' · ' + unit.unitId
+      : 'Pick a unit';
+    var meta = unit
+      ? {
+          unitId: unit.unitId,
+          grudgeUuid: unit.grudgeUuid,
+          pack: unit.pack,
+          classHint: unit.classHint,
+          modelUrl: unit.modelUrl,
+          textureUrl: unit.textureUrl,
+          animationPackUrl: unit.animationPackUrl,
+          colliderUrl: unit.colliderUrl,
+          brainUrl: unit.brainUrl,
+          scaleFactor: root && root.userData.scaleFactor,
+          nativeHeight: root && root.userData.nativeHeight,
+          targetHeight: root && root.userData.targetHeight,
+        }
+      : {};
+    document.getElementById('meta-json').textContent = JSON.stringify(meta, null, 2);
+
+    var animBox = document.getElementById('anim-btns');
+    animBox.innerHTML = '';
+    if (root && root.userData.animActions) {
+      Object.keys(root.userData.animActions).forEach(function (name) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = name;
+        b.onclick = function () {
+          root.userData.playClip(name);
+          Array.prototype.forEach.call(animBox.querySelectorAll('button'), function (x) { x.classList.remove('on'); });
+          b.classList.add('on');
+        };
+        animBox.appendChild(b);
+      });
+    }
+  }
+
+  var TINTS = [
+    0xffffff, 0xff6644, 0x44aaff, 0x55dd88, 0xffcc33, 0xcc66ff, 0xff88aa, 0x88ffe0,
+  ];
+  (function buildSwatches() {
+    var box = document.getElementById('swatches');
+    TINTS.forEach(function (hex) {
+      var el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'sw';
+      el.style.background = '#' + hex.toString(16).padStart(6, '0');
+      el.onclick = function () {
+        if (currentRoot && currentRoot.userData.setColorTint) {
+          currentRoot.userData.setColorTint(hex);
+          setCheck('c-color', true);
+        }
+        Array.prototype.forEach.call(box.querySelectorAll('.sw'), function (s) { s.classList.remove('sel'); });
+        el.classList.add('sel');
+      };
+      box.appendChild(el);
+    });
+  })();
+
+  document.getElementById('color-pick').addEventListener('input', function (e) {
+    if (currentRoot && currentRoot.userData.setColorTint) {
+      currentRoot.userData.setColorTint(e.target.value);
+      setCheck('c-color', true);
+    }
+  });
+  document.getElementById('btn-reset-color').onclick = function () {
+    if (currentRoot && currentRoot.userData.resetColor) currentRoot.userData.resetColor();
+  };
+
+  async function loadUnit(unit) {
+    selectedUnit = unit;
+    clearStage();
+    setStatus('Loading ' + unit.displayName + '…');
+    setCheck('c-fbx', 'run');
+    setCheck('c-tex', 'run');
+    setCheck('c-anim', 'run');
+    setCheck('c-scale', 'run');
+
+    document.querySelectorAll('.unit').forEach(function (el) {
+      el.classList.toggle('sel', el.dataset.id === unit.unitId);
+    });
+
+    try {
+      var root = await TvsUnitLoader.loadTvsUnit(unit, {
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        height: 2.0,
+        withTexture: true,
+        withAnims: true,
+        loadSidecars: true,
+        verify: true,
+        maxClips: 8,
+      });
+      currentRoot = root;
+      scene.add(root);
+      setCheck('c-fbx', true);
+      updatePills(root, unit);
+      fillDetail(unit, root);
+      setStatus(unit.displayName + ' ready · drag to orbit · scroll to zoom');
+    } catch (err) {
+      console.error(err);
+      setCheck('c-fbx', false);
+      setStatus(String(err && err.message || err), true);
+      fillDetail(unit, null);
+      updatePills(null, unit);
+    }
+  }
+
+  function renderList() {
+    var packF = document.getElementById('pack-filter').value;
+    var classF = document.getElementById('class-filter').value;
+    var list = document.getElementById('unit-list');
+    list.innerHTML = '';
+    if (!roster) return;
+    var units = roster.units.slice();
+    if (packF) units = units.filter(function (u) { return u.pack === packF; });
+    if (classF) units = units.filter(function (u) { return u.classHint === classF; });
+
+    var byPack = {};
+    units.forEach(function (u) {
+      if (!byPack[u.pack]) byPack[u.pack] = [];
+      byPack[u.pack].push(u);
+    });
+    Object.keys(byPack).sort().forEach(function (pack) {
+      var h = document.createElement('div');
+      h.className = 'pack-h';
+      h.textContent = pack + ' (' + byPack[pack].length + ')';
+      list.appendChild(h);
+      byPack[pack].forEach(function (u) {
+        var el = document.createElement('div');
+        el.className = 'unit' + (selectedUnit && selectedUnit.unitId === u.unitId ? ' sel' : '');
+        el.dataset.id = u.unitId;
+        el.innerHTML =
+          '<div><div class="name">' + u.displayName.replace(/^Voxel\s+/i, '') + '</div>' +
+          '<div class="meta">' + u.unitId + '</div></div>' +
+          '<div class="hint">' + u.classHint + '</div>';
+        el.onclick = function () { loadUnit(u); };
+        list.appendChild(el);
+      });
+    });
+  }
+
+  document.getElementById('pack-filter').onchange = renderList;
+  document.getElementById('class-filter').onchange = renderList;
+
+  document.getElementById('btn-army').onclick = async function () {
+    clearStage();
+    setStatus('Loading army sample (melee / ranged / magic / civilian)…');
+    try {
+      var sample = await TvsUnitLoader.loadArmySample({
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        height: 2.0,
+        withTexture: true,
+        withAnims: true,
+        maxClips: 4,
+      });
+      armyRoots = sample.roots;
+      armyRoots.forEach(function (r) { scene.add(r); });
+      selectedUnit = sample.units[0];
+      currentRoot = armyRoots[0];
+      updatePills(currentRoot, selectedUnit);
+      fillDetail(selectedUnit, currentRoot);
+      setStatus('Army sample · ' + sample.units.map(function (u) { return u.displayName; }).join(' · '));
+      setCheck('c-fbx', true);
+    } catch (err) {
+      setStatus(String(err && err.message || err), true);
+    }
+  };
+
+  document.getElementById('btn-verify').onclick = async function () {
+    setStatus('Verifying CDN endpoints…');
+    var urls = [
+      TvsUnitLoader.CDN_ROSTER,
+      'https://assets.grudge-studio.com/models/voxels/tvs/catalog.json',
+    ];
+    if (roster && roster.units[0]) {
+      urls.push(roster.units[0].modelUrl, roster.units[0].textureUrl);
+    }
+    var ok = 0;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        var r = await fetch(urls[i], { method: 'HEAD', mode: 'cors' });
+        if (r.ok) ok++;
+        else throw new Error(r.status);
+      } catch (e) {
+        try {
+          var r2 = await fetch(urls[i], { mode: 'cors' });
+          if (r2.ok) ok++;
+        } catch (_) {}
+      }
+    }
+    setStatus('CDN check: ' + ok + '/' + urls.length + ' OK');
+    setCheck('c-roster', ok > 0);
+  };
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = clock.getDelta();
+    if (currentRoot && currentRoot.userData.updateMixer) currentRoot.userData.updateMixer(dt);
+    armyRoots.forEach(function (r) {
+      if (r.userData.updateMixer) r.userData.updateMixer(dt);
+    });
+    var target = currentRoot ? currentRoot.position.clone().add(new THREE.Vector3(0, 1, 0)) : new THREE.Vector3(0, 1, 0);
+    camera.position.x = target.x + Math.sin(yaw) * Math.cos(pitch) * dist;
+    camera.position.y = target.y + Math.sin(pitch) * dist + 0.4;
+    camera.position.z = target.z + Math.cos(yaw) * Math.cos(pitch) * dist;
+    camera.lookAt(target);
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  (async function boot() {
+    try {
+      roster = await TvsUnitLoader.loadTvsRoster();
+      setCheck('c-roster', true);
+      setStatus('Roster: ' + (roster.units && roster.units.length) + ' units · CDN ' + (roster.cdnBase || ''));
+
+      var packs = {};
+      (roster.units || []).forEach(function (u) { packs[u.pack] = true; });
+      var sel = document.getElementById('pack-filter');
+      Object.keys(packs).sort().forEach(function (p) {
+        var o = document.createElement('option');
+        o.value = p; o.textContent = p;
+        sel.appendChild(o);
+      });
+      renderList();
+
+      // Default: best knights champion
+      var best =
+        TvsUnitLoader.findUnit(roster, 'voxel-knights-champion') ||
+        TvsUnitLoader.pickBestUnit(roster, 'swordsman') ||
+        roster.units[0];
+      if (best) await loadUnit(best);
+    } catch (err) {
+      setCheck('c-roster', false);
+      setStatus('Failed to load roster: ' + (err && err.message || err), true);
+    }
+  })();
+})();
+</script>
+</body>
+</html>
