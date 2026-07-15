@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
     <!-- Fleet modular auth: GrudgeAuth.start({ mode:'popup'|'redirect'|'modal' }) -->
-    <script src="https://id.grudge-studio.com/grudge-game-bootstrap.js"></script>
+    <!-- client.* matches CSP script-src *.grudge-studio.com; id.* also allow-listed -->
+    <script src="https://client.grudge-studio.com/grudge-game-bootstrap.js"></script>
     <script>window.GRUDGE_AUTH_GATEWAY='https://id.grudge-studio.com';window.GRUDGE_AUTH_MODE='popup';</script>
     <!-- Puter via same-origin proxy so embed CSP (script-src 'self') allows it -->
     <script src="vendor/puter.js"></script>
@@ -599,7 +600,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
 <div id="world-loading" class="gw-load-screen screen-overlay" style="display:none">
   <!-- Video assets optional — poster/CSS gradient is enough when webm/mp4 are not shipped -->
-  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="branding/og-image.png" preload="none">
+  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="/branding/load-screen-poster.jpg" preload="metadata">
     <source src="/branding/load-screen.webm" type="video/webm">
     <source src="/branding/load-screen.mp4" type="video/mp4">
   </video>
@@ -1760,11 +1761,15 @@ function startGame(){
     if(stock.length) addToInventory(stock[Math.floor(Math.random()*stock.length)],1);
     showFlash(v.name+': "Take what you need — island trade is scarce."');
   });
-  worldEngine.setAllyOfferHandler(function(sv){
-    const kind=sv.coldUnit==='snowman_friend'?'snow_scout':'viking_shield';
-    spawnAlly(kind, playerMesh.position.clone().add(new THREE.Vector3(2,0,2)));
-    showFlash(sv.name+' joins your warband.');
-  });
+  if(typeof worldEngine.setAllyOfferHandler==='function'){
+    worldEngine.setAllyOfferHandler(function(sv){
+      const kind=(sv&&sv.coldUnit==='snowman_friend')?'snow_scout':'viking_shield';
+      if(typeof spawnAlly==='function'&&playerMesh){
+        spawnAlly(kind, playerMesh.position.clone().add(new THREE.Vector3(2,0,2)));
+      }
+      showFlash(((sv&&sv.name)||'Survivor')+' joins your warband.');
+    });
+  }
   function finishWorldEntry(){
     linkVfxAliases();
     init();

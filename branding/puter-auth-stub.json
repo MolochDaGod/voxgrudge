@@ -1,0 +1,6 @@
+{
+  "ok": false,
+  "available": false,
+  "provider": "puter",
+  "message": "Puter auth is optional on VoxGrudge. Use Grudge ID popup sign-in (id.grudge-studio.com)."
+}

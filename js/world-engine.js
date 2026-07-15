@@ -55,6 +55,7 @@
     let onChestOpen = null;
     let onSurvivorTalk = null;
     let onVendorTalk = null;
+    let onAllyOffer = null;
 
     function rngForChunk(cx, cz) {
       const h = ((cx * 73856093) ^ (cz * 19349663) ^ seed) >>> 0;
@@ -396,11 +397,18 @@
         if (d < bestD) { bestD = d; best = p; }
       });
       if (!best) return false;
-      if (best.data && best.data.role === 'vendor' && onVendorTalk) {
-        onVendorTalk(best.data);
+      const data = best.data || {};
+      if (data.role === 'vendor' && onVendorTalk) {
+        onVendorTalk(data);
         return true;
       }
-      if (onSurvivorTalk) { onSurvivorTalk(best.data); return true; }
+      // Ally recruit offers (cold-biom scouts / shield-bearers, etc.)
+      const isAllyOffer = data.role === 'ally' || data.allyOffer || data.coldUnit === 'snowman_friend' || data.coldUnit === 'viking_shield';
+      if (isAllyOffer && onAllyOffer) {
+        onAllyOffer(data);
+        return true;
+      }
+      if (onSurvivorTalk) { onSurvivorTalk(data); return true; }
       return false;
     }
 
@@ -486,6 +494,7 @@
       setChestHandler(fn) { onChestOpen = fn; },
       setSurvivorHandler(fn) { onSurvivorTalk = fn; },
       setVendorHandler(fn) { onVendorTalk = fn; },
+      setAllyOfferHandler(fn) { onAllyOffer = fn; },
       getInteractHint,
       resetChunkMeshes() {
         loaded.forEach(c => { c.meshesBuilt = false; });

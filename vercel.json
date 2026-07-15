@@ -46,6 +46,10 @@
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/health"
     },
     {
+      "source": "/api/auth/puter",
+      "destination": "/branding/puter-auth-stub.json"
+    },
+    {
       "source": "/api/auth/:path*",
       "destination": "https://id.grudge-studio.com/api/auth/:path*"
     },
@@ -107,7 +111,7 @@
         { "key": "X-Grudge-App", "value": "voxgrudge" },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://*.grudge-studio.com https://*.vercel.app https://id.grudge-studio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: blob:; media-src 'self' https: blob: data:; worker-src 'self' blob:; base-uri 'self'"
+          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://grudge-studio.com https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://id.grudge-studio.com https://client.grudge-studio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: blob: https://vercel.live wss://vercel.live; media-src 'self' https: blob: data:; worker-src 'self' blob:; base-uri 'self'"
         }
       ]
     },

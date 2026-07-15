@@ -79,9 +79,33 @@
 
   function absUrl(path) {
     if (!path) return FALLBACK_ICON;
-    if (/^https?:\/\//i.test(path) || path.indexOf("data:") === 0) return path;
-    if (path.charAt(0) === "/") return path;
-    return "/" + path.replace(/^\.?\//, "");
+    if (/^https?:\/\//i.test(path) || path.indexOf("data:") === 0 || path.indexOf("blob:") === 0) return path;
+    // Strip accidental leading ./ or ../ segments that would break absolute assets
+    var clean = String(path).replace(/\\/g, "/").replace(/^\.?\//, "");
+    while (clean.indexOf("../") === 0) clean = clean.slice(3);
+    // If someone passed only a filename that we know lives under the UI kit, expand it
+    if (clean.indexOf("/") < 0 && /\.(png|webp|jpg|jpeg|gif)$/i.test(clean)) {
+      // Prefer full kit path when filename matches a MANIFEST value tail
+      var keys = Object.keys(MANIFEST);
+      for (var i = 0; i < keys.length; i++) {
+        var full = MANIFEST[keys[i]];
+        if (full && full.slice(-clean.length - 1) === "/" + clean) {
+          clean = full.replace(/^\//, "");
+          break;
+        }
+      }
+      if (clean.indexOf("/") < 0) {
+        clean = "assets/grudge-game/ui/" + clean;
+      }
+    }
+    if (clean.charAt(0) !== "/") clean = "/" + clean;
+    // Origin-absolute so CSS var() + url() never resolve against a deep CSS path
+    try {
+      if (typeof location !== "undefined" && location.origin && location.origin.indexOf("http") === 0) {
+        return location.origin + clean;
+      }
+    } catch (e) { /* ignore */ }
+    return clean;
   }
 
   function url(id) {
@@ -211,7 +235,9 @@
       "--vox-png-notif": "notif.bg",
     };
     Object.keys(map).forEach(function (cssVar) {
-      root.style.setProperty(cssVar, "url('" + url(map[cssVar]) + "')");
+      var src = url(map[cssVar]);
+      // Always quote + absolute — bare filenames 404 when resolved from /ui/hud/
+      root.style.setProperty(cssVar, 'url("' + src + '")');
     });
   }
 
@@ -314,7 +340,7 @@
       "--uf-party": UI + "Unit_Frames/Party/UnitFrame_Party_Background.png",
     };
     Object.keys(patches).forEach(function (k) {
-      root.style.setProperty(k, "url('" + patches[k] + "')");
+      root.style.setProperty(k, 'url("' + absUrl(patches[k]) + '")');
     });
   }
 
