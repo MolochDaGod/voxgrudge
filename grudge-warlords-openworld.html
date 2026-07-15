@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="ui/hud/combat-hud.css">
 <link rel="stylesheet" href="ui/load-screen.css">
 <link rel="stylesheet" href="ui/vox-game-shell.css">
+<link rel="stylesheet" href="ui/vox-ui-kit.css">
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
@@ -270,64 +271,91 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
     <h1>GRUDGE WARLORDS</h1>
   </header>
   <div class="sub">Nexus Era · Open World Survival</div>
-  <div class="version">Stats from <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener" style="color:#667">survival.grudge-studio.com</a> · 8-step combat · T1–T6 gear · GRUDOX</div>
+  <div class="version">CraftPix PNG UI · TVS D1/R2 · 8-step combat · GRUDOX</div>
   <div id="vox-flow-rail" aria-label="Game flow">
     <span class="step on" data-step="select">1 · Hero</span>
     <span class="step" data-step="world">2 · World</span>
     <span class="step" data-step="loading">3 · Load</span>
     <span class="step" data-step="playing">4 · Play</span>
   </div>
-  <div id="vox-boot-status">Checking canvas &amp; TVS deps…</div>
+  <div id="vox-boot-status">Loading UI PNG frames…</div>
   <div class="vox-links-row">
     <a href="tvs-showcase.html">TVS Showcase</a>
     <a href="tvs-showcase.html#settlements">Settlements</a>
     <a href="https://grudox.grudge-studio.com/" target="_blank" rel="noopener">Grudox Fleet</a>
   </div>
-  <div class="skin-picker-label" style="text-align:center;margin-bottom:6px">World content (TVS cities · farms · camps · castles)</div>
-  <div id="settlement-strip" aria-label="Settlement content modes"></div>
-  <div id="skin-picker">
-    <div class="skin-picker-label">TVS Hero (D1 / R2 · resources packs)</div>
-    <div id="tvs-unit-row" class="char-select-row"></div>
-    <div class="skin-picker-label">Color Tint</div>
-    <div id="tvs-tint-row" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
-    <div class="skin-picker-label">Legacy Kenney roster</div>
-    <div id="char-select-row" class="char-select-row"></div>
-    <div class="skin-picker-label">Body Mesh (Kenney fallback)</div>
-    <div id="skin-body-row"></div>
-    <div class="skin-picker-label">Color Palette (Kenney fallback)</div>
-    <div id="skin-texture-row"></div>
+
+  <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 12px">
+    <div class="vox-container__header"><h2 class="vox-container__title">Survivor class</h2></div>
+    <div class="vox-container__body">
+      <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
+      <div class="class-grid" id="class-grid" style="display:none" aria-hidden="true"></div>
+    </div>
   </div>
-  <p style="color:#555;font-size:11px;letter-spacing:2px;margin:0 0 10px;position:relative">TVS voxel heroes from CDN · scale · texture · color · anim · <a href="tvs-showcase.html" style="color:#7ec8ff">open showcase</a></p>
-  <p style="color:#445;font-size:10px;letter-spacing:1px;margin:0 0 12px;position:relative">In-world: WASD · C cycles TPS/ISO/FPS · mouse &amp; RMB change per camera mode · Shift dash</p>
-  <div id="seed-row" style="position:relative;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
-    <span style="font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase">World Seed</span>
-    <input id="world-seed-input" type="number" style="width:120px;background:#0a0e14;border:1px solid #333;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
-    <button type="button" class="hud-action-btn" style="pointer-events:auto" onclick="randomizeWorldSeed()">Random</button>
-  </div>
-  <div class="class-select-layout">
-    <div class="class-grid" id="class-grid"></div>
-    <aside class="class-preview" id="class-preview">
-      <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
-      <h3 id="preview-name">Choose Survivor</h3>
-      <div class="cp-val" id="preview-cp">—</div>
-      <div id="preview-stats"></div>
-      <p class="preview-hint" id="preview-hint">Every survivor uses the same 8 attributes, 37 derived stats, and combat pipeline as Grudges survival.</p>
-      <span class="perk-tag hidden" id="preview-perk"></span>
+
+  <div class="vox-shell-grid">
+    <div class="vox-container">
+      <div class="vox-container__header"><h2 class="vox-container__title">TVS hero · body · palette</h2></div>
+      <div class="vox-container__body">
+        <div id="skin-picker">
+          <div class="skin-picker-label">TVS Hero (carousel)</div>
+          <div id="tvs-hero-carousel" aria-label="TVS hero carousel"></div>
+          <div id="tvs-unit-row" class="char-select-row" style="display:none"></div>
+          <div class="skin-picker-label">Color Tint</div>
+          <div id="tvs-tint-row" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
+          <div class="skin-picker-label" style="opacity:0.55">Legacy Kenney (fallback)</div>
+          <div id="char-select-row" class="char-select-row"></div>
+          <div id="skin-body-row"></div>
+          <div id="skin-texture-row"></div>
+        </div>
+      </div>
+    </div>
+    <aside class="vox-container class-preview" id="class-preview">
+      <div class="vox-container__header"><h2 class="vox-container__title">Loadout</h2></div>
+      <div class="vox-container__body">
+        <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
+        <h3 id="preview-name">Choose Survivor</h3>
+        <div class="cp-val" id="preview-cp">—</div>
+        <div id="preview-stats"></div>
+        <p class="preview-hint" id="preview-hint">PNG unit frames + carousel UI · TVS heroes from CDN.</p>
+        <span class="perk-tag hidden" id="preview-perk"></span>
+        <div id="seed-row" style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:9px;letter-spacing:2px;color:#889;text-transform:uppercase">World Seed</span>
+          <input id="world-seed-input" type="number" style="width:110px;background:#0a0e14;border:1px solid #444;color:#ccc;padding:6px 8px;font-size:11px;border-radius:4px" placeholder="auto">
+          <button type="button" class="vox-btn vox-btn--sm" onclick="randomizeWorldSeed()">Random</button>
+        </div>
+      </div>
     </aside>
   </div>
-  <button class="gw-btn hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
+
+  <div class="vox-container" style="width:min(96vw,980px);margin:14px auto 8px">
+    <div class="vox-container__header"><h2 class="vox-container__title">World content · settlements</h2></div>
+    <div class="vox-container__body">
+      <div id="settlement-carousel" aria-label="Settlement carousel"></div>
+      <div id="settlement-strip" aria-label="Settlement content modes" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <p style="color:#667;font-size:10px;letter-spacing:1px;margin:8px 0;position:relative;text-align:center">WASD · C camera · RMB free-look · Esc pause · unit frames track player + AI targets</p>
+  <button class="vox-btn vox-btn--lg vox-btn--primary hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
 </div>
+
+<div id="vox-unit-frames" class="pre-game-hidden" aria-label="Player unit frame"></div>
+<div id="vox-ai-frames" class="pre-game-hidden" aria-label="AI target frames"></div>
+<div id="vox-xp-strip" class="pre-game-hidden"><div class="fill" id="vox-xp-fill"></div></div>
 
 <div id="zone-content-pill" class="hidden">Content · —</div>
 <div id="cam-mode-pill" class="pre-game-hidden">CAM · TPS · Hold RMB free-look · C cycle</div>
 <div id="mouse-help" class="pre-game-hidden">LMB attack · RMB free-look</div>
 
 <div id="vox-pause-overlay" aria-hidden="true">
-  <div class="panel">
-    <h2>Paused</h2>
-    <p>Esc resume · settlements &amp; TVS assets stay loaded</p>
-    <button type="button" class="primary" id="vox-pause-resume">Resume</button>
-    <button type="button" id="vox-pause-menu" onclick="location.reload()">Main Menu</button>
+  <div class="panel vox-container">
+    <div class="vox-container__header"><h2 class="vox-container__title">Paused</h2></div>
+    <div class="vox-container__body" style="text-align:center">
+      <p style="margin:0 0 16px;color:#9ab;font-size:12px">Esc resume · PNG frames stay hot · TVS assets loaded</p>
+      <button type="button" class="vox-btn vox-btn--primary" id="vox-pause-resume">Resume</button>
+      <button type="button" class="vox-btn" id="vox-pause-menu" onclick="location.reload()">Main Menu</button>
+    </div>
   </div>
 </div>
 
@@ -613,6 +641,8 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/grudge-scale.js"></script>
 <script src="js/vox-game-canvas.js"></script>
 <script src="js/vox-game-flow.js"></script>
+<script src="js/vox-ui-deps.js"></script>
+<script src="js/vox-ui-kit.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
 <script src="js/tvs-world-content.js"></script>
@@ -1287,10 +1317,14 @@ function renderTvsUnitPicker(){
     TvsUnitLoader.loadTvsRoster().then(function(r){
       tvsRosterCache = r;
       renderTvsUnitPicker();
+      refreshTvsHeroCarousel();
     }).catch(function(err){
       console.warn('[VoxGrudge] TVS roster failed', err);
       const row = document.getElementById('tvs-unit-row');
-      if(row) row.innerHTML = '<span style="color:#666;font-size:10px">TVS roster offline — Kenney fallback</span>';
+      if(row){
+        row.style.display = '';
+        row.innerHTML = '<span style="color:#666;font-size:10px">TVS roster offline — Kenney fallback</span>';
+      }
     });
   }
 })();
@@ -1344,20 +1378,134 @@ function setFlowRail(state){
   });
 }
 
+let classCarouselApi = null;
+let tvsHeroCarouselApi = null;
+let settlementCarouselApi = null;
+
+function buildClassCarousel(){
+  if(!window.VoxUiKit || !document.getElementById('class-carousel')) return;
+  const items = VoxUiKit.classItemsFromDefs(CLASSES);
+  classCarouselApi = VoxUiKit.carousel(document.getElementById('class-carousel'), {
+    items: items,
+    visible: 4,
+    selectedId: playerClass,
+    onSelect: function(item){
+      const cid = item.id;
+      playerClass = cid;
+      playerSkinBody = CLASS_MODEL_MAP[cid]||'a';
+      applyTvsHeroForClass(cid);
+      renderTvsUnitPicker();
+      refreshTvsHeroCarousel();
+      updateClassPreview(cid);
+      updateSkinPickerUI();
+      document.getElementById('start-btn').classList.remove('hidden');
+      // sync legacy grid selection
+      document.querySelectorAll('.class-card').forEach(function(c){
+        c.classList.toggle('sel', c.dataset.cid===cid);
+      });
+    },
+  });
+}
+
+function refreshTvsHeroCarousel(){
+  if(!window.VoxUiKit || !tvsRosterCache) return;
+  const host = document.getElementById('tvs-hero-carousel');
+  if(!host) return;
+  const hint = playerClass && window.TvsUnitLoader ? TvsUnitLoader.classToHint(playerClass) : null;
+  let units = (tvsRosterCache.units||[]).slice();
+  if(hint){
+    units = units.filter(function(u){ return u.classHint===hint; }).concat(units.filter(function(u){ return u.classHint!==hint; }));
+  }
+  units = units.slice(0, 24);
+  const items = units.map(function(u){
+    return {
+      id: u.unitId,
+      title: (u.displayName||u.unitId).replace(/^Voxel\s+/i,''),
+      meta: (u.classHint||'')+' · '+(u.pack||''),
+      badge: 'TVS',
+      iconUrl: u.textureUrl || null,
+      color: 'linear-gradient(135deg,#1a2438,#3a2010)',
+      raw: u,
+    };
+  });
+  if(tvsHeroCarouselApi){
+    tvsHeroCarouselApi.setItems(items, playerTvsUnitId);
+  } else {
+    tvsHeroCarouselApi = VoxUiKit.carousel(host, {
+      items: items,
+      visible: 4,
+      selectedId: playerTvsUnitId,
+      onSelect: function(item){
+        if(item.raw) selectTvsUnit(item.raw);
+      },
+    });
+  }
+}
+
+function buildSettlementCarousel(){
+  if(!window.VoxUiKit) return;
+  const host = document.getElementById('settlement-carousel');
+  if(!host) return;
+  const types = (window.TvsWorldContent && TvsWorldContent.listSettlementTypes()) || [
+    {id:'village',title:'Village',theme:'economy'},
+    {id:'farm',title:'Farm',theme:'agriculture'},
+    {id:'camp',title:'Camp',theme:'wild'},
+    {id:'castle',title:'Castle',theme:'fortress'},
+    {id:'city',title:'City',theme:'royalty'},
+    {id:'cathedral',title:'Cathedral',theme:'holy'},
+    {id:'wizard_tower',title:'Tower',theme:'magic'},
+  ];
+  const items = VoxUiKit.settlementItems(types).map(function(it){
+    it.badge = selectedSettlementTypes.indexOf(it.id)>=0 ? 'ON' : 'OFF';
+    return it;
+  });
+  settlementCarouselApi = VoxUiKit.carousel(host, {
+    items: items,
+    visible: 5,
+    onSelect: function(item){
+      const i = selectedSettlementTypes.indexOf(item.id);
+      if(i>=0){
+        if(selectedSettlementTypes.length>1) selectedSettlementTypes.splice(i,1);
+      } else {
+        selectedSettlementTypes.push(item.id);
+      }
+      buildSettlementCarousel();
+      renderSettlementStrip();
+      const worldStep = document.querySelector('#vox-flow-rail .step[data-step="world"]');
+      if(worldStep){ worldStep.classList.add('on'); worldStep.classList.add('done'); }
+    },
+  });
+}
+
 function initGameShell(){
   const bootEl = document.getElementById('vox-boot-status');
-  const deps = window.VoxGameCanvas
-    ? VoxGameCanvas.checkDeps({ THREE:true, FBXLoader:true, TvsUnitLoader:true, TvsWorldContent:true })
-    : { ok:false, missing:['VoxGameCanvas'] };
-  if(bootEl){
-    if(deps.ok){
-      bootEl.textContent = 'Canvas stack ready · TVS D1/R2 loaders online';
-      bootEl.className = 'ok';
-    } else {
-      bootEl.textContent = 'Missing: '+(deps.missing||[]).join(', ');
-      bootEl.className = 'bad';
+
+  // PNG UI kit first (containers / carousel / unit frames)
+  const uiReady = window.VoxUiKit
+    ? VoxUiKit.init({
+        onProgress: function(p){
+          if(bootEl) bootEl.textContent = 'UI PNG '+p.pct+'% · '+p.id;
+        },
+      }).then(function(){
+        buildClassCarousel();
+        buildSettlementCarousel();
+      })
+    : Promise.resolve();
+
+  uiReady.then(function(){
+    const deps = window.VoxGameCanvas
+      ? VoxGameCanvas.checkDeps({ THREE:true, FBXLoader:true, TvsUnitLoader:true, TvsWorldContent:true })
+      : { ok:false, missing:['VoxGameCanvas'] };
+    if(bootEl && bootEl.className!=='ok'){
+      if(deps.ok){
+        bootEl.textContent = (bootEl.textContent||'')+' · canvas/TVS loaders online';
+        bootEl.className = 'ok';
+      } else if(!bootEl.className) {
+        bootEl.textContent = 'Missing: '+(deps.missing||[]).join(', ');
+        bootEl.className = 'bad';
+      }
     }
-  }
+  });
 
   if(window.VoxGameFlow){
     gameFlow = VoxGameFlow.create({
@@ -1372,6 +1520,7 @@ function initGameShell(){
           if(!el) return;
           if(show) el.classList.remove('pre-game-hidden');
           else el.classList.add('pre-game-hidden');
+          if(window.VoxUiKit) VoxUiKit.showGameChrome(!!show);
         },
         setLoading: function(on, label){
           const loadEl = document.getElementById('world-loading');
@@ -1393,6 +1542,9 @@ function initGameShell(){
           if(!el) return;
           el.classList.toggle('show', !!on);
           el.setAttribute('aria-hidden', on ? 'false' : 'true');
+          if(el.querySelector('.panel') && !el.querySelector('.panel').classList.contains('vox-container')){
+            el.querySelector('.panel').classList.add('vox-container');
+          }
         },
       },
     });
@@ -1403,11 +1555,10 @@ function initGameShell(){
     TvsWorldContent.loadSettlements().then(function(){
       tvsContentReady = true;
       renderSettlementStrip();
-      if(bootEl && bootEl.className==='ok'){
-        bootEl.textContent = 'Ready · TVS settlements '+TvsWorldContent.listSettlementTypes().length+' recipes';
-      }
+      buildSettlementCarousel();
     }).catch(function(){
       renderSettlementStrip();
+      buildSettlementCarousel();
     });
   } else {
     renderSettlementStrip();
@@ -1495,6 +1646,7 @@ function updateClassPreview(cid){
     const cp=preview?preview.stats.combatPower:'—';
     const card = document.createElement('div');
     card.className = 'class-card';
+    card.dataset.cid = cid;
     card.style.setProperty('--cc', cls.color);
     card.innerHTML = '<div class="c-icon"></div><div class="c-name">'+cls.name+'</div><div class="c-cp">CP '+cp+'</div><div class="c-desc">'+cls.desc+'</div>';
     const classIcon=window.GrudgeHudIcons?GrudgeHudIcons.classIconUrl(cid):null;
@@ -1512,6 +1664,8 @@ function updateClassPreview(cid){
       }
       applyTvsHeroForClass(cid);
       renderTvsUnitPicker();
+      refreshTvsHeroCarousel();
+      if(classCarouselApi) classCarouselApi.select(cid);
       updateClassPreview(cid);
       document.getElementById('start-btn').classList.remove('hidden');
     };
@@ -1612,6 +1766,7 @@ function startGame(){
     connectGrudox();
     hideWorldLoading();
     if(gameFlow) gameFlow.goto('playing');
+    if(window.VoxUiKit) VoxUiKit.showGameChrome(true);
     const zonePill = document.getElementById('zone-content-pill');
     if(zonePill){
       zonePill.textContent = 'Content · '+(selectedSettlementTypes.join(' · ')||'open world');
@@ -5148,6 +5303,46 @@ function updateHUD(){
   const levelEl=document.getElementById('level-val');
   if(levelEl) levelEl.textContent='Lv.'+(level||1)+' — '+(exp||0)+'/'+(expToNext||1);
   if(window.VoxCombatHud) VoxCombatHud.tick();
+
+  // PNG unit frames (player XY + AI targets)
+  if(window.VoxUiKit && gameStarted){
+    const cls = CLASSES[playerClass]||{};
+    const embMap = {swordsman:'warrior',archer:'ranger',mage:'mage',druid:'ranger',paladin:'warrior',necromancer:'mage'};
+    const emb = embMap[playerClass]||'warrior';
+    const av = (window.VoxUiDeps && VoxUiDeps.url('emblem.'+emb)) || ('assets/grudge-game/class-emblems/'+emb+'.webp');
+    VoxUiKit.setPlayerFrame({
+      name: (playerTvsUnit && playerTvsUnit.displayName) || cls.name || 'Hero',
+      level: level||1,
+      hp: hp, maxHp: maxHp,
+      mp: typeof energy!=='undefined'?energy:100,
+      maxMp: typeof maxEnergy!=='undefined'?maxEnergy:100,
+      avatarUrl: av,
+      tag: 'YOU',
+    });
+    const expPct2 = expToNext>0?(exp/expToNext)*100:0;
+    VoxUiKit.setXp(expPct2);
+    // Nearest enemy as AI frame 0
+    let nearest=null, nd=1e9;
+    if(typeof enemies!=='undefined' && enemies && playerMesh){
+      for(let i=0;i<enemies.length;i++){
+        const e=enemies[i];
+        if(!e||!e.alive||!e.mesh) continue;
+        const d=playerMesh.position.distanceTo(e.mesh.position);
+        if(d<nd && d<28){ nd=d; nearest=e; }
+      }
+    }
+    if(nearest){
+      VoxUiKit.setAiFrame(0, {
+        name: nearest.name || nearest.type || 'Enemy',
+        hp: nearest.hp!=null?nearest.hp:nearest.health,
+        maxHp: nearest.maxHp!=null?nearest.maxHp:(nearest.maxHealth||100),
+        level: nearest.level||1,
+        kind: 'enemy',
+      });
+    } else {
+      VoxUiKit.setAiFrame(0, { hide:true });
+    }
+  }
 
   // Biome / zone / safe area — playerMesh is created later in init(); skip until ready
   if(playerMesh&&playerMesh.position&&typeof getBiome==='function'){
