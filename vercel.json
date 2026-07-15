@@ -111,7 +111,7 @@
         { "key": "X-Grudge-App", "value": "voxgrudge" },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://grudge-studio.com https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://id.grudge-studio.com https://client.grudge-studio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: blob: https://vercel.live wss://vercel.live; media-src 'self' https: blob: data:; worker-src 'self' blob:; base-uri 'self'"
+          "value": "frame-ancestors 'self' https://grudge-studio.com https://*.grudge-studio.com https://grudgewarlords.com https://*.vercel.app; default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://static.cloudflareinsights.com https://www.gstatic.com https://grudge-studio.com https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://id.grudge-studio.com https://client.grudge-studio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: blob: https://vercel.live wss://vercel.live https://assets.grudge-studio.com; media-src 'self' https: blob: data:; worker-src 'self' blob:; base-uri 'self'"
         }
       ]
     },
@@ -119,6 +119,30 @@
       "source": "/models/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400, immutable" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/branding/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/vfx/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
+      ]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=120, stale-while-revalidate=600" }
       ]
     },
     {

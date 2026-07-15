@@ -1,32 +1,62 @@
 /**
- * Grudge asset URLs — same-origin static first, optional CDN proxy second.
+ * Grudge asset URLs — Cloudflare R2 CDN first on live deploys.
  *
- * IMPORTANT: Prefer bundled relative paths on every host. The /api/assets → R2
- * proxy has been 522/404 on grudge-studio.com, which left TerraForge broken when
- * env detection flipped to "production"/"staging" and forced CDN model URLs.
+ * SSOT: https://assets.grudge-studio.com  (r2-cdn Worker → grudge-assets bucket)
+ * Keys:  voxgrudge/...                     (this game's prefix)
+ *        models/voxels/tvs/...             (TVS shared)
+ *
+ * Localhost / ?local=1 → same-origin static (assets/, models/, vfx/)
+ * Live + ?cdn=0        → force local bundle (debug)
+ * Live default         → direct R2 origin (not Vercel proxy)
  */
 (function (global) {
   'use strict';
 
   var R2_ORIGIN = 'https://assets.grudge-studio.com';
-  var LOCAL_PREFIX = '/api/assets/';
+  /** Public CDN prefix for this app's uploaded tree */
+  var R2_APP = 'voxgrudge';
+  /** Same-origin proxy (optional fallback if CORS blocks; usually unused) */
+  var LOCAL_PROXY = '/api/assets/';
 
   function env() {
     return global.GrudgeEnv && GrudgeEnv.detect ? GrudgeEnv.detect() : 'local';
+  }
+
+  function isLocalHost() {
+    var h = (global.location && global.location.hostname) || '';
+    return h === 'localhost' || h === '127.0.0.1' || h === '';
+  }
+
+  function queryFlag(name) {
+    try {
+      var q = (global.location && global.location.search) || '';
+      if (q.indexOf(name + '=1') >= 0 || q.indexOf(name + '=true') >= 0) return true;
+      if (q.indexOf(name + '=0') >= 0 || q.indexOf(name + '=false') >= 0) return false;
+    } catch (e) {}
+    return null;
+  }
+
+  /**
+   * CDN on for any non-local deploy unless ?cdn=0 / ?local=1.
+   * Localhost stays on bundled files unless ?cdn=1.
+   */
+  function useR2() {
+    var force = queryFlag('cdn');
+    if (force === true) return true;
+    if (force === false) return false;
+    if (queryFlag('local') === true) return false;
+    if (isLocalHost()) return false;
+    // Live: Vercel, grudge-studio subdomains, production
+    return true;
   }
 
   function pathname() {
     return (global.location && global.location.pathname) || '';
   }
 
-  /**
-   * Base path when the game is mounted under a subpath
-   * (/embed/vox/... or /voxgrudge/...). Relative asset URLs must stay under that root.
-   */
   function bundleBase() {
     var path = pathname();
     if (path.indexOf('/embed/vox') >= 0) {
-      // e.g. /embed/vox/grudge-warlords-openworld.html → /embed/vox/
       return path.replace(/\/[^/]*$/, '/').replace(/\/+$/, '/') || '/embed/vox/';
     }
     if (path.indexOf('/voxgrudge') >= 0) return '/voxgrudge/';
@@ -36,72 +66,112 @@
   function bundleUrl(localPath) {
     var p = String(localPath || '').replace(/^\//, '');
     var base = bundleBase();
-    return base ? base + p : p;
+    return base ? base + p : '/' + p;
   }
 
-  /**
-   * CDN only when explicitly requested (?cdn=1) — never the default.
-   * Static deploy ships models/, vfx/, assets/ next to the HTML.
-   */
-  function useR2() {
-    try {
-      var q = (global.location && global.location.search) || '';
-      if (q.indexOf('cdn=1') >= 0 || q.indexOf('cdn=true') >= 0) return true;
-    } catch (e) {}
-    return false;
+  /** Absolute URL under R2 (never uses broken host-relative proxy by default). */
+  function cdnUrl(r2Key) {
+    var p = String(r2Key || '').replace(/^\//, '');
+    return R2_ORIGIN + '/' + p;
   }
 
   function assetRoot() {
-    return useR2() ? R2_ORIGIN + '/' : '';
+    return useR2() ? R2_ORIGIN + '/' : '/';
   }
 
+  /**
+   * Game binary under voxgrudge/ prefix on R2, or local path.
+   * r2() with key "assets/foo.png" → CDN voxgrudge/assets/foo.png
+   */
   function r2(path) {
     if (!path) return '';
     var p = String(path).replace(/^\//, '');
-    if (useR2()) return LOCAL_PREFIX + p;
-    return bundleUrl('assets/' + p.replace(/^assets\//, ''));
+    if (useR2()) return cdnUrl(R2_APP + '/' + p.replace(/^voxgrudge\//, ''));
+    return bundleUrl(p.indexOf('assets/') === 0 || p.indexOf('models/') === 0 || p.indexOf('vfx/') === 0 || p.indexOf('branding/') === 0
+      ? p
+      : 'assets/' + p.replace(/^assets\//, ''));
   }
 
   function localOrR2(localPath, r2Path) {
-    return useR2() ? r2(r2Path || localPath) : bundleUrl(localPath);
+    if (useR2()) {
+      var key = r2Path || localPath;
+      key = String(key || '').replace(/^\//, '');
+      if (key.indexOf(R2_APP + '/') !== 0 && key.indexOf('models/') !== 0 && key.indexOf('icons/') !== 0) {
+        key = R2_APP + '/' + key;
+      }
+      return cdnUrl(key);
+    }
+    return bundleUrl(localPath);
   }
 
-  /** GLB/OBJ/FBX under models/ — always same-origin static unless ?cdn=1 */
+  /** GLB/OBJ/FBX under models/ */
   function modelUrl(localPath) {
     if (!localPath) return '';
     var p = String(localPath).replace(/^\//, '').replace(/^assets\//, '');
-    if (useR2()) return LOCAL_PREFIX + 'voxgrudge/' + p;
+    if (useR2()) return cdnUrl(R2_APP + '/' + p);
     return bundleUrl(p);
   }
 
+  /** TVS shared pack — always R2 when online (canonical fleet path). */
+  function tvsUrl(rel) {
+    var p = String(rel || '').replace(/^\//, '');
+    if (isLocalHost() && queryFlag('cdn') !== true) {
+      return bundleUrl('assets/voxels/' + p.replace(/^models\/voxels\/tvs\//, ''));
+    }
+    return cdnUrl('models/voxels/tvs/' + p.replace(/^models\/voxels\/tvs\//, ''));
+  }
+
   function vfxFrame(folder, name) {
-    if (useR2()) return LOCAL_PREFIX + 'voxgrudge/vfx/' + folder + '/' + name;
+    if (useR2()) return cdnUrl(R2_APP + '/vfx/' + folder + '/' + name);
     return bundleUrl('vfx/' + folder + '/' + name);
   }
 
+  /** CraftPix / grudge-game UI PNGs */
   function uiFrame(rel) {
     var p = String(rel || '').replace(/^\//, '');
-    if (useR2()) return LOCAL_PREFIX + 'grudge-game/ui/' + p;
+    if (useR2()) return cdnUrl(R2_APP + '/assets/grudge-game/ui/' + p);
     return bundleUrl('assets/grudge-game/ui/' + p);
+  }
+
+  function emblemUrl(name) {
+    var n = String(name || 'warrior').replace(/\.webp$/i, '');
+    if (useR2()) return cdnUrl(R2_APP + '/assets/grudge-game/class-emblems/' + n + '.webp');
+    return bundleUrl('assets/grudge-game/class-emblems/' + n + '.webp');
+  }
+
+  function mineIcon(name) {
+    var n = String(name || '').replace(/^\//, '');
+    if (useR2()) return cdnUrl(R2_APP + '/assets/mine-loader/ui-icons/' + n);
+    return bundleUrl('assets/mine-loader/ui-icons/' + n);
+  }
+
+  function brandingUrl(name) {
+    var n = String(name || '').replace(/^\//, '');
+    if (useR2()) return cdnUrl(R2_APP + '/branding/' + n);
+    return bundleUrl('branding/' + n);
   }
 
   function iconUrl(rel) {
     if (!rel) return '';
     var p = String(rel).replace(/^\//, '');
-    if (useR2()) return LOCAL_PREFIX + p;
+    // Pack icons live at bucket root (icons/...)
+    if (useR2()) {
+      if (p.indexOf('icons/') === 0 || p.indexOf('sprites/') === 0) return cdnUrl(p);
+      return cdnUrl(R2_APP + '/' + p);
+    }
     return bundleUrl('assets/codex/' + p);
   }
 
   function codexIcon(path) {
     if (!path) return '';
     var p = String(path).replace(/^\//, '');
-    if (useR2()) return R2_ORIGIN + '/' + p;
+    if (useR2()) return cdnUrl(p);
     return bundleUrl('assets/codex/' + p);
   }
 
   function hudFrame(rel) {
     var p = String(rel || '').replace(/^\//, '');
-    if (useR2()) return LOCAL_PREFIX + 'voxgrudge/ui/hud/frames/' + p;
+    if (useR2()) return cdnUrl(R2_APP + '/ui/hud/frames/' + p);
     return bundleUrl('ui/hud/frames/' + p);
   }
 
@@ -139,7 +209,7 @@
       }
       out[key] = Object.assign({}, m, {
         path: 'vfx/' + m.folder + '/' + m.prefix,
-        r2Path: 'voxgrudge/vfx/' + m.folder + '/' + m.prefix,
+        r2Path: R2_APP + '/vfx/' + m.folder + '/' + m.prefix,
       });
     });
     return out;
@@ -147,7 +217,7 @@
 
   function vfxUrl(def, frameSuffix) {
     if (useR2() && def.r2Path) {
-      return LOCAL_PREFIX + def.r2Path + frameSuffix;
+      return cdnUrl(def.r2Path + frameSuffix);
     }
     return bundleUrl((def.path || '') + frameSuffix);
   }
@@ -156,6 +226,7 @@
     var root = document.documentElement;
     if (!root) return;
     root.style.setProperty('--gg-r2-ui', uiFrame(''));
+    root.style.setProperty('--gg-cdn', useR2() ? R2_ORIGIN : '');
     root.style.setProperty('--gg-slot-action', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Slot_Background.png') + '")');
     root.style.setProperty('--gg-slot-extra', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Extra_Slot_Background.png') + '")');
     root.style.setProperty('--gg-slot-inv', 'url("' + uiFrame('Inventory/Inventory_Slot_Background.png') + '")');
@@ -171,15 +242,23 @@
 
   global.GrudgeAssets = {
     R2_ORIGIN: R2_ORIGIN,
+    R2_APP: R2_APP,
+    LOCAL_PROXY: LOCAL_PROXY,
     env: env,
     useR2: useR2,
+    isLocalHost: isLocalHost,
     bundleBase: bundleBase,
     bundleUrl: bundleUrl,
+    cdnUrl: cdnUrl,
     r2: r2,
     localOrR2: localOrR2,
     modelUrl: modelUrl,
+    tvsUrl: tvsUrl,
     vfxFrame: vfxFrame,
     uiFrame: uiFrame,
+    emblemUrl: emblemUrl,
+    mineIcon: mineIcon,
+    brandingUrl: brandingUrl,
     hudFrame: hudFrame,
     iconUrl: iconUrl,
     codexIcon: codexIcon,

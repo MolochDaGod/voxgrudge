@@ -5,36 +5,93 @@
  *   https://assets.grudge-studio.com/models/voxels/tvs/unit-roster.json
  *
  * Best practices:
- *   - Magic-byte verify FBX (reject HTML fake-200)
- *   - Height normalize via local scale (reset → measure → scale → ground feet)
- *   - Texture rebind with NearestFilter (voxel atlases)
- *   - Color tint via material.color (editable without re-bake)
- *   - Semantic anim packs from *.anims.json; prefer human-* over animal clips
- *   - Sidecars: collider / brain / grudgeUuid for D1 join
- *
- * Example:
- *   const roster = await TvsUnitLoader.loadTvsRoster();
- *   const unit = TvsUnitLoader.pickUnit(roster, 'melee');
- *   const root = await TvsUnitLoader.loadTvsUnit(unit, {
- *     THREE, FBXLoader, height: 2.0, withAnims: true, withTexture: true,
- *   });
- *   root.userData.setColorTint(0xff6644);
- *   root.userData.playClip('idle');
+ *   - Normalize unit records (modelUrl/meshUrl/r2Key consistency)
+ *   - Magic-byte verify FBX (reject HTML fake-200); parse buffer once
+ *   - Height normalize via local scale (skinned measure + decade unit fix + ground feet)
+ *   - Texture rebind MeshStandard + NearestFilter + CORS + flipY false for external atlases
+ *   - Color tint via material.color
+ *   - Semantic anim packs from *.anims.json
  */
 (function (global) {
   "use strict";
 
   var CDN = "https://assets.grudge-studio.com";
+  var TVS_PREFIX = "models/voxels/tvs";
   var CDN_ROSTER =
     (global.GrudgeFleet &&
       global.GrudgeFleet.endpoints &&
       global.GrudgeFleet.endpoints.tvsVoxelRoster) ||
-    CDN + "/models/voxels/tvs/unit-roster.json";
-  var CDN_CATALOG = CDN + "/models/voxels/tvs/catalog.json";
+    CDN + "/" + TVS_PREFIX + "/unit-roster.json";
+  var CDN_CATALOG = CDN + "/" + TVS_PREFIX + "/catalog.json";
 
   var DEFAULT_HEIGHT = 2.0;
   var HUMAN_CLIP_RE = /human[-_]/i;
   var ANIMAL_CLIP_RE = /^(horse|cow|pig|sheep|chicken|duck|bull|owl|corgi|goat)[-_]/i;
+
+  // ── URL / unit consistency ─────────────────────────────────────────────────
+
+  /** Absolute CDN URL from relative r2 key or partial path. */
+  function absCdnUrl(u) {
+    if (!u) return null;
+    var s = String(u).trim();
+    if (!s) return null;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.indexOf("//") === 0) return "https:" + s;
+    s = s.replace(/^\//, "");
+    if (s.indexOf("models/") === 0 || s.indexOf("icons/") === 0) return CDN + "/" + s;
+    if (s.indexOf("voxgrudge/") === 0) return CDN + "/" + s;
+    // Bare pack-relative: characters/foo.fbx under TVS
+    return CDN + "/" + TVS_PREFIX + "/" + s.replace(/^models\/voxels\/tvs\//, "");
+  }
+
+  /**
+   * Normalize a roster unit so loaders always see consistent absolute URLs.
+   * Accepts modelUrl | meshUrl | url | r2Key aliases.
+   */
+  function normalizeUnit(unit) {
+    if (!unit) return null;
+    var u = Object.assign({}, unit);
+    var model =
+      u.modelUrl ||
+      u.meshUrl ||
+      u.url ||
+      u.model ||
+      (u.r2Key ? absCdnUrl(u.r2Key) : null) ||
+      (u.modelR2Key ? absCdnUrl(u.modelR2Key) : null);
+    var tex =
+      u.textureUrl ||
+      u.texUrl ||
+      u.albedoUrl ||
+      (u.textureR2Key ? absCdnUrl(u.textureR2Key) : null);
+    var anims =
+      u.animationPackUrl ||
+      u.animsUrl ||
+      u.animationUrl ||
+      (u.animsR2Key ? absCdnUrl(u.animsR2Key) : null);
+    var collider = u.colliderUrl || (u.colliderR2Key ? absCdnUrl(u.colliderR2Key) : null);
+    var brain = u.brainUrl || (u.brainR2Key ? absCdnUrl(u.brainR2Key) : null);
+
+    u.modelUrl = absCdnUrl(model);
+    u.textureUrl = absCdnUrl(tex);
+    u.animationPackUrl = absCdnUrl(anims);
+    u.colliderUrl = absCdnUrl(collider);
+    u.brainUrl = absCdnUrl(brain);
+    // Back-compat aliases
+    u.meshUrl = u.modelUrl;
+    u.animsUrl = u.animationPackUrl;
+    return u;
+  }
+
+  function normalizeRoster(roster) {
+    if (!roster) return roster;
+    var out = Object.assign({}, roster);
+    out.cdnBase = out.cdnBase || CDN;
+    out.r2Prefix = out.r2Prefix || TVS_PREFIX;
+    out.units = (roster.units || []).map(normalizeUnit).filter(function (u) {
+      return u && u.modelUrl;
+    });
+    return out;
+  }
 
   // ── fetch helpers ──────────────────────────────────────────────────────────
 
@@ -49,49 +106,79 @@
     }
   }
 
-  async function assertRealFbx(url) {
+  async function fetchRealFbxBuffer(url) {
     var res = await fetch(url, { mode: "cors" });
     if (!res.ok) throw new Error("FBX HTTP " + res.status + ": " + url);
-    var buf = new Uint8Array(await res.arrayBuffer());
-    if (buf.length < 32) throw new Error("FBX too small: " + url);
+    var buf = await res.arrayBuffer();
+    var bytes = new Uint8Array(buf);
+    if (bytes.length < 32) throw new Error("FBX too small: " + url);
     var head = "";
-    for (var i = 0; i < 20 && i < buf.length; i++) head += String.fromCharCode(buf[i]);
+    for (var i = 0; i < 20 && i < bytes.length; i++) head += String.fromCharCode(bytes[i]);
     if (head.indexOf("<!DOCTYPE") >= 0 || head.indexOf("<html") >= 0 || head.indexOf("<HTML") >= 0) {
       throw new Error("HTML fake-200 (not FBX): " + url);
     }
-    if (head.indexOf("Kaydara") < 0 && buf[0] !== 0x4b) {
-      // Allow binary without full Kaydara string only if size looks like a model
-      if (buf.length < 2048) throw new Error("Not FBX: " + url);
+    if (head.indexOf("Kaydara") < 0 && bytes[0] !== 0x4b) {
+      if (bytes.length < 2048) throw new Error("Not FBX: " + url);
     }
     return buf;
   }
 
+  /** Prefer parse(arrayBuffer) so we only download once (verify + import). */
   async function loadFbxFromUrl(FBXLoader, url, opts) {
     opts = opts || {};
-    if (opts.verify !== false) {
-      await assertRealFbx(url);
-    }
     var loader = new FBXLoader();
+    if (opts.verify === false) {
+      return new Promise(function (resolve, reject) {
+        loader.load(url, resolve, undefined, reject);
+      });
+    }
+    var buf = await fetchRealFbxBuffer(url);
+    // three r128 FBXLoader: parse(buffer, path)
+    if (typeof loader.parse === "function") {
+      var path = url.replace(/[^/]+$/, "");
+      try {
+        var parsed = loader.parse(buf, path);
+        return Promise.resolve(parsed);
+      } catch (e) {
+        console.warn("[TvsUnitLoader] parse buffer failed, retry load()", e && e.message);
+      }
+    }
     return new Promise(function (resolve, reject) {
       loader.load(url, resolve, undefined, reject);
     });
   }
 
+  async function assertRealFbx(url) {
+    await fetchRealFbxBuffer(url);
+    return true;
+  }
+
   async function loadTexture(THREE, url) {
     return new Promise(function (resolve, reject) {
       var loader = new THREE.TextureLoader();
+      if (loader.setCrossOrigin) loader.setCrossOrigin("anonymous");
       loader.load(
         url,
         function (tex) {
+          // External PNG atlases for TVS FBX: flipY false (FBX UV space)
+          tex.flipY = false;
           tex.magFilter = THREE.NearestFilter;
           tex.minFilter = THREE.NearestFilter;
           tex.generateMipmaps = false;
-          if (THREE.sRGBEncoding != null) tex.encoding = THREE.sRGBEncoding;
-          // FBXLoader + external PNG atlases: keep default flipY (true)
+          tex.wrapS = THREE.ClampToEdgeWrapping;
+          tex.wrapT = THREE.ClampToEdgeWrapping;
+          if ("colorSpace" in tex && THREE.SRGBColorSpace != null) {
+            tex.colorSpace = THREE.SRGBColorSpace;
+          } else if (THREE.sRGBEncoding != null) {
+            tex.encoding = THREE.sRGBEncoding;
+          }
+          tex.needsUpdate = true;
           resolve(tex);
         },
         undefined,
-        reject
+        function (err) {
+          reject(err || new Error("texture load failed: " + url));
+        }
       );
     });
   }
@@ -100,18 +187,21 @@
 
   async function loadTvsRoster(force) {
     if (global.TvsVoxelAssets && global.TvsVoxelAssets.loadRoster) {
-      return global.TvsVoxelAssets.loadRoster(force);
+      var r = await global.TvsVoxelAssets.loadRoster(force);
+      return normalizeRoster(r);
     }
     if (global.GrudgeFleet && global.GrudgeFleet.loadTvsVoxelRoster) {
-      return global.GrudgeFleet.loadTvsVoxelRoster();
+      return normalizeRoster(await global.GrudgeFleet.loadTvsVoxelRoster());
     }
     try {
       var res = await fetch(CDN_ROSTER, { mode: "cors" });
       if (!res.ok) throw new Error("roster " + res.status);
-      return res.json();
+      return normalizeRoster(await res.json());
     } catch (e) {
-      var local = await fetchJson("assets/voxels/unit-roster.json");
-      if (local) return local;
+      var local =
+        (await fetchJson("/assets/voxels/unit-roster.json")) ||
+        (await fetchJson("assets/voxels/unit-roster.json"));
+      if (local) return normalizeRoster(local);
       throw e;
     }
   }
@@ -125,7 +215,10 @@
       if (!res.ok) throw new Error("catalog " + res.status);
       return res.json();
     } catch (e) {
-      return fetchJson("assets/voxels/catalog.json");
+      return (
+        (await fetchJson("/assets/voxels/catalog.json")) ||
+        (await fetchJson("assets/voxels/catalog.json"))
+      );
     }
   }
 
@@ -155,15 +248,14 @@
       roster.units.find(function (u) {
         return (
           u.unitId === unitId ||
-          u.unitId.toLowerCase() === key ||
+          (u.unitId && u.unitId.toLowerCase() === key) ||
           (u.displayName && u.displayName.toLowerCase() === key) ||
-          u.unitId.toLowerCase().endsWith(key)
+          (u.unitId && u.unitId.toLowerCase().endsWith(key))
         );
       }) || null
     );
   }
 
-  /** Map VoxGrudge / Nexus class ids → TVS classHint */
   var CLASS_HINT_MAP = {
     swordsman: "melee",
     paladin: "melee",
@@ -182,7 +274,6 @@
     return CLASS_HINT_MAP[String(classId || "").toLowerCase()] || "melee";
   }
 
-  // Preferred heroes per class for best showcase look
   var CLASS_UNIT_PREFS = {
     swordsman: ["voxel-knights-champion", "voxel-knights-knight", "voxel-cathedral-crusader"],
     paladin: ["voxel-cathedral-crusader", "voxel-knights-champion", "voxel-palace-guard"],
@@ -201,32 +292,92 @@
     return pickUnit(roster, classToHint(classId));
   }
 
-  // ── scale (local, not world-bbox-as-scale) ──────────────────────────────────
+  // ── scale ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Body-only bbox: prefer SkinnedMesh; skip obvious weapon-only meshes so
+   * long spears don't inflate height and shrink the character.
+   */
+  function measureBodyBox(object3d, THREE) {
+    var box = new THREE.Box3();
+    var found = false;
+    object3d.updateMatrixWorld(true);
+    object3d.traverse(function (ch) {
+      if (!ch.isMesh && !ch.isSkinnedMesh) return;
+      var n = (ch.name || "").toLowerCase();
+      if (/weapon|sword|axe|bow|staff|shield|spear|arrow|tool|prop/i.test(n) && !ch.isSkinnedMesh) {
+        return;
+      }
+      // Expand by geometry if skinned (world AABB can be empty at bind pose on some packs)
+      if (ch.isSkinnedMesh && ch.geometry) {
+        if (!ch.geometry.boundingBox) ch.geometry.computeBoundingBox();
+        if (ch.geometry.boundingBox) {
+          var b = ch.geometry.boundingBox.clone();
+          b.applyMatrix4(ch.matrixWorld);
+          box.union(b);
+          found = true;
+          return;
+        }
+      }
+      box.expandByObject(ch);
+      found = true;
+    });
+    if (!found) box.setFromObject(object3d);
+    return box;
+  }
 
   /**
    * Normalize character height in meters.
-   * Always resets scale to 1 first so we never compound world-space bbox bugs.
+   * Reset scale → optional cm unit fix → scale to target → ground feet at local y=0.
    */
   function normalizeHeight(object3d, targetHeight, THREE) {
     if (!object3d || !targetHeight || !THREE) return object3d;
     object3d.scale.set(1, 1, 1);
+    object3d.position.set(0, 0, 0);
+    object3d.rotation.set(0, 0, 0);
     object3d.updateMatrixWorld(true);
-    var box = new THREE.Box3().setFromObject(object3d);
+
+    var box = measureBodyBox(object3d, THREE);
     var size = new THREE.Vector3();
     box.getSize(size);
-    if (!(size.y > 0.001)) return object3d;
-    var s = targetHeight / size.y;
-    // Guard pathological FBX units (µm / km)
-    if (s > 1000 || s < 0.0001) {
-      console.warn("[TvsUnitLoader] extreme scale factor", s, "height", size.y);
+    if (!(size.y > 1e-6)) {
+      console.warn("[TvsUnitLoader] zero height bbox", object3d.name);
+      return object3d;
     }
-    object3d.scale.setScalar(s);
+
+    // Decade unit fix: cm-authored FBX often ~100–300 units tall
+    var unitFix = 1;
+    if (size.y > 40) {
+      unitFix = 0.01;
+    } else if (size.y < 0.05) {
+      unitFix = 100;
+    }
+    if (unitFix !== 1) {
+      object3d.scale.setScalar(unitFix);
+      object3d.updateMatrixWorld(true);
+      box = measureBodyBox(object3d, THREE);
+      box.getSize(size);
+    }
+
+    var s = targetHeight / size.y;
+    // Clamp pathological factors (after unit fix)
+    if (s > 50) s = 50;
+    if (s < 0.02) s = 0.02;
+    if (s > 20 || s < 0.05) {
+      console.warn("[TvsUnitLoader] extreme scale factor", s, "nativeH", size.y, "unitFix", unitFix);
+    }
+
+    object3d.scale.multiplyScalar(s);
     object3d.updateMatrixWorld(true);
-    var box2 = new THREE.Box3().setFromObject(object3d);
+    var box2 = measureBodyBox(object3d, THREE);
+    // Feet on local y=0
     object3d.position.y -= box2.min.y;
-    object3d.userData.nativeHeight = size.y;
+    object3d.userData.nativeHeight = size.y / (unitFix || 1);
+    object3d.userData.measuredAfterUnitFix = size.y;
     object3d.userData.targetHeight = targetHeight;
-    object3d.userData.scaleFactor = s;
+    object3d.userData.scaleFactor = object3d.scale.x;
+    object3d.userData.unitFix = unitFix;
+    object3d.userData.feetGrounded = true;
     return object3d;
   }
 
@@ -234,49 +385,62 @@
 
   function collectMaterials(root) {
     var mats = [];
-    var seen = new Set();
+    var seen = typeof Set !== "undefined" ? new Set() : null;
+    var listSeen = [];
     root.traverse(function (ch) {
-      if (!ch.isMesh) return;
+      if (!ch.isMesh && !ch.isSkinnedMesh) return;
       ch.castShadow = true;
       ch.receiveShadow = true;
+      if (ch.isSkinnedMesh) ch.frustumCulled = false;
       var list = Array.isArray(ch.material) ? ch.material : [ch.material];
       list.forEach(function (m) {
-        if (!m || seen.has(m)) return;
-        seen.add(m);
+        if (!m) return;
+        if (seen) {
+          if (seen.has(m)) return;
+          seen.add(m);
+        } else {
+          if (listSeen.indexOf(m) >= 0) return;
+          listSeen.push(m);
+        }
         mats.push(m);
       });
     });
     return mats;
   }
 
+  /**
+   * Rebind atlas as fresh MeshStandardMaterial on every mesh (voxel look).
+   * Avoids broken FBX Phong materials without maps.
+   */
   function applyTextureToRoot(root, texture, THREE) {
-    root.traverse(function (ch) {
-      if (!ch.isMesh || !ch.material) return;
-      var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
-      for (var i = 0; i < mats.length; i++) {
-        var m = mats[i];
-        if (!m) continue;
-        // Clone so multiple instances don't share tint state incorrectly
-        if (!m.userData || !m.userData._tvsOwned) {
-          m = m.clone();
-          m.userData = m.userData || {};
-          m.userData._tvsOwned = true;
-          mats[i] = m;
-        }
-        m.map = texture;
-        m.needsUpdate = true;
-        if (m.color) m.color.setHex(0xffffff);
-        if ("metalness" in m) m.metalness = 0;
-        if ("roughness" in m) m.roughness = 0.85;
-        if ("flatShading" in m) m.flatShading = true;
-      }
-      ch.material = Array.isArray(ch.material) ? mats : mats[0];
+    var shared = new THREE.MeshStandardMaterial({
+      map: texture,
+      color: 0xffffff,
+      metalness: 0,
+      roughness: 0.88,
+      flatShading: true,
+      side: THREE.DoubleSide,
     });
+    shared.userData = { _tvsOwned: true, _baseColor: 0xffffff };
+
+    root.traverse(function (ch) {
+      if (!ch.isMesh && !ch.isSkinnedMesh) return;
+      // Dispose previous tvs-owned materials to avoid leaks on swap
+      var prev = Array.isArray(ch.material) ? ch.material : [ch.material];
+      prev.forEach(function (m) {
+        if (m && m.userData && m.userData._tvsOwned && m !== shared) {
+          try {
+            m.dispose();
+          } catch (e) {}
+        }
+      });
+      ch.material = shared;
+    });
+    return shared;
   }
 
   function attachColorApi(root, THREE) {
     var mats = collectMaterials(root);
-    // Store original colors for reset
     mats.forEach(function (m) {
       if (!m.userData) m.userData = {};
       if (m.color && m.userData._baseColor == null) {
@@ -342,10 +506,6 @@
     return score;
   }
 
-  /**
-   * Resolve best clip URLs from anims.json.
-   * Prefer human-* when unit is a character (not animal).
-   */
   function resolveClipMap(animsJson, unit) {
     var out = {};
     if (!animsJson) return out;
@@ -356,20 +516,20 @@
       });
     var preferHuman = !isAnimal;
 
-    // Semantic map first
     var clips = animsJson.clips || {};
     Object.keys(clips).forEach(function (sem) {
       var c = clips[sem];
-      if (c && c.url) out[sem] = c;
+      if (c && c.url) {
+        out[sem] = Object.assign({}, c, { url: absCdnUrl(c.url) });
+      }
     });
 
-    // Fix bad idle/walk mappings (horse-* on human heroes)
     if (preferHuman && animsJson.allClips) {
       var bySem = {};
       animsJson.allClips.forEach(function (c) {
         var sem = c.semantic || "other";
         if (!bySem[sem]) bySem[sem] = [];
-        bySem[sem].push(c);
+        bySem[sem].push(Object.assign({}, c, { url: absCdnUrl(c.url) }));
       });
       ["idle", "locomotion", "attack", "defend", "jump", "sit"].forEach(function (sem) {
         var list = bySem[sem] || [];
@@ -385,10 +545,9 @@
       });
     }
 
-    // Also index allClips by id for freeform play
     if (animsJson.allClips) {
       animsJson.allClips.forEach(function (c) {
-        if (c.id && c.url) out["id:" + c.id] = c;
+        if (c.id && c.url) out["id:" + c.id] = Object.assign({}, c, { url: absCdnUrl(c.url) });
       });
     }
     return out;
@@ -402,7 +561,6 @@
     var keys = Object.keys(clipMap).filter(function (k) {
       return k.indexOf("id:") !== 0;
     });
-    // Cap concurrent anim loads for game path
     var maxLoad = opts.maxClips || 6;
     var loadKeys = keys.slice(0, maxLoad);
 
@@ -411,7 +569,7 @@
         var entry = clipMap[sem];
         if (!entry || !entry.url) return;
         try {
-          var animRoot = await loadFbxFromUrl(FBXLoader, entry.url, { verify: opts.verify });
+          var animRoot = await loadFbxFromUrl(FBXLoader, entry.url, { verify: opts.verify !== false });
           var list = animRoot.animations || [];
           if (!list.length) return;
           var clip = list[0].clone();
@@ -426,7 +584,6 @@
       })
     );
 
-    // Also use embedded clips on the mesh itself
     if (root.animations && root.animations.length) {
       root.animations.forEach(function (clip, i) {
         var name = clip.name || "embedded-" + i;
@@ -443,7 +600,6 @@
       fade = fade == null ? 0.15 : fade;
       var action = actions[name];
       if (!action) {
-        // fuzzy
         var k = Object.keys(actions).find(function (n) {
           return n.toLowerCase().indexOf(String(name).toLowerCase()) >= 0;
         });
@@ -470,7 +626,6 @@
     root.userData.updateMixer = updateMixer;
     root.userData.clipMap = clipMap;
 
-    // Auto-idle
     if (actions.idle) playClip("idle", 0);
     else if (actions.locomotion) playClip("locomotion", 0);
 
@@ -479,21 +634,15 @@
 
   // ── main load ──────────────────────────────────────────────────────────────
 
-  /**
-   * Load unit mesh + texture + anims + sidecars.
-   * opts: {
-   *   THREE, FBXLoader, height=2.0,
-   *   withTexture=true, withAnims=true, loadSidecars=true, withBrain=false,
-   *   verify=true, debugColliders=false, colorTint=null, team='a', maxClips=6
-   * }
-   */
-  async function loadTvsUnit(unit, opts) {
+  async function loadTvsUnit(unitIn, opts) {
     opts = opts || {};
     var THREE = opts.THREE || global.THREE;
     var FBXLoader = opts.FBXLoader || (THREE && THREE.FBXLoader) || global.FBXLoader;
     if (!FBXLoader) throw new Error("FBXLoader required");
     if (!THREE) throw new Error("THREE required");
-    if (!unit || !unit.modelUrl) throw new Error("unit.modelUrl required");
+
+    var unit = normalizeUnit(unitIn);
+    if (!unit || !unit.modelUrl) throw new Error("unit.modelUrl required (got " + (unitIn && unitIn.unitId) + ")");
 
     var height = opts.height != null ? opts.height : DEFAULT_HEIGHT;
     var group = await loadFbxFromUrl(FBXLoader, unit.modelUrl, { verify: opts.verify !== false });
@@ -501,7 +650,7 @@
     group.userData.tvsUnit = unit;
     group.userData.grudgeUuid = unit.grudgeUuid;
     group.userData.assetSource = "tvs-voxel";
-    group.userData.r2Key = unit.modelUrl.replace(CDN + "/", "");
+    group.userData.r2Key = String(unit.modelUrl).replace(CDN + "/", "");
     group.userData.d1 = {
       grudgeUuid: unit.grudgeUuid,
       unitId: unit.unitId,
@@ -515,7 +664,7 @@
     };
     group.name = unit.unitId || unit.displayName || "tvs-unit";
 
-    // Texture rebind
+    // Texture rebind (before scale so materials exist)
     if (opts.withTexture !== false && unit.textureUrl) {
       try {
         var tex = await loadTexture(THREE, unit.textureUrl);
@@ -524,22 +673,44 @@
         group.userData.textureUrl = unit.textureUrl;
       } catch (err) {
         console.warn("[TvsUnitLoader] texture fail", unit.textureUrl, err && err.message);
+        // Retry flipY true once (some packs authored for TGALoader default)
+        try {
+          var tex2 = await new Promise(function (resolve, reject) {
+            var loader = new THREE.TextureLoader();
+            if (loader.setCrossOrigin) loader.setCrossOrigin("anonymous");
+            loader.load(
+              unit.textureUrl,
+              function (t) {
+                t.flipY = true;
+                t.magFilter = THREE.NearestFilter;
+                t.minFilter = THREE.NearestFilter;
+                t.generateMipmaps = false;
+                if (THREE.sRGBEncoding != null) t.encoding = THREE.sRGBEncoding;
+                t.needsUpdate = true;
+                resolve(t);
+              },
+              undefined,
+              reject
+            );
+          });
+          applyTextureToRoot(group, tex2, THREE);
+          group.userData.texture = tex2;
+          group.userData.textureUrl = unit.textureUrl;
+          group.userData.textureFlipY = true;
+        } catch (err2) {
+          console.warn("[TvsUnitLoader] texture retry fail", err2 && err2.message);
+        }
       }
     }
 
-    // Scale + ground
     normalizeHeight(group, height, THREE);
-
-    // Color API
     attachColorApi(group, THREE);
     if (opts.colorTint != null) group.userData.setColorTint(opts.colorTint);
 
-    // Sidecars
     if (opts.loadSidecars !== false) {
       var collider = await fetchJson(unit.colliderUrl);
       var animsJson = await fetchJson(unit.animationPackUrl);
-      var brain =
-        opts.withBrain && unit.brainUrl ? await fetchJson(unit.brainUrl) : null;
+      var brain = opts.withBrain && unit.brainUrl ? await fetchJson(unit.brainUrl) : null;
 
       group.userData.collider = collider;
       group.userData.animationPack = animsJson;
@@ -570,14 +741,14 @@
       } else if (group.animations && group.animations.length) {
         group.userData.mixer = new THREE.AnimationMixer(group);
         group.userData.playClip = function (nameOrIndex) {
-          var clips = group.animations;
+          var clist = group.animations;
           var clip =
             typeof nameOrIndex === "number"
-              ? clips[nameOrIndex]
-              : clips.find(function (c) {
+              ? clist[nameOrIndex]
+              : clist.find(function (c) {
                   return c.name.toLowerCase().indexOf(String(nameOrIndex).toLowerCase()) >= 0;
                 });
-          if (!clip) clip = clips[0];
+          if (!clip) clip = clist[0];
           if (!clip) return null;
           return group.userData.mixer.clipAction(clip).reset().fadeIn(0.15).play();
         };
@@ -591,19 +762,31 @@
       }
     }
 
-    // Runtime texture swap helper
     group.userData.setTextureUrl = async function (url) {
-      var t = await loadTexture(THREE, url);
+      var t = await loadTexture(THREE, absCdnUrl(url) || url);
       applyTextureToRoot(group, t, THREE);
       group.userData.texture = t;
       group.userData.textureUrl = url;
+      attachColorApi(group, THREE);
       return group;
     };
+
+    // Consistency report for debugging #hero / showcase
+    group.userData.importReport = {
+      unitId: unit.unitId,
+      modelUrl: unit.modelUrl,
+      textureUrl: unit.textureUrl,
+      height: group.userData.targetHeight,
+      scale: group.userData.scaleFactor,
+      unitFix: group.userData.unitFix,
+      hasTexture: !!group.userData.texture,
+      hasMixer: !!group.userData.mixer,
+    };
+    console.info("[TvsUnitLoader] loaded", group.userData.importReport);
 
     return group;
   }
 
-  /** Sample army for RTS / danger room / showcase strip */
   async function loadArmySample(opts) {
     var roster = await loadTvsRoster();
     var picks = ["melee", "ranged", "magic", "civilian"]
@@ -626,6 +809,9 @@
     DEFAULT_HEIGHT: DEFAULT_HEIGHT,
     CLASS_HINT_MAP: CLASS_HINT_MAP,
     CLASS_UNIT_PREFS: CLASS_UNIT_PREFS,
+    absCdnUrl: absCdnUrl,
+    normalizeUnit: normalizeUnit,
+    normalizeRoster: normalizeRoster,
     loadTvsRoster: loadTvsRoster,
     loadTvsCatalog: loadTvsCatalog,
     pickUnit: pickUnit,

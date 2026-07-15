@@ -1,9 +1,9 @@
 {
   "name": "voxgrudge",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "Grudge Warlords open-world voxel / TerraForge (CDN Three r128 track)",
+  "description": "Grudge Warlords open-world voxel — R2 CDN delivery + glTF pipeline",
   "scripts": {
     "setup": "node scripts/setup-dev.mjs",
     "dev": "node scripts/preflight-dev.mjs && node scripts/dev.mjs",
@@ -11,9 +11,18 @@
     "dev:server": "npm run dev --prefix server",
     "dev:check": "node scripts/health-dev.mjs",
     "verify:hud-icons": "node scripts/verify-hud-icons.mjs",
+    "verify:assets": "node scripts/verify-assets.mjs",
+    "verify:assets:cdn": "node scripts/verify-assets.mjs --cdn-only",
     "verify:three": "node ../grudge-three-stack/scripts/verify-three-stack.mjs .",
     "sync:mine-loader": "node scripts/sync-mine-loader-assets.mjs",
     "sync:grudge-game-hud": "node scripts/sync-grudge-game-hud.mjs",
+    "upload:r2": "node scripts/upload-r2.mjs",
+    "upload:r2:all": "node scripts/upload-r2.mjs --all",
+    "upload:r2:dry": "node scripts/upload-r2.mjs --dry-run",
+    "optimize:glb": "node scripts/optimize-glb.mjs",
+    "convert": "node scripts/convert-pipeline.mjs",
+    "convert:doctor": "node scripts/convert-pipeline.mjs doctor",
+    "pipeline": "npm run convert:doctor && npm run upload:r2 && npm run verify:assets:cdn",
     "deploy:test": "node scripts/deploy-test.mjs",
     "start:server": "npm start --prefix server",
     "postinstall": "npm install --prefix server"
@@ -21,8 +30,23 @@
   "engines": {
     "node": ">=18"
   },
-  "grudgeThreeTrack": "cdn-r128",
+  "grudgeThreeTrack": "cdn-r128-pinned",
+  "grudgeAssets": {
+    "cdn": "https://assets.grudge-studio.com",
+    "appPrefix": "voxgrudge",
+    "bucket": "grudge-assets",
+    "tvs": "models/voxels/tvs"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.2.0",
+    "@gltf-transform/core": "^4.2.0",
+    "@gltf-transform/extensions": "^4.2.0",
+    "@gltf-transform/functions": "^4.2.0",
+    "meshoptimizer": "^0.22.0",
+    "sharp": "^0.33.5"
+  },
   "optionalDependencies": {
+    "draco3dgltf": "^1.5.7",
     "fflate": "^0.8.2"
   }
 }

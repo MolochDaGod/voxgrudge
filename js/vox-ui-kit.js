@@ -582,10 +582,17 @@
       });
     }
 
-    // Hash deep-link
-    var hash = (location.hash || "").replace(/^#/, "");
-    if (hash === "hero" || hash === "world" || hash === "class") show(hash);
-    else show("class");
+    // Hash deep-link (#hero / #world / #class) + live hashchange
+    function applyHash() {
+      var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+      if (hash === "hero" || hash === "world" || hash === "class") show(hash);
+      else if (!hash) show(current || "class");
+    }
+    applyHash();
+    if (!bar._voxHashWired) {
+      bar._voxHashWired = true;
+      window.addEventListener("hashchange", applyHash);
+    }
 
     global.VoxUiKit._sectionShow = show;
   }

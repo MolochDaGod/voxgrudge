@@ -14,8 +14,11 @@
   "use strict";
 
   var CDN =
+    (global.GrudgeAssets && global.GrudgeAssets.R2_ORIGIN) ||
     (global.GrudgeFleet && global.GrudgeFleet.endpoints && global.GrudgeFleet.endpoints.assets) ||
     "https://assets.grudge-studio.com";
+  // Always absolute TVS CDN base for file consistency (not voxgrudge/ app prefix).
+  // Localhost may still fall back to /assets/voxels/* when CDN fails.
   var BASE = CDN.replace(/\/$/, "") + "/models/voxels/tvs";
 
   var cache = { catalog: null, roster: null };
@@ -28,30 +31,38 @@
 
   async function loadCatalog(force) {
     if (cache.catalog && !force) return cache.catalog;
-    try {
-      cache.catalog = await fetchJson(BASE + "/catalog.json");
-    } catch (e1) {
+    var urls = [BASE + "/catalog.json", "/assets/voxels/catalog.json", "assets/voxels/catalog.json"];
+    var lastErr;
+    for (var i = 0; i < urls.length; i++) {
       try {
-        cache.catalog = await fetchJson("assets/voxels/catalog.json");
-      } catch (e2) {
-        cache.catalog = await fetchJson("/assets/voxels/catalog.json");
+        cache.catalog = await fetchJson(urls[i]);
+        return cache.catalog;
+      } catch (e) {
+        lastErr = e;
       }
     }
-    return cache.catalog;
+    throw lastErr || new Error("TVS catalog unavailable");
   }
 
   async function loadRoster(force) {
     if (cache.roster && !force) return cache.roster;
-    try {
-      cache.roster = await fetchJson(BASE + "/unit-roster.json");
-    } catch (e1) {
+    var urls = [BASE + "/unit-roster.json", "/assets/voxels/unit-roster.json", "assets/voxels/unit-roster.json"];
+    var lastErr;
+    for (var i = 0; i < urls.length; i++) {
       try {
-        cache.roster = await fetchJson("assets/voxels/unit-roster.json");
-      } catch (e2) {
-        cache.roster = await fetchJson("/assets/voxels/unit-roster.json");
+        var raw = await fetchJson(urls[i]);
+        // Normalize via TvsUnitLoader when present (absolute model/texture URLs)
+        if (global.TvsUnitLoader && global.TvsUnitLoader.normalizeRoster) {
+          cache.roster = global.TvsUnitLoader.normalizeRoster(raw);
+        } else {
+          cache.roster = raw;
+        }
+        return cache.roster;
+      } catch (e) {
+        lastErr = e;
       }
     }
-    return cache.roster;
+    throw lastErr || new Error("TVS roster unavailable");
   }
 
   function characterUrl(slugOrId) {

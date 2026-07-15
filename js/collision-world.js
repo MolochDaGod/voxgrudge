@@ -100,10 +100,24 @@
       return 0;
     }
 
+    /**
+     * Place object so world AABB feet sit on ground + footY.
+     * Uses bbox min.y (not origin-as-feet) so TVS normalizeHeight + Kenney both work.
+     */
     function snapObject(obj, footY) {
       if (!obj || !obj.position) return;
-      var y = getGroundHeight(obj.position.x, obj.position.z);
-      obj.position.y = y + (footY || 0);
+      var ground = getGroundHeight(obj.position.x, obj.position.z);
+      var extra = footY || 0;
+      try {
+        obj.updateMatrixWorld(true);
+        var box = new THREE.Box3().setFromObject(obj);
+        if (isFinite(box.min.y)) {
+          obj.position.y += ground + extra - box.min.y;
+          return;
+        }
+      } catch (e) { /* fall through */ }
+      // Fallback: origin-at-feet
+      obj.position.y = ground + extra;
     }
 
     function circleHitsBox(px, pz, radius, box) {

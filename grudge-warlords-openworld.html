@@ -640,12 +640,35 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 </div><!-- /game-hud -->
 
 <!-- @grudge/three-stack CDN track (r128) — order mandatory: three → fflate → loaders -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Pinned Three 0.128.0 + loaders (single version). DRACO/Meshopt decoders for optimized GLBs. -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js"></script>
+<script>
+// Attach Meshopt + DRACO to GLTFLoader instances (used by npm run optimize:glb output)
+window.VoxGltfConfigure = function (loader) {
+  if (!loader) return loader;
+  try {
+    if (typeof MeshoptDecoder !== 'undefined' && loader.setMeshoptDecoder) {
+      if (MeshoptDecoder.ready) MeshoptDecoder.ready.then(function () { loader.setMeshoptDecoder(MeshoptDecoder); });
+      else loader.setMeshoptDecoder(MeshoptDecoder);
+    }
+  } catch (e) {}
+  try {
+    if (typeof THREE !== 'undefined' && THREE.DRACOLoader && loader.setDRACOLoader) {
+      var draco = new THREE.DRACOLoader();
+      draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+      loader.setDRACOLoader(draco);
+    }
+  } catch (e2) {}
+  return loader;
+};
+</script>
 <script src="js/three-stack-check.js"></script>
 <script src="js/grudge-env.js"></script>
 <script src="js/grudge-asset-config.js"></script>
@@ -657,6 +680,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/vox-game-canvas.js"></script>
 <script src="js/vox-game-flow.js"></script>
 <script src="js/vox-ui-deps.js"></script>
+<script src="js/vox-boot.js"></script>
 <script src="js/vox-ui-kit.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
@@ -1079,7 +1103,18 @@ function registerEntityCollider(id,kind,mesh,def,opts){
 }
 
 // ── Asset Base URL (switch to R2 CDN for production) ──
-const ASSET_BASE = ''; // Set to 'https://assets.grudge-studio.com/' for R2
+// R2 CDN is default on live hosts via GrudgeAssets.useR2() — ?cdn=0 forces local
+const ASSET_BASE = (window.GrudgeAssets && GrudgeAssets.useR2 && GrudgeAssets.useR2())
+  ? (GrudgeAssets.R2_ORIGIN + '/' + GrudgeAssets.R2_APP + '/')
+  : '';
+
+/** GLTFLoader + Meshopt/DRACO (optimize:glb pipeline). */
+function makeGltfLoader(){
+  const loader = new THREE.GLTFLoader();
+  if(window.VoxGameCanvas && VoxGameCanvas.configureGltfLoader) return VoxGameCanvas.configureGltfLoader(loader);
+  if(window.VoxGltfConfigure) return VoxGltfConfigure(loader);
+  return loader;
+}
 
 // ── Cube Energy System ──
 let cubeEnergy = 0, maxCubeEnergy = 100;
@@ -1498,36 +1533,21 @@ function buildSettlementCarousel(){
 function initGameShell(){
   const bootEl = document.getElementById('vox-boot-status');
 
-  // PNG UI kit first (containers / carousel / unit frames)
-  const uiReady = window.VoxUiKit
-    ? VoxUiKit.init({
-        onProgress: function(p){
-          if(bootEl) bootEl.textContent = 'UI PNG '+p.pct+'% · '+p.id;
-        },
-      }).then(function(){
-        buildClassCarousel();
-        buildSettlementCarousel();
-      })
-    : Promise.resolve();
-
-  uiReady.then(function(){
-    const deps = window.VoxGameCanvas
-      ? VoxGameCanvas.checkDeps({ THREE:true, FBXLoader:true, TvsUnitLoader:true, TvsWorldContent:true })
-      : { ok:false, missing:['VoxGameCanvas'] };
-    if(bootEl && bootEl.className!=='ok'){
-      if(deps.ok){
-        bootEl.textContent = (bootEl.textContent||'')+' · canvas/TVS loaders online';
-        bootEl.className = 'ok';
-      } else if(!bootEl.className) {
-        bootEl.textContent = 'Missing: '+(deps.missing||[]).join(', ');
-        bootEl.className = 'bad';
-      }
-    }
-  });
-
+  // Flow FSM first so UI hooks exist during boot
   if(window.VoxGameFlow){
     gameFlow = VoxGameFlow.create({
-      onEnter: function(state){ setFlowRail(state); },
+      onEnter: function(state, prev, meta){
+        setFlowRail(state);
+        // Sync canvas pause with flow (Esc / dead / loading)
+        if(gameCanvasHost){
+          if(state==='playing') gameCanvasHost.setPaused(false);
+          else if(state==='pause' || state==='loading' || state==='dead') gameCanvasHost.setPaused(true);
+        }
+        if(state==='error' && meta && meta.message){
+          console.error('[VoxGameFlow] error', meta.message);
+          if(bootEl){ bootEl.textContent = meta.message; bootEl.className = 'bad'; }
+        }
+      },
       ui: {
         showClassScreen: function(show){
           const el = document.getElementById('class-screen');
@@ -1540,10 +1560,12 @@ function initGameShell(){
           else el.classList.add('pre-game-hidden');
           if(window.VoxUiKit) VoxUiKit.showGameChrome(!!show);
         },
-        setLoading: function(on, label){
+        setLoading: function(on, label, pct){
           const loadEl = document.getElementById('world-loading');
           const msg = document.getElementById('world-loading-msg');
-          if(msg && label) msg.textContent = label;
+          if(msg && label){
+            msg.textContent = pct!=null && pct>0 ? (label+' · '+pct+'%') : label;
+          }
           if(!loadEl) return;
           if(on){
             loadEl.style.display = 'block';
@@ -1554,6 +1576,10 @@ function initGameShell(){
             loadEl.classList.remove('is-active');
             document.body.classList.remove('is-world-loading');
           }
+          const bar = document.getElementById('world-loading-bar') || document.getElementById('vox-load-bar');
+          if(bar && pct!=null) bar.style.width = Math.max(0, Math.min(100, pct))+'%';
+          const pctEl = document.getElementById('world-loading-pct');
+          if(pctEl && pct!=null) pctEl.textContent = Math.round(pct)+'%';
         },
         showPause: function(on){
           const el = document.getElementById('vox-pause-overlay');
@@ -1564,10 +1590,66 @@ function initGameShell(){
             el.querySelector('.panel').classList.add('vox-container');
           }
         },
+        showDead: function(on){
+          const go = document.getElementById('game-over');
+          if(!go) return;
+          if(on) go.classList.remove('hidden');
+          else go.classList.add('hidden');
+        },
+        showError: function(msg){
+          if(msg===false){
+            if(bootEl && bootEl.className==='bad' && bootEl.dataset.sticky!=='1') {
+              /* leave status for boot report */
+            }
+            return;
+          }
+          if(bootEl){
+            bootEl.textContent = typeof msg==='string' ? msg : 'Error';
+            bootEl.className = 'bad';
+            bootEl.dataset.sticky = '1';
+          }
+        },
       },
     });
-    gameFlow.goto('select');
   }
+
+  // Macro boot: deps + UI PNG + CDN + repair (then kit carousels)
+  const bootPromise = window.VoxBoot
+    ? VoxBoot.run({
+        statusEl: bootEl,
+        startBtn: '#start-btn',
+        need: {
+          THREE:true, FBXLoader:true, GLTFLoader:true, fflate:true,
+          TvsUnitLoader:true, TvsWorldContent:true, VoxUiDeps:true, VoxGameFlow:true, WebGL:true,
+        },
+      })
+    : Promise.resolve({ ok:true });
+
+  bootPromise.then(function(report){
+    const kit = window.VoxUiKit
+      ? VoxUiKit.init({
+          onProgress: function(p){
+            if(bootEl && bootEl.className!=='bad') bootEl.textContent = 'UI kit '+p.pct+'% · '+p.id;
+          },
+        })
+      : Promise.resolve();
+    return kit.then(function(){
+      buildClassCarousel();
+      buildSettlementCarousel();
+      // Enter hero select after boot (legal: boot → select)
+      if(gameFlow && gameFlow.state==='boot') gameFlow.goto('select');
+      if(report && !report.ok && gameFlow){
+        gameFlow.goto('error', { message: (report.issues&&report.issues[0]) || 'Boot failed' });
+      }
+    });
+  }).catch(function(err){
+    console.error('[initGameShell] boot', err);
+    if(bootEl){ bootEl.textContent = 'Boot error: '+(err&&err.message||err); bootEl.className='bad'; }
+    if(gameFlow) gameFlow.goto('error', { message: String(err&&err.message||err) });
+  });
+
+  // Legacy path: no VoxBoot → go straight to select
+  if(gameFlow && !window.VoxBoot) gameFlow.goto('select');
 
   if(window.TvsWorldContent){
     TvsWorldContent.loadSettlements().then(function(){
@@ -1589,6 +1671,18 @@ function initGameShell(){
       if(gameCanvasHost) gameCanvasHost.setPaused(false);
     };
   }
+
+  // Tab visibility → soft pause while playing (best practice)
+  document.addEventListener('visibilitychange', function(){
+    if(!gameStarted || !gameFlow) return;
+    if(document.hidden){
+      if(gameFlow.isPlaying()){
+        gameFlow.goto('pause');
+        if(gameCanvasHost) gameCanvasHost.setPaused(true);
+      }
+    }
+    // Do not auto-resume — player confirms Esc/Resume (avoids surprise combat)
+  });
 }
 
 // Escape pause (does not steal Esc from command center when open)
@@ -1737,10 +1831,16 @@ function linkVfxAliases(){
 
 function startGame(){
   if(!playerClass) return;
+  // Macro gate: refuse enter when boot hard-failed (missing THREE/WebGL/etc.)
+  if(window.VoxBoot && !VoxBoot.canStart()){
+    const bootEl = document.getElementById('vox-boot-status');
+    if(bootEl){ bootEl.textContent = 'Cannot start — fix boot errors first'; bootEl.className='bad'; }
+    return;
+  }
   isGameOver=false;
   gameStarted=false;
   spawnGraceTimer=0;
-  if(gameFlow) gameFlow.goto('loading', { label: 'Entering the Surface…' });
+  if(gameFlow) gameFlow.goto('loading', { label: 'Entering the Surface…', pct: 0 });
   const goEl=document.getElementById('game-over');
   if(goEl) goEl.classList.add('hidden');
   const seedInp=document.getElementById('world-seed-input');
@@ -1824,7 +1924,7 @@ function startGame(){
   }
 
   if(USE_VOX_ROLL&&!voxRollAnim&&window.VoxRollAnim){
-    voxRollAnim=VoxRollAnim.create({THREE:THREE,loader:new THREE.GLTFLoader()});
+    voxRollAnim=VoxRollAnim.create({THREE:THREE,loader:makeGltfLoader()});
   }
 
   const loadCtx={
@@ -1892,7 +1992,7 @@ function init(){
       THREE:THREE,
       objLoader:new THREE.OBJLoader(),
       mtlLoader:new THREE.MTLLoader(),
-      gltfLoader:new THREE.GLTFLoader(),
+      gltfLoader:makeGltfLoader(),
     });
   }
 
@@ -1921,13 +2021,14 @@ function init(){
   camera.position.set(0, 28, 22);
   camera.lookAt(0, 0, 0);
 
-  // Renderer — canvas best practices (DPR cap, resize, visibility pause)
+  // Renderer — canvas best practices (DPR cap, resize, visibility, context loss, dt clamp)
   if(window.VoxGameCanvas){
     gameCanvasHost = VoxGameCanvas.mount({
       wrap: document.getElementById('game-canvas-wrap'),
       THREE: THREE,
       antialias: true,
       maxDpr: 2,
+      maxDt: 0.05,
       preserveDrawingBuffer: true,
       clearColor: 0x0a0e14,
       shadows: true,
@@ -1938,7 +2039,22 @@ function init(){
           camera.updateProjectionMatrix();
         }
       },
-      onPause: function(){ if(gameFlow && gameFlow.isPlaying()){ /* soft pause clock only via host */ } },
+      onPause: function(reason){
+        // Visibility soft-pause is handled by document listener → flow pause
+        if(reason==='visibility' && gameFlow && gameFlow.isPlaying()){
+          /* optional: could auto-pause flow; we require explicit Esc resume */
+        }
+      },
+      onContextLost: function(){
+        if(gameFlow) gameFlow.goto('pause');
+        showFlash && showFlash('Graphics context lost — click Resume after restore');
+      },
+      onContextRestored: function(){
+        showFlash && showFlash('Graphics restored');
+      },
+      onFrameError: function(err){
+        console.error('[VoxGrudge] frame', err);
+      },
     });
     renderer = gameCanvasHost.renderer;
   } else {
@@ -1972,7 +2088,7 @@ function init(){
   window._collisionWorld = collisionWorld;
 
   if(window.VoxRollAnim&&!voxRollAnim){
-    voxRollAnim = VoxRollAnim.create({THREE:THREE, loader:new THREE.GLTFLoader()});
+    voxRollAnim = VoxRollAnim.create({THREE:THREE, loader:makeGltfLoader()});
     voxRollAnim.load();
   }
 
@@ -2013,18 +2129,46 @@ function init(){
     const prevPos = playerMesh && playerMesh.position ? playerMesh.position.clone() : new THREE.Vector3();
     if(playerMesh && playerMesh.parent) scene.remove(playerMesh);
     playerMesh = mesh;
-    playerMesh.position.copy(prevPos);
+    // Keep XZ; Y is recomputed by feet snap (bbox-aware)
+    playerMesh.position.x = prevPos.x;
+    playerMesh.position.z = prevPos.z;
     scene.add(playerMesh);
+    // Never compound parent scale on TVS kits (already height-normalized to ~2m)
+    if(playerMesh.userData && playerMesh.userData.assetSource === 'tvs-voxel'){
+      // Ensure world scale is uniform identity parent chain
+      if(playerMesh.parent && playerMesh.parent !== scene){
+        /* playerMesh is scene-child — OK */
+      }
+    }
     snapToGround(playerMesh, 0);
+    // Sanity: if measured height is insane after snap, re-normalize
+    if(window.TvsUnitLoader && playerMesh.userData && playerMesh.userData.assetSource === 'tvs-voxel'){
+      try {
+        playerMesh.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(playerMesh);
+        const h = box.max.y - box.min.y;
+        const target = (window.GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M) || 2.0;
+        if(h > target * 4 || h < target * 0.25){
+          console.warn('[VoxGrudge] player height out of band', h, '→ renormalize');
+          TvsUnitLoader.normalizeHeight(playerMesh, target, THREE);
+          snapToGround(playerMesh, 0);
+        }
+      } catch(e) {}
+    }
     if(opts.mixer) playerMixer = opts.mixer;
     if(opts.skelParts !== undefined) playerSkelParts = opts.skelParts;
-    if(weaponMeshObj && !opts.skipWeapon){
+    // TVS kits often include weapon meshes — skip arsenal attach unless asked
+    const skipW = opts.skipWeapon || (playerMesh.userData && playerMesh.userData.assetSource === 'tvs-voxel' && opts.skipWeapon !== false && opts.forceWeapon !== true);
+    if(weaponMeshObj && !skipW){
       try { playerMesh.add(weaponMeshObj); } catch(e) {}
     }
     if(playerController){
       playerController.setTarget(playerMesh);
       playerController.alignBehindCharacter();
       playerController.forceSnap();
+    }
+    if(playerMesh.userData && playerMesh.userData.importReport){
+      console.info('[VoxGrudge] player mesh ready', playerMesh.userData.importReport);
     }
   }
 
@@ -2057,7 +2201,7 @@ function init(){
   window.swapPlayerTvsUnit = async function(unit){
     if(!window.TvsUnitLoader || !unit) return;
     try {
-      const root = await TvsUnitLoader.loadTvsUnit(unit, {
+      const root = await TvsUnitLoader.loadTvsUnit(TvsUnitLoader.normalizeUnit(unit), {
         THREE: THREE,
         FBXLoader: THREE.FBXLoader,
         height: GrudgeScale.PLAYER_HEIGHT_M || 2.0,
@@ -2069,7 +2213,7 @@ function init(){
         colorTint: playerColorTint !== 0xffffff ? playerColorTint : null,
       });
       root.userData._tvsPlayer = true;
-      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null });
+      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null, skipWeapon: true });
     } catch(err){
       console.warn('[VoxGrudge] swap TVS failed', err);
     }
@@ -2079,10 +2223,13 @@ function init(){
     try {
       if(!window.TvsUnitLoader) throw new Error('TvsUnitLoader missing');
       if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
+      else if(TvsUnitLoader.normalizeRoster) tvsRosterCache = TvsUnitLoader.normalizeRoster(tvsRosterCache);
       let unit = playerTvsUnit;
       if(!unit && playerTvsUnitId) unit = TvsUnitLoader.findUnit(tvsRosterCache, playerTvsUnitId);
       if(!unit) unit = TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass);
       if(!unit) throw new Error('no TVS unit');
+      unit = TvsUnitLoader.normalizeUnit(unit);
+      if(!unit.modelUrl) throw new Error('unit missing modelUrl after normalize: '+(unit.unitId||'?'));
       playerTvsUnit = unit;
       playerTvsUnitId = unit.unitId;
       const root = await TvsUnitLoader.loadTvsUnit(unit, {
@@ -2100,8 +2247,8 @@ function init(){
         root.userData.setColorTint(playerColorTint);
       }
       root.userData._tvsPlayer = true;
-      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null });
-      console.info('[VoxGrudge] TVS player', unit.unitId, unit.grudgeUuid);
+      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null, skipWeapon: true });
+      console.info('[VoxGrudge] TVS player', unit.unitId, unit.grudgeUuid, root.userData.importReport);
     } catch(err){
       console.warn('[VoxGrudge] TVS player fallback', err && err.message || err);
       spawnKenneyOrVoxFallback();
@@ -5727,7 +5874,7 @@ function applyKenneyTexture(group, letter){
 
 function spawnCraftingTables(){
   if(!scene||typeof THREE.GLTFLoader==='undefined') return;
-  if(!glbLoader) glbLoader=new THREE.GLTFLoader();
+  if(!glbLoader) glbLoader=makeGltfLoader();
   const spots=[{x:10,z:8},{x:-12,z:14},{x:6,z:-10}];
   glbLoader.load('models/crafting_table.glb',function(gltf){
     craftTableTemplate=gltf.scene;
@@ -5770,7 +5917,7 @@ function renderCraftTablePreview(){
 
 function preloadModels(callback){
   if(typeof THREE.GLTFLoader==='undefined'){modelsLoaded=false;callback();return;}
-  glbLoader = new THREE.GLTFLoader();
+  glbLoader = makeGltfLoader();
   const letters = KENNEY_BODY_LETTERS;
   let loaded = 0;
   const totalKenney = letters.length;
@@ -6489,7 +6636,14 @@ function isNearClimbable(){
 // ═══════════════════════════════════════════════════════════════
 function animate(){
   requestAnimationFrame(animate);
-  if(!gameStarted||isGameOver){ renderer.render(scene,camera); return; }
+  if(!renderer||!scene||!camera) return;
+  // Soft pause: still draw last frame when paused / not started / dead
+  const flowOk = !gameFlow || gameFlow.shouldTick();
+  const canvasOk = !gameCanvasHost || !gameCanvasHost.isPaused();
+  if(!gameStarted||isGameOver||!flowOk||!canvasOk){
+    try{ renderer.render(scene,camera); }catch(e){}
+    return;
+  }
 
   const dt=Math.min(clock.getDelta(),0.05);
   if(spawnGraceTimer>0) spawnGraceTimer=Math.max(0,spawnGraceTimer-dt);
