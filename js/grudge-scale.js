@@ -7,11 +7,18 @@
   const BOSS_MAX_HEIGHT_M = 4.0;
   const KENNEY_NATIVE_H = 1.9;
   const VOX_NATIVE_H = 2.8;
+  /**
+   * Assumed native mesh height BEFORE fitEnemyMeshHeight remeasure.
+   * Skeleton-warrior.glb ships near human scale (~1.9–2.1 m bind pose). If a
+   * prior scale map treated it as cm (190 units × 1.6) it read ~100× tall —
+   * always re-fit with measured Box3 after spawn (fitEnemyMeshHeight).
+   */
   const CREATURE_NATIVE_H = {
     cheetah: 1.4, owl: 0.9, crocodile: 1.2, rhinoceros: 2.0, werewolf: 1.8,
-    'skeleton-warrior': 1.9, 'iron-golem': 2.8, 'mini-dragon': 1.6, drake: 3.2,
+    'skeleton-warrior': 1.95, 'iron-golem': 2.8, 'mini-dragon': 1.6, drake: 3.2,
     'ender-dragon': 4.5, 'karate-boss': 2.2,
     minecraft_spider: 1.1, voxel_snake: 1.0, crow: 0.7, giganto: 3.5, demise: 2.4,
+    cannon: 1.35,
   };
 
   const TIER_HEIGHT_M = {
@@ -64,7 +71,30 @@
 
   function creatureScale(creatureName, heightM) {
     const native = CREATURE_NATIVE_H[creatureName] || 1.8;
-    return scaleForHeight(heightM, native);
+    // Cap first-pass scale so a bad native guess can't 100× a creature before
+    // fitEnemyMeshHeight remeasures. Real size is corrected by measured Box3.
+    const s = scaleForHeight(heightM, native);
+    return clamp(s, 0.02, 8);
+  }
+
+  /**
+   * Decade unit fix when measured height is absurd (cm vs m exports).
+   * Prefer this when Box3 height is outside [0.05, 50] meters.
+   */
+  function unitFixToward(targetM, measuredH) {
+    if (!(targetM > 0) || !(measuredH > 0)) return 1;
+    if (measuredH >= 0.05 && measuredH <= 50) return 1;
+    return Math.pow(10, Math.round(Math.log10(targetM / measuredH)));
+  }
+
+  function scaleToHeightSafe(measuredHeight, targetM) {
+    const t = targetM || PLAYER_HEIGHT_M;
+    let h = measuredHeight || 1;
+    const uf = unitFixToward(t, h);
+    h *= uf;
+    let s = (t / h) * uf;
+    if (!Number.isFinite(s) || s <= 0) s = 1;
+    return clamp(s, 0.02, 12);
   }
 
   function fantasyScale(fantasyKey, heightM) {
@@ -77,8 +107,7 @@
    * Caller measures mesh height (Box3) then applies scale.
    */
   function scaleToHeight(measuredHeight, targetM) {
-    if (!measuredHeight || measuredHeight < 1e-4) return 1;
-    return (targetM || PLAYER_HEIGHT_M) / measuredHeight;
+    return scaleToHeightSafe(measuredHeight, targetM);
   }
 
   global.GrudgeScale = {
@@ -93,6 +122,9 @@
     fantasyScale,
     scaleForHeight,
     scaleToHeight,
+    scaleToHeightSafe,
+    unitFixToward,
     ENEMY_HEIGHT_OVERRIDES,
+    CREATURE_NATIVE_H,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

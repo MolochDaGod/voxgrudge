@@ -860,6 +860,7 @@ const ITEM_DEFS = {
   ally_crow:    {name:'Scout Crow',       icon:'🐦‍⬛',color:0x333333,effect:'summon',  ally:'crow'},
   ally_spider:  {name:'Brood Spider',     icon:'🕷️',color:0x1a4a10,effect:'summon',  ally:'spider'},
   ally_snake:   {name:'Venom Snake',      icon:'🐍', color:0x8a7a44,effect:'summon',  ally:'snake'},
+  cannon:       {name:'Cannon',           icon:'💣', color:0x444450,effect:'place_cannon', dmg:180,radius:6,model:'cannon'},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -945,6 +946,7 @@ const RECIPES = [
   {id:'ally_crow',    name:'Scout Crow',     emoji:'🐦‍⬛',cost:{wood:2,ore:1},    result:{item:'ally_crow',count:1},tab:'allies'},
   {id:'ally_spider',  name:'Brood Spider',   emoji:'🕷️',cost:{stone:2,ore:2},   result:{item:'ally_spider',count:1},tab:'allies'},
   {id:'ally_snake',   name:'Venom Snake',    emoji:'🐍', cost:{wood:3,stone:1},   result:{item:'ally_snake',count:1},tab:'allies'},
+  {id:'cannon',       name:'Cannon',         emoji:'💣', cost:{ore:6,stone:4,wood:2}, result:{item:'cannon',count:1},tab:'gear'},
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -2255,7 +2257,10 @@ function init(){
     if(keyIs('interact',e.code)||e.code==='KeyX') { e.preventDefault(); tryWorldInteract(); }
     if(keyIs('mine',e.code)||e.code==='KeyM') tryMineResource();
     if(keyIs('skill1',e.code)||e.code==='KeyQ') activateSkill(0);
-    if(keyIs('skill2',e.code)||e.code==='KeyE') activateSkill(1);
+    if(keyIs('skill2',e.code)||e.code==='KeyE') {
+      if(typeof tryFireNearestCannon==='function'&&tryFireNearestCannon()){ e.preventDefault(); return; }
+      activateSkill(1);
+    }
     if(keyIs('skill3',e.code)||e.code==='KeyR') activateSkill(2);
     if(keyIs('skill4',e.code)||e.code==='KeyF') activateSkill(3);
     if(e.code==='KeyV') tryDash();
@@ -3548,22 +3553,42 @@ function getBiome(x,z){
   return BIOMES[0];
 }
 
-/** Measure Y height of a mesh group and scale uniformly to target meters. */
+/**
+ * Measure Y height and scale to target meters — decade unit fix for cm/m exports
+ * (skeleton-warrior was ~100× when measured wrong or scaled without re-fit).
+ */
 function fitEnemyMeshHeight(mesh, heightM){
   if(!mesh||!heightM) return;
+  // Reset local scale so we never stack 100× corrections
+  mesh.scale.set(1,1,1);
   mesh.updateMatrixWorld(true);
-  const box=new THREE.Box3().setFromObject(mesh);
+  // Prefer skinned body only (props inflate world AABB)
+  let box=new THREE.Box3();
+  let n=0;
+  mesh.traverse(function(o){
+    if(o.isSkinnedMesh&&o.visible){ box.expandByObject(o); n++; }
+  });
+  if(n===0) box=new THREE.Box3().setFromObject(mesh);
   const size=box.getSize(new THREE.Vector3());
-  const h=size.y||1;
-  const s=GrudgeScale.scaleToHeight(h, heightM);
-  mesh.scale.multiplyScalar(s);
-  // Re-center feet: after scale, bottom may not sit at y=0 local
+  let h=size.y||1;
+  const s=(GrudgeScale.scaleToHeightSafe||GrudgeScale.scaleToHeight)(h, heightM);
+  mesh.scale.setScalar(s);
   mesh.updateMatrixWorld(true);
   const box2=new THREE.Box3().setFromObject(mesh);
-  const footOffset=box2.min.y-mesh.position.y;
-  // Shift children up so local origin is at feet
-  if(Math.abs(footOffset)>0.01){
-    mesh.children.forEach(function(ch){ ch.position.y -= footOffset; });
+  // Ground feet to y=0 in parent space
+  mesh.position.y -= (box2.min.y - mesh.position.y);
+  // Hip-center XZ when a hips bone exists
+  let hips=null;
+  mesh.traverse(function(o){
+    if(!hips&&o.isBone&&/hips$/i.test(o.name)) hips=o;
+  });
+  if(hips){
+    const hp=new THREE.Vector3();
+    hips.getWorldPosition(hp);
+    const wp=new THREE.Vector3();
+    mesh.getWorldPosition(wp);
+    mesh.position.x -= (hp.x - wp.x);
+    mesh.position.z -= (hp.z - wp.z);
   }
 }
 
@@ -4533,8 +4558,92 @@ function getNearbyCraftStation(){
   return null;
 }
 
+let worldCannons=[];
+
+function getNearbyCannon(){
+  if(!playerMesh||!worldCannons.length) return null;
+  const p=playerMesh.position;
+  let best=null,bestD=3.6;
+  for(let i=0;i<worldCannons.length;i++){
+    const c=worldCannons[i];
+    if(!c.mesh||!c.mesh.visible) continue;
+    const d=p.distanceTo(c.mesh.position);
+    if(d<bestD){bestD=d;best=c;}
+  }
+  return best;
+}
+
+function tryFireNearestCannon(){
+  const c=getNearbyCannon();
+  if(!c) return false;
+  const now=performance.now()/1000;
+  if(c.cdUntil&&now<c.cdUntil){
+    if(typeof showFlash==='function') showFlash('Cannon reloading…');
+    return true;
+  }
+  c.cdUntil=now+1.7;
+  c.recoilT=0.28;
+  const dir=new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  dir.y=Math.max(-0.1,Math.min(0.35,dir.y));
+  dir.normalize();
+  const origin=c.mesh.position.clone().add(new THREE.Vector3(0,0.7,0)).addScaledVector(dir,1.0);
+  const ball=new THREE.Mesh(
+    new THREE.SphereGeometry(0.28,10,10),
+    new THREE.MeshStandardMaterial({color:0x2a2a30,metalness:0.7,roughness:0.45})
+  );
+  ball.position.copy(origin);
+  scene.add(ball);
+  const speed=2.8;
+  bullets.push({
+    mesh:ball,vel:dir.clone().multiplyScalar(speed),dir:dir.clone(),speed:speed,
+    life:3.0,dmg:(ITEM_DEFS.cannon&&ITEM_DEFS.cannon.dmg)||180,
+    ranged:true,explosive:true,expRadius:(ITEM_DEFS.cannon&&ITEM_DEFS.cannon.radius)||6,
+    hit:false,gravity:1.2,homing:0,trailTimer:0,trailInterval:0.04,trailUpdate:0,
+    knockback:2.4,impactType:'explosion',impactColor:0xff6600,prevPositions:[],
+    fromPlayer:true,cannon:true
+  });
+  return true;
+}
+
+function updateWorldCannons(dt){
+  for(let i=0;i<worldCannons.length;i++){
+    const c=worldCannons[i];
+    if(!c.mesh) continue;
+    if(c.recoilT>0){
+      c.recoilT=Math.max(0,c.recoilT-dt);
+      c.mesh.rotation.x=Math.sin(c.recoilT*40)*0.05*(c.recoilT/0.28);
+    }else if(c.mesh.rotation.x){
+      c.mesh.rotation.x*=0.85;
+      if(Math.abs(c.mesh.rotation.x)<0.001) c.mesh.rotation.x=0;
+    }
+  }
+}
+
+function placeWorldCannon(x,z,yaw){
+  const gy=typeof getGroundY==='function'?getGroundY(x,z):0;
+  let mesh=null;
+  if(typeof CREATURE_CACHE!=='undefined'&&CREATURE_CACHE.cannon){
+    mesh=CREATURE_CACHE.cannon.clone(true);
+    const sc=(window.GrudgeScale&&GrudgeScale.voxScale)?GrudgeScale.voxScale(1.35):1.35;
+    mesh.scale.set(sc,sc,sc);
+  }else{
+    mesh=new THREE.Mesh(
+      new THREE.BoxGeometry(1.2,0.8,1.6),
+      new THREE.MeshStandardMaterial({color:0x3a3a44,metalness:0.5,roughness:0.5})
+    );
+  }
+  mesh.position.set(x,gy,z);
+  mesh.rotation.y=yaw||0;
+  mesh.traverse(function(ch){if(ch.isMesh){ch.castShadow=true;ch.receiveShadow=true;}});
+  scene.add(mesh);
+  worldCannons.push({mesh:mesh,cdUntil:0,recoilT:0});
+  return mesh;
+}
+
 function tryWorldInteract(){
   if(!playerMesh) return;
+  if(tryFireNearestCannon()) return;
   const craftSt=getNearbyCraftStation();
   if(craftSt){
     if(window.GrudgeStudioUI) GrudgeStudioUI.openPanel('craft');
@@ -4549,6 +4658,11 @@ function tryWorldInteract(){
 function updateInteractHint(){
   const el=document.getElementById('interact-hint');
   if(!el||!playerMesh){if(el)el.style.opacity='0';return;}
+  if(getNearbyCannon()){
+    el.style.opacity='1';
+    el.textContent='[E] Fire cannon';
+    return;
+  }
   if(getNearbyCraftStation()){
     el.style.opacity='1';
     el.textContent='[X] Crafting Table';
@@ -4624,6 +4738,12 @@ function applyItem(def){
   else if(def.effect==='invuln'){ statusEffects.invuln={timer:def.duration||5}; }
   else if(def.effect==='equip'){ equipItem(def.slot, def); }
   else if(def.effect==='summon'){ summonAlly(def.ally); }
+  else if(def.effect==='place_cannon'){
+    if(!playerMesh) return;
+    const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(playerMesh.quaternion);
+    placeWorldCannon(playerMesh.position.x+fwd.x*2.2, playerMesh.position.z+fwd.z*2.2, playerMesh.rotation.y);
+    if(typeof showFlash==='function') showFlash('Cannon deployed — press E to fire');
+  }
 }
 
 function equipItem(slot, def){
@@ -5563,10 +5683,11 @@ const CREATURE_MODEL_MAP = {
   fire_drake:'drake',frost_wyrm:'ender-dragon',juggernaut:'iron-golem',
   shadow_dragon:'ender-dragon',creature_titan:'karate-boss'
 };
+// First-pass scale hints only — fitEnemyMeshHeight always remeasures (skeleton fix).
 const CREATURE_SCALE_MAP = {
-  cheetah:1.8,owl:1.2,crocodile:1.5,rhinoceros:2.2,werewolf:2.0,
-  'skeleton-warrior':1.6,'iron-golem':2.5,'mini-dragon':1.4,drake:2.8,
-  'ender-dragon':3.5,'karate-boss':2.0
+  cheetah:1.0,owl:1.0,crocodile:1.0,rhinoceros:1.0,werewolf:1.0,
+  'skeleton-warrior':1.0,'iron-golem':1.0,'mini-dragon':1.0,drake:1.0,
+  'ender-dragon':1.0,'karate-boss':1.0,cannon:1.0
 };
 
 function preloadKenneyTextures(callback){
@@ -5667,7 +5788,7 @@ function preloadModels(callback){
     );
   });
   // Preload creature GLBs in background (non-blocking)
-  const creatureNames = [...new Set(Object.values(CREATURE_MODEL_MAP))];
+  const creatureNames = [...new Set([...Object.values(CREATURE_MODEL_MAP),'cannon'])];
   creatureNames.forEach(name=>{
     glbLoader.load('models/creatures/'+name+'.glb',
       function(gltf){
@@ -6389,6 +6510,7 @@ function animate(){
   updateBullets(dt);
   updateParticles(dt);
   updateWorldItems(dt);
+  if(typeof updateWorldCannons==='function') updateWorldCannons(dt);
   updateStatusEffects(dt);
   updateDayNight(dt);
   updateSpawning(dt);
