@@ -1,0 +1,207 @@
+{
+  "version": "1.0.0",
+  "cdnBase": "https://assets.grudge-studio.com",
+  "r2Prefix": "models/voxels/tvs",
+  "description": "TVS settlement recipes for VoxGrudge, Grudox RPG, top-down, RTS, PvE. Characters + buildings from resources/ packs via D1/R2 roster.",
+  "settlementTypes": {
+    "village": {
+      "id": "village",
+      "title": "Village",
+      "pack": "voxel-village",
+      "theme": "economy",
+      "pve": "civilian_guard",
+      "defaultRadius": 22,
+      "buildings": [
+        { "slug": "voxel-village-inn", "role": "landmark", "height": 6 },
+        { "slug": "voxel-village-house", "role": "home", "count": 4, "height": 4.5 },
+        { "slug": "voxel-village-shop", "role": "vendor", "height": 4.5 },
+        { "slug": "voxel-village-stall", "role": "market", "count": 3, "height": 2.5 },
+        { "slug": "voxel-village-lamppost", "role": "dressing", "count": 4, "height": 3 }
+      ],
+      "props": [
+        { "slug": "voxel-village-barrel", "count": 4, "height": 1 },
+        { "slug": "voxel-village-crate", "count": 3, "height": 1 },
+        { "slug": "voxel-village-fence", "count": 6, "height": 1.2 }
+      ],
+      "npcs": [
+        { "unitId": "voxel-village-innkeeper", "classHint": "civilian" },
+        { "unitId": "voxel-village-merchant", "classHint": "civilian" },
+        { "unitId": "voxel-village-barmaid", "classHint": "civilian" }
+      ],
+      "enemies": []
+    },
+    "farm": {
+      "id": "farm",
+      "title": "Farm",
+      "pack": "voxel-farm",
+      "theme": "agriculture",
+      "pve": "wildlife",
+      "defaultRadius": 26,
+      "buildings": [
+        { "slug": "voxel-farm-farm-house", "role": "home", "height": 5 },
+        { "slug": "voxel-farm-barn", "role": "storage", "height": 6 },
+        { "slug": "voxel-farm-windmill", "role": "landmark", "height": 10 },
+        { "slug": "voxel-farm-fence", "role": "dressing", "count": 8, "height": 1.2 },
+        { "slug": "voxel-farm-hay-bale", "role": "dressing", "count": 5, "height": 1.2 },
+        { "slug": "voxel-farm-wheat", "role": "crop", "count": 10, "height": 1.5 },
+        { "slug": "voxel-farm-tree", "role": "nature", "count": 4, "height": 5 }
+      ],
+      "props": [
+        { "slug": "voxel-farm-pitch-fork", "count": 1, "height": 1.4 },
+        { "slug": "voxel-farm-spade", "count": 1, "height": 1.2 }
+      ],
+      "npcs": [
+        { "unitId": "voxel-farm-farmer", "classHint": "civilian" },
+        { "unitId": "voxel-farm-farm-hand", "classHint": "civilian" }
+      ],
+      "animals": [
+        { "slug": "voxel-farm-cow", "count": 2, "height": 1.4 },
+        { "slug": "voxel-farm-sheep", "count": 3, "height": 1.0 },
+        { "slug": "voxel-farm-chicken", "count": 4, "height": 0.45 }
+      ],
+      "enemies": []
+    },
+    "camp": {
+      "id": "camp",
+      "title": "Ranger Camp",
+      "pack": "voxel-rangers",
+      "theme": "wild",
+      "pve": "bandit_outpost",
+      "defaultRadius": 18,
+      "buildings": [
+        { "slug": "voxel-rangers-tent", "role": "home", "count": 3, "height": 2.8 },
+        { "slug": "voxel-rangers-campfire-frame1", "role": "landmark", "height": 1.2 },
+        { "slug": "voxel-rangers-tower", "role": "defense", "height": 7 },
+        { "slug": "voxel-rangers-wall", "role": "defense", "count": 4, "height": 2.5 },
+        { "slug": "voxel-rangers-banner", "role": "dressing", "count": 2, "height": 3 }
+      ],
+      "props": [
+        { "slug": "voxel-rangers-chair", "count": 2, "height": 1 },
+        { "slug": "voxel-rangers-table", "count": 1, "height": 1 }
+      ],
+      "npcs": [
+        { "unitId": "voxel-rangers-captain", "classHint": "ranged" },
+        { "unitId": "voxel-rangers-hooded", "classHint": "ranged" }
+      ],
+      "enemies": [
+        { "classHint": "melee", "count": 2 },
+        { "classHint": "ranged", "count": 1 }
+      ]
+    },
+    "castle": {
+      "id": "castle",
+      "title": "Knight Keep",
+      "pack": "voxel-knights",
+      "theme": "fortress",
+      "pve": "siege_guards",
+      "defaultRadius": 30,
+      "buildings": [
+        { "slug": "voxel-knights-keep", "role": "landmark", "height": 12 },
+        { "slug": "voxel-knights-tower", "role": "defense", "count": 3, "height": 9 },
+        { "slug": "voxel-knights-gate", "role": "entrance", "height": 5 },
+        { "slug": "voxel-knights-wall", "role": "defense", "count": 6, "height": 3.5 },
+        { "slug": "voxel-knights-banner", "role": "dressing", "count": 3, "height": 3.5 },
+        { "slug": "voxel-knights-statue", "role": "dressing", "height": 3 }
+      ],
+      "props": [
+        { "slug": "voxel-knights-chest", "count": 2, "height": 1 },
+        { "slug": "voxel-knights-table", "count": 1, "height": 1 }
+      ],
+      "npcs": [
+        { "unitId": "voxel-knights-champion", "classHint": "melee" },
+        { "unitId": "voxel-knights-captain", "classHint": "melee" },
+        { "unitId": "voxel-knights-archer", "classHint": "ranged" }
+      ],
+      "enemies": [
+        { "classHint": "melee", "count": 3 },
+        { "classHint": "ranged", "count": 2 }
+      ]
+    },
+    "city": {
+      "id": "city",
+      "title": "Palace City",
+      "pack": "voxel-palace",
+      "theme": "royalty",
+      "pve": "city_guard",
+      "defaultRadius": 34,
+      "buildings": [
+        { "slug": "voxel-palace-palace", "role": "landmark", "height": 14 },
+        { "slug": "voxel-palace-fountain", "role": "landmark", "height": 3 },
+        { "slug": "voxel-palace-fence", "role": "dressing", "count": 8, "height": 1.5 },
+        { "slug": "voxel-palace-carriage", "role": "dressing", "height": 2.2 },
+        { "slug": "voxel-palace-tree", "role": "nature", "count": 5, "height": 5 }
+      ],
+      "props": [],
+      "npcs": [
+        { "unitId": "voxel-palace-king", "classHint": "civilian" },
+        { "unitId": "voxel-palace-queen", "classHint": "civilian" },
+        { "unitId": "voxel-palace-guard", "classHint": "melee" }
+      ],
+      "enemies": [
+        { "classHint": "melee", "count": 2 }
+      ]
+    },
+    "cathedral": {
+      "id": "cathedral",
+      "title": "Holy Cathedral",
+      "pack": "voxel-cathedral",
+      "theme": "holy",
+      "pve": "undead_raid",
+      "defaultRadius": 24,
+      "buildings": [
+        { "slug": "voxel-cathedral-cathedral", "role": "landmark", "height": 14 },
+        { "slug": "voxel-cathedral-statue", "role": "dressing", "count": 2, "height": 3 },
+        { "slug": "voxel-cathedral-grave", "role": "dressing", "count": 4, "height": 1.5 },
+        { "slug": "voxel-cathedral-tree", "role": "nature", "count": 3, "height": 5 }
+      ],
+      "props": [
+        { "slug": "voxel-cathedral-tome", "count": 1, "height": 0.6 }
+      ],
+      "npcs": [
+        { "unitId": "voxel-cathedral-priest", "classHint": "magic" },
+        { "unitId": "voxel-cathedral-crusader", "classHint": "melee" },
+        { "unitId": "voxel-cathedral-monk", "classHint": "magic" }
+      ],
+      "enemies": [
+        { "classHint": "magic", "count": 2 },
+        { "classHint": "melee", "count": 2 }
+      ]
+    },
+    "wizard_tower": {
+      "id": "wizard_tower",
+      "title": "Arcane Tower",
+      "pack": "voxel-wizards",
+      "theme": "magic",
+      "pve": "arcane_trial",
+      "defaultRadius": 16,
+      "buildings": [
+        { "slug": "voxel-wizards-tower", "role": "landmark", "height": 12 },
+        { "slug": "voxel-wizards-sword-in-stone", "role": "landmark", "height": 2.5 },
+        { "slug": "voxel-wizards-stone", "role": "dressing", "count": 4, "height": 1.2 },
+        { "slug": "voxel-wizards-tree", "role": "nature", "count": 3, "height": 5 }
+      ],
+      "props": [],
+      "npcs": [
+        { "unitId": "voxel-wizards-wizard", "classHint": "magic" },
+        { "unitId": "voxel-wizards-warlock", "classHint": "magic" }
+      ],
+      "enemies": [
+        { "classHint": "magic", "count": 3 }
+      ]
+    }
+  },
+  "biomeMap": {
+    "starter": ["village", "farm"],
+    "wild": ["camp", "farm"],
+    "fortress": ["castle", "camp"],
+    "holy": ["cathedral", "village"],
+    "magic": ["wizard_tower", "camp"],
+    "city": ["city", "village"]
+  },
+  "gameProfiles": {
+    "voxgrudge": { "modes": ["openworld", "pve"], "defaultSettlements": ["village", "farm", "camp"] },
+    "grudox-rpg": { "modes": ["topdown", "quest"], "defaultSettlements": ["village", "castle", "cathedral"] },
+    "topdown": { "modes": ["isometric"], "defaultSettlements": ["village", "camp"] },
+    "rts": { "modes": ["placeable"], "defaultSettlements": ["castle", "farm", "camp"] }
+  }
+}

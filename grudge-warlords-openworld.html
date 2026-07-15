@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="ui/hud/grudge-hud.css">
 <link rel="stylesheet" href="ui/hud/combat-hud.css">
 <link rel="stylesheet" href="ui/load-screen.css">
+<link rel="stylesheet" href="ui/vox-game-shell.css">
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
@@ -270,6 +271,20 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
   </header>
   <div class="sub">Nexus Era · Open World Survival</div>
   <div class="version">Stats from <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener" style="color:#667">survival.grudge-studio.com</a> · 8-step combat · T1–T6 gear · GRUDOX</div>
+  <div id="vox-flow-rail" aria-label="Game flow">
+    <span class="step on" data-step="select">1 · Hero</span>
+    <span class="step" data-step="world">2 · World</span>
+    <span class="step" data-step="loading">3 · Load</span>
+    <span class="step" data-step="playing">4 · Play</span>
+  </div>
+  <div id="vox-boot-status">Checking canvas &amp; TVS deps…</div>
+  <div class="vox-links-row">
+    <a href="tvs-showcase.html">TVS Showcase</a>
+    <a href="tvs-showcase.html#settlements">Settlements</a>
+    <a href="https://grudox.grudge-studio.com/" target="_blank" rel="noopener">Grudox Fleet</a>
+  </div>
+  <div class="skin-picker-label" style="text-align:center;margin-bottom:6px">World content (TVS cities · farms · camps · castles)</div>
+  <div id="settlement-strip" aria-label="Settlement content modes"></div>
   <div id="skin-picker">
     <div class="skin-picker-label">TVS Hero (D1 / R2 · resources packs)</div>
     <div id="tvs-unit-row" class="char-select-row"></div>
@@ -303,8 +318,18 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
   <button class="gw-btn hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
 </div>
 
+<div id="zone-content-pill" class="hidden">Content · —</div>
 <div id="cam-mode-pill" class="pre-game-hidden">CAM · TPS · Hold RMB free-look · C cycle</div>
 <div id="mouse-help" class="pre-game-hidden">LMB attack · RMB free-look</div>
+
+<div id="vox-pause-overlay" aria-hidden="true">
+  <div class="panel">
+    <h2>Paused</h2>
+    <p>Esc resume · settlements &amp; TVS assets stay loaded</p>
+    <button type="button" class="primary" id="vox-pause-resume">Resume</button>
+    <button type="button" id="vox-pause-menu" onclick="location.reload()">Main Menu</button>
+  </div>
+</div>
 
 <!-- Mode-specific mouse image (OS cursor hidden in-game) -->
 <div id="game-cursor" aria-hidden="true">
@@ -586,8 +611,12 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/grudge-env.js"></script>
 <script src="js/grudge-asset-config.js"></script>
 <script src="js/grudge-scale.js"></script>
+<script src="js/vox-game-canvas.js"></script>
+<script src="js/vox-game-flow.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
+<script src="js/tvs-world-content.js"></script>
+<script src="js/tvs-settlement-builder.js"></script>
 <script src="js/collision-layers.js"></script>
 <script src="js/terrain-collider.js"></script>
 <script src="js/collision-world.js"></script>
@@ -1100,6 +1129,12 @@ let playerTvsUnit = null;
 let playerColorTint = 0xffffff;
 let tvsRosterCache = null;
 const TVS_TINTS = [0xffffff, 0xff6644, 0x44aaff, 0x55dd88, 0xffcc33, 0xcc66ff, 0xff88aa];
+/** Selected settlement types to seed in open world (cities/farms/camps/castles). */
+let selectedSettlementTypes = ['village', 'farm', 'camp'];
+let gameFlow = null;
+let gameCanvasHost = null;
+let tvsSettlementGroups = [];
+let tvsContentReady = false;
 
 function updateSkinPickerUI(){
   document.querySelectorAll('.skin-body-btn').forEach(btn=>{
@@ -1260,6 +1295,154 @@ function renderTvsUnitPicker(){
   }
 })();
 
+// ── Settlement content strip + game flow shell ──
+function renderSettlementStrip(){
+  const strip = document.getElementById('settlement-strip');
+  if(!strip) return;
+  const types = (window.TvsWorldContent && TvsWorldContent.listSettlementTypes()) || [
+    {id:'village',title:'Village',theme:'economy'},
+    {id:'farm',title:'Farm',theme:'agriculture'},
+    {id:'camp',title:'Camp',theme:'wild'},
+    {id:'castle',title:'Castle',theme:'fortress'},
+    {id:'city',title:'City',theme:'royalty'},
+    {id:'cathedral',title:'Cathedral',theme:'holy'},
+    {id:'wizard_tower',title:'Tower',theme:'magic'},
+  ];
+  strip.innerHTML = '';
+  types.forEach(function(t){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'set-btn'+(selectedSettlementTypes.indexOf(t.id)>=0?' sel':'');
+    b.dataset.id = t.id;
+    b.innerHTML = '<span class="t">'+(t.title||t.id)+'</span><span class="s">'+(t.theme||t.pack||'')+'</span>';
+    b.title = 'Toggle '+t.title+' settlement in world';
+    b.onclick = function(){
+      const i = selectedSettlementTypes.indexOf(t.id);
+      if(i>=0){
+        if(selectedSettlementTypes.length>1) selectedSettlementTypes.splice(i,1);
+      } else {
+        selectedSettlementTypes.push(t.id);
+      }
+      renderSettlementStrip();
+      const worldStep = document.querySelector('#vox-flow-rail .step[data-step="world"]');
+      if(worldStep){ worldStep.classList.add('on'); worldStep.classList.add('done'); }
+    };
+    strip.appendChild(b);
+  });
+}
+
+function setFlowRail(state){
+  const map = { select:'select', loading:'loading', playing:'playing', pause:'playing', dead:'playing', boot:'select' };
+  const active = map[state] || 'select';
+  document.querySelectorAll('#vox-flow-rail .step').forEach(function(el){
+    const s = el.dataset.step;
+    el.classList.toggle('on', s===active || (active==='playing' && s==='world'));
+    el.classList.toggle('done',
+      (active==='loading' && (s==='select'||s==='world')) ||
+      (active==='playing' && (s==='select'||s==='world'||s==='loading'||s==='playing'))
+    );
+  });
+}
+
+function initGameShell(){
+  const bootEl = document.getElementById('vox-boot-status');
+  const deps = window.VoxGameCanvas
+    ? VoxGameCanvas.checkDeps({ THREE:true, FBXLoader:true, TvsUnitLoader:true, TvsWorldContent:true })
+    : { ok:false, missing:['VoxGameCanvas'] };
+  if(bootEl){
+    if(deps.ok){
+      bootEl.textContent = 'Canvas stack ready · TVS D1/R2 loaders online';
+      bootEl.className = 'ok';
+    } else {
+      bootEl.textContent = 'Missing: '+(deps.missing||[]).join(', ');
+      bootEl.className = 'bad';
+    }
+  }
+
+  if(window.VoxGameFlow){
+    gameFlow = VoxGameFlow.create({
+      onEnter: function(state){ setFlowRail(state); },
+      ui: {
+        showClassScreen: function(show){
+          const el = document.getElementById('class-screen');
+          if(el) el.style.display = show ? '' : 'none';
+        },
+        showHud: function(show){
+          const el = document.getElementById('game-hud');
+          if(!el) return;
+          if(show) el.classList.remove('pre-game-hidden');
+          else el.classList.add('pre-game-hidden');
+        },
+        setLoading: function(on, label){
+          const loadEl = document.getElementById('world-loading');
+          const msg = document.getElementById('world-loading-msg');
+          if(msg && label) msg.textContent = label;
+          if(!loadEl) return;
+          if(on){
+            loadEl.style.display = 'block';
+            loadEl.classList.add('is-active');
+            document.body.classList.add('is-world-loading');
+          } else {
+            loadEl.style.display = 'none';
+            loadEl.classList.remove('is-active');
+            document.body.classList.remove('is-world-loading');
+          }
+        },
+        showPause: function(on){
+          const el = document.getElementById('vox-pause-overlay');
+          if(!el) return;
+          el.classList.toggle('show', !!on);
+          el.setAttribute('aria-hidden', on ? 'false' : 'true');
+        },
+      },
+    });
+    gameFlow.goto('select');
+  }
+
+  if(window.TvsWorldContent){
+    TvsWorldContent.loadSettlements().then(function(){
+      tvsContentReady = true;
+      renderSettlementStrip();
+      if(bootEl && bootEl.className==='ok'){
+        bootEl.textContent = 'Ready · TVS settlements '+TvsWorldContent.listSettlementTypes().length+' recipes';
+      }
+    }).catch(function(){
+      renderSettlementStrip();
+    });
+  } else {
+    renderSettlementStrip();
+  }
+
+  const resumeBtn = document.getElementById('vox-pause-resume');
+  if(resumeBtn){
+    resumeBtn.onclick = function(){
+      if(gameFlow && gameFlow.state==='pause') gameFlow.goto('playing');
+      if(gameCanvasHost) gameCanvasHost.setPaused(false);
+    };
+  }
+}
+
+// Escape pause (does not steal Esc from command center when open)
+document.addEventListener('keydown', function(e){
+  if(e.code!=='Escape') return;
+  const gcc = document.getElementById('grudge-command-center');
+  if(gcc && gcc.classList.contains('open')) return;
+  if(!gameStarted || !gameFlow) return;
+  if(gameFlow.state==='playing'){
+    gameFlow.goto('pause');
+    if(gameCanvasHost) gameCanvasHost.setPaused(true);
+  } else if(gameFlow.state==='pause'){
+    gameFlow.goto('playing');
+    if(gameCanvasHost) gameCanvasHost.setPaused(false);
+  }
+});
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initGameShell);
+} else {
+  initGameShell();
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CLASS SELECT UI (Nexus Era — survival.grudge-studio.com stats)
 // ═══════════════════════════════════════════════════════════════
@@ -1382,6 +1565,7 @@ function startGame(){
   isGameOver=false;
   gameStarted=false;
   spawnGraceTimer=0;
+  if(gameFlow) gameFlow.goto('loading', { label: 'Entering the Surface…' });
   const goEl=document.getElementById('game-over');
   if(goEl) goEl.classList.add('hidden');
   const seedInp=document.getElementById('world-seed-input');
@@ -1427,6 +1611,12 @@ function startGame(){
     }
     connectGrudox();
     hideWorldLoading();
+    if(gameFlow) gameFlow.goto('playing');
+    const zonePill = document.getElementById('zone-content-pill');
+    if(zonePill){
+      zonePill.textContent = 'Content · '+(selectedSettlementTypes.join(' · ')||'open world');
+      zonePill.classList.remove('hidden');
+    }
   }
 
   if(!window.GrudgeAssetLoader){
@@ -1547,14 +1737,35 @@ function init(){
   camera.position.set(0, 28, 22);
   camera.lookAt(0, 0, 0);
 
-  // Renderer
-  renderer = new THREE.WebGLRenderer({antialias:true});
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(devicePixelRatio);
-  renderer.preserveDrawingBuffer = true; // needed for screenshots
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  document.getElementById('game-canvas-wrap').appendChild(renderer.domElement);
+  // Renderer — canvas best practices (DPR cap, resize, visibility pause)
+  if(window.VoxGameCanvas){
+    gameCanvasHost = VoxGameCanvas.mount({
+      wrap: document.getElementById('game-canvas-wrap'),
+      THREE: THREE,
+      antialias: true,
+      maxDpr: 2,
+      preserveDrawingBuffer: true,
+      clearColor: 0x0a0e14,
+      shadows: true,
+      ariaLabel: 'VoxGrudge open world',
+      onResize: function(w, h){
+        if(camera){
+          camera.aspect = w / Math.max(1, h);
+          camera.updateProjectionMatrix();
+        }
+      },
+      onPause: function(){ if(gameFlow && gameFlow.isPlaying()){ /* soft pause clock only via host */ } },
+    });
+    renderer = gameCanvasHost.renderer;
+  } else {
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.preserveDrawingBuffer = true;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.getElementById('game-canvas-wrap').appendChild(renderer.domElement);
+  }
 
   clock = new THREE.Clock();
 
@@ -1583,6 +1794,9 @@ function init(){
 
   // World ground + mesh colliders
   buildWorld();
+
+  // TVS settlements: cities, villages, farms, camps, castles, cathedrals, towers
+  spawnSelectedSettlements();
 
   if (window.GrudgeWorldFires) {
     worldFires = new GrudgeWorldFires(scene, { worldEngine, maxCount: 96 });
@@ -1956,6 +2170,76 @@ function genProcTexture(type){
   const tex=new THREE.CanvasTexture(c);
   tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
   return tex;
+}
+
+async function spawnSelectedSettlements(){
+  if(!window.TvsWorldContent || !window.TvsSettlementBuilder || !scene) return;
+  try {
+    await TvsWorldContent.load();
+    const seedInp = document.getElementById('world-seed-input');
+    const seed = parseInt(seedInp && seedInp.value ? seedInp.value : '', 10) || 7;
+    const types = (selectedSettlementTypes && selectedSettlementTypes.length)
+      ? selectedSettlementTypes.slice()
+      : ['village', 'farm', 'camp'];
+    const msg = document.getElementById('world-loading-msg');
+    if(msg) msg.textContent = 'Placing TVS settlements ('+types.join(', ')+')…';
+
+    const plans = types.map(function(tid, i){
+      const a = (i / types.length) * Math.PI * 2 + 0.35;
+      const dist = 48 + (i % 2) * 18;
+      return TvsWorldContent.planSettlement(tid, {
+        x: Math.cos(a) * dist,
+        z: Math.sin(a) * dist,
+        seed: seed + i * 31,
+        includeEnemies: true,
+        includeNpcs: true,
+      });
+    });
+
+    tvsSettlementGroups = [];
+    for(let i=0;i<plans.length;i++){
+      if(msg) msg.textContent = 'Settlement '+(i+1)+'/'+plans.length+': '+plans[i].typeId;
+      const g = await TvsSettlementBuilder.spawn(plans[i], {
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        scene: scene,
+        maxConcurrent: 3,
+        includeActors: true,
+        withAnims: true,
+        unitHeight: GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M ? GrudgeScale.PLAYER_HEIGHT_M : 2.0,
+        onInstance: function(mesh, inst){
+          if(inst.solid && typeof registerEntityCollider==='function'){
+            try {
+              registerEntityCollider(
+                'tvs_'+inst.slug+'_'+inst.x.toFixed(0)+'_'+inst.z.toFixed(0),
+                'building',
+                mesh,
+                null,
+                { solid: true }
+              );
+            } catch(e) {}
+          }
+          if(typeof snapToGround==='function'){
+            try { snapToGround(mesh, 0); } catch(e) {}
+          }
+        },
+        onActor: function(mesh){
+          if(typeof snapToGround==='function'){
+            try { snapToGround(mesh, 0); } catch(e) {}
+          }
+        },
+      });
+      tvsSettlementGroups.push(g);
+    }
+    console.info('[VoxGrudge] TVS settlements', types, tvsSettlementGroups.length);
+    const zonePill = document.getElementById('zone-content-pill');
+    if(zonePill){
+      zonePill.textContent = 'Content · '+types.join(' · ');
+      zonePill.classList.remove('hidden');
+    }
+  } catch(err){
+    console.warn('[VoxGrudge] settlement spawn failed', err && err.message || err);
+  }
 }
 
 function buildWorld(){

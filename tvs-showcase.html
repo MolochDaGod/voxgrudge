@@ -107,6 +107,7 @@
         </select>
       </label>
       <button type="button" id="btn-army">Army sample</button>
+      <button type="button" id="btn-settlements" class="active">Settlements</button>
       <button type="button" id="btn-verify">Verify CDN</button>
     </div>
     <div class="list" id="unit-list"></div>
@@ -155,6 +156,8 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
+<script src="js/tvs-world-content.js"></script>
+<script src="js/tvs-settlement-builder.js"></script>
 <script>
 (function () {
   var canvas = document.getElementById('stage');
@@ -461,6 +464,67 @@
       setStatus(String(err && err.message || err), true);
     }
   };
+
+  document.getElementById('btn-settlements').onclick = async function () {
+    if (!window.TvsWorldContent || !window.TvsSettlementBuilder) {
+      setStatus('Settlement modules missing', true);
+      return;
+    }
+    clearStage();
+    setStatus('Loading settlement recipes (village · farm · camp · castle)…');
+    dist = 28;
+    try {
+      await TvsWorldContent.load();
+      var types = ['village', 'farm', 'camp', 'castle'];
+      var groups = [];
+      for (var i = 0; i < types.length; i++) {
+        var a = (i / types.length) * Math.PI * 2;
+        var plan = TvsWorldContent.planSettlement(types[i], {
+          x: Math.cos(a) * 14,
+          z: Math.sin(a) * 14,
+          seed: 11 + i,
+          includeEnemies: false,
+          includeNpcs: true,
+          radius: 10,
+        });
+        setStatus('Spawning ' + types[i] + '…');
+        var g = await TvsSettlementBuilder.spawn(plan, {
+          THREE: THREE,
+          FBXLoader: THREE.FBXLoader,
+          maxConcurrent: 4,
+          includeActors: true,
+          withAnims: false,
+          unitHeight: 2.0,
+        });
+        scene.add(g);
+        groups.push(g);
+      }
+      armyRoots = groups;
+      currentRoot = groups[0];
+      setCheck('c-fbx', true);
+      setCheck('c-tex', true);
+      setCheck('c-scale', true);
+      setStatus('Settlements ready · village · farm · camp · castle (drag orbit · scroll zoom)');
+      document.getElementById('sel-name').textContent = 'Settlement ring';
+      document.getElementById('sel-meta').textContent = 'Shared recipes for VoxGrudge · Grudox RPG · top-down · RTS';
+      document.getElementById('meta-json').textContent = JSON.stringify({
+        types: types,
+        games: ['voxgrudge', 'grudox-rpg', 'topdown', 'rts'],
+        source: 'assets/voxels/settlements.json',
+        cdn: 'assets.grudge-studio.com/models/voxels/tvs/',
+      }, null, 2);
+    } catch (err) {
+      setStatus(String(err && err.message || err), true);
+    }
+  };
+
+  // Deep-link #settlements
+  if (location.hash === '#settlements') {
+    setTimeout(function () {
+      var b = document.getElementById('btn-settlements');
+      if (b) b.click();
+    }, 600);
+  }
 
   document.getElementById('btn-verify').onclick = async function () {
     setStatus('Verifying CDN endpoints…');
