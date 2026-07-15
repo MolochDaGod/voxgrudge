@@ -650,6 +650,10 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/grudge-env.js"></script>
 <script src="js/grudge-asset-config.js"></script>
 <script src="js/grudge-scale.js"></script>
+<script src="js/vox-standards.js"></script>
+<script src="js/vox-textures.js"></script>
+<script src="js/vox-assets.js"></script>
+<script src="js/game-flow.js"></script>
 <script src="js/vox-game-canvas.js"></script>
 <script src="js/vox-game-flow.js"></script>
 <script src="js/vox-ui-deps.js"></script>
@@ -678,6 +682,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <script src="js/grudge-world-fires.js"></script>
 <script src="js/grudge-explorer-combat.js"></script>
 <script src="js/enemy-combat.js"></script>
+<script src="js/enemy-brain.js"></script>
 <script src="js/player-controller.js"></script>
 <!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
 <script src="js/grudge-vox-cloud.js"></script>
@@ -1697,6 +1702,9 @@ function hideWorldLoading(){
   if(window.GrudgeAssetLoader&&GrudgeAssetLoader.unbindLoadScreen) GrudgeAssetLoader.unbindLoadScreen(loadEl);
   else if(loadEl){loadEl.style.display='none';loadEl.classList.remove('is-active');}
   document.body.classList.remove('is-world-loading');
+  if(window.GameFlow && GameFlow.get()===GameFlow.FLOW.LOADING){
+    GameFlow.enterPlaying('assets_ready');
+  }
 }
 
 function buildVfxLoadTasks(){
@@ -1737,6 +1745,10 @@ function startGame(){
   const worldSeed=parseInt(seedInp&&seedInp.value?seedInp.value:'',10)||(Date.now()%1000000000);
   if(seedInp&&!seedInp.value) seedInp.value=String(worldSeed);
   window._voxWorldSeed=worldSeed;
+  if(window.GameFlow) GameFlow.enterLoading('Forging heightmaps & assets…');
+  if(window.VoxTextures && VoxTextures.preloadBiomeTextures){
+    try{ VoxTextures.preloadBiomeTextures(THREE, worldSeed); }catch(e){}
+  }
   const loadEl=document.getElementById('world-loading');
   if(loadEl&&window.GrudgeAssetLoader) GrudgeAssetLoader.bindLoadScreen(loadEl);
   else if(loadEl){loadEl.style.display='block';loadEl.classList.add('is-active');}
@@ -2094,16 +2106,33 @@ function init(){
     }
   })();
 
-  // Controller + camera locked to the selected character
+  // Controller + camera locked to the selected character (VoxStandards defaults)
   if(window.PlayerController){
-    playerController = PlayerController.create({ THREE:THREE, camera:camera, mode:'tps', distance:12, baseFov:camera.fov||60 });
+    const camStd=(window.VoxStandards&&VoxStandards.CAMERA&&VoxStandards.CAMERA.tps)||{};
+    playerController = PlayerController.create({
+      THREE:THREE,
+      camera:camera,
+      mode:'tps',
+      distance: camStd.distance||12,
+      baseFov: camStd.fov||camera.fov||58,
+      followHeight:(window.VoxStandards&&VoxStandards.SCALE.PLAYER_FOLLOW_HEIGHT)||1.45,
+      lookHeight:(window.VoxStandards&&VoxStandards.SCALE.PLAYER_LOOK_HEIGHT)||1.35,
+    });
     playerController.setTarget(playerMesh);
     playerController.bindDom(window, renderer && renderer.domElement);
     playerController.alignBehindCharacter();
     playerController.forceSnap();
+    // Terrain + props for camera collision (prevents clip through hills/walls)
+    if(playerController.setCollisionMeshes){
+      const collMeshes=[];
+      if(window._terrainHandle&&_terrainHandle.mesh) collMeshes.push(_terrainHandle.mesh);
+      if(worldPlane) collMeshes.push(worldPlane);
+      playerController.setCollisionMeshes(collMeshes);
+    }
   }
   refreshCamModeUi('tps');
   enableGameCursor(true);
+  if(window.GameFlow) GameFlow.enterPlaying('surface_ready');
 
   // Minimap
   mmCanvas = document.getElementById('mm-canvas');
@@ -2314,6 +2343,14 @@ function init(){
 // WORLD GENERATION
 // ═══════════════════════════════════════════════════════════════
 function genProcTexture(type){
+  // Seeded biome canvases (VoxTextures) — stable with world seed, higher detail
+  if(window.VoxTextures && VoxTextures.genProcTexture){
+    return VoxTextures.genProcTexture(THREE, type||'grass', {
+      seed: window._voxWorldSeed||1,
+      size: 256,
+      repeat: 48,
+    });
+  }
   const c=document.createElement('canvas');c.width=128;c.height=128;
   const ctx=c.getContext('2d');
   if(type==='grass'){
@@ -3494,6 +3531,7 @@ function damagePlayer(rawDmg, attackerEnemy){
 function triggerGameOver(){
   if(!gameStarted||spawnGraceTimer>0) return;
   isGameOver = true;
+  if(window.GameFlow) GameFlow.enterDeath();
   const m = Math.floor(survivalTime/60), s = Math.floor(survivalTime%60);
   document.getElementById('go-stats').textContent = 'Survived: '+m+'m'+s+'s  ·  Eliminated: '+score+'  ·  Level: '+level+'  ·  Day: '+dayNumber;
   document.getElementById('game-over').classList.remove('hidden');
@@ -3667,6 +3705,11 @@ function spawnEnemyAt(sx,sz,typeId,meta){
     atkDir:null,
     telegraph:null,
   };
+  if(window.EnemyBrain) EnemyBrain.init(enemy,{aggro:!!meta.isRaid});
+  // Normalize GLB / fantasy meshes to roster height standard
+  if(window.VoxAssets && VoxAssets.normalizeModelHeight && enemy.mesh && def.fantasy){
+    try{ VoxAssets.normalizeModelHeight(THREE, enemy.mesh, heightM); }catch(_){}
+  }
   enemies.push(enemy);
   return enemy;
 }
@@ -3954,42 +3997,7 @@ function updateEnemies(dt){
 
     e.attackCd = Math.max(0, e.attackCd-dt);
 
-    // Camp AI — Albion-style aggro + leash + patrol
-    if(e.campId){
-      const inSafe=collisionWorld&&collisionWorld.isInSafeZone(pp.x,pp.z);
-      const distHome=Math.hypot(ep.x-e.homeX,ep.z-e.homeZ);
-      const distPlayer=Math.hypot(ep.x-pp.x,ep.z-pp.z);
-      e.aggro=!inSafe&&distPlayer<(worldEngine?worldEngine.AGGRO_RADIUS:32);
-      e.leashed=distHome>(worldEngine?worldEngine.LEASH_RADIUS:90);
-      if(e.leashed){
-        if(e.atkPhase && e.atkPhase!=='idle'){
-          if(window.EnemyCombat) EnemyCombat.clearAttack(e);
-          else e.atkPhase='idle';
-        }
-        const toHome=new THREE.Vector3(e.homeX-ep.x,0,e.homeZ-ep.z).normalize();
-        ep.add(toHome.multiplyScalar(e.speed*1.2*dt));
-        snapToGround(e.mesh,0);
-        syncEnemyCollider(e);
-        return;
-      }
-      if(!e.aggro){
-        if(e.atkPhase && e.atkPhase!=='idle'){
-          if(window.EnemyCombat) EnemyCombat.clearAttack(e);
-          else e.atkPhase='idle';
-        }
-        e.patrolAngle=(e.patrolAngle||0)+dt*0.4;
-        const pr=(worldEngine?worldEngine.PATROL_RADIUS:14)*0.45;
-        const tx=e.homeX+Math.cos(e.patrolAngle)*pr;
-        const tz=e.homeZ+Math.sin(e.patrolAngle)*pr;
-        const toP=new THREE.Vector3(tx-ep.x,0,tz-ep.z);
-        if(toP.length()>0.5) ep.add(toP.normalize().multiplyScalar(e.speed*0.35*dt));
-        snapToGround(e.mesh,0);
-        syncEnemyCollider(e);
-        return;
-      }
-    }
-
-    // Attack state machine (windup → active → recovery)
+    // Attack state machine (windup → active → recovery) first so brain sees busy
     const busy=updateEnemyAttack(e, dt, pp, dist, dir);
     const profile=e.atkProfile||e.attackProfile;
     let moveMult=1;
@@ -3999,51 +4007,95 @@ function updateEnemies(dt){
       else if(e.atkPhase==='recovery') moveMult=0.2;
     }
 
-    // Movement behaviors (respect attack lock)
+    // High-level AI brain (patrol / alert / chase / flank / kite / leash)
     let moved = false;
-    if(!busy || moveMult>0.05){
-      if(e.beh==='chase'||e.beh==='heavy'||e.beh==='berserker'||e.beh==='swoop'||e.beh==='tank'){
-        const spd = (e.beh==='berserker'&&dist<10 ? e.speed*1.5 : e.speed) * moveMult;
-        // Stop inside preferred melee band so big colliders don't clip the player
-        const stopAt=(e.radius||0.5)+PLAYER_BODY_RADIUS+0.15;
-        if(dist>stopAt){
-          ep.add(dir.clone().multiplyScalar(spd*dt));
-          moved=true;
+    let face = dir;
+    if(window.EnemyBrain){
+      if(!e.brain) EnemyBrain.init(e,{aggro:!!e.aggro});
+      const inSafe=playerInSafeZone();
+      const intent=EnemyBrain.think(e,{
+        playerPos:pp,
+        dt:dt,
+        dist:dist,
+        inSafe:inSafe,
+        busy:busy,
+        aggroRadius:worldEngine?worldEngine.AGGRO_RADIUS:((window.VoxStandards&&VoxStandards.SCALE.AGGRO_RADIUS)||32),
+        leashRadius:worldEngine?worldEngine.LEASH_RADIUS:((window.VoxStandards&&VoxStandards.SCALE.LEASH_RADIUS)||90),
+        patrolRadius:worldEngine?worldEngine.PATROL_RADIUS:((window.VoxStandards&&VoxStandards.SCALE.PATROL_RADIUS)||14),
+        callHelp:function(src,radius){ EnemyBrain.callHelp(src, enemies, radius, pp); },
+      });
+      // Cancel attacks when leashing / de-aggroing
+      if((intent.state==='leash'||intent.state==='patrol'||intent.state==='idle') && busy){
+        if(window.EnemyCombat) EnemyCombat.clearAttack(e);
+        else { e.atkPhase='idle'; if(e.telegraph){try{e.telegraph.dispose();}catch(_){} e.telegraph=null;} }
+      }
+      if(intent.moveDir && (!busy || moveMult>0.05)){
+        const spd=e.speed*(intent.speedMult||1)*moveMult;
+        ep.x+=intent.moveDir.x*spd*dt;
+        ep.z+=intent.moveDir.z*spd*dt;
+        moved=true;
+      }
+      if(intent.faceDir) face=new THREE.Vector3(intent.faceDir.x,0,intent.faceDir.z);
+      if(!busy && intent.wantAttack) tryStartEnemyAttack(e, pp, dist, dir);
+    } else {
+      // Legacy camp AI fallback
+      if(e.campId){
+        const inSafe=collisionWorld&&collisionWorld.isInSafeZone(pp.x,pp.z);
+        const distHome=Math.hypot(ep.x-e.homeX,ep.z-e.homeZ);
+        const distPlayer=Math.hypot(ep.x-pp.x,ep.z-pp.z);
+        e.aggro=!inSafe&&distPlayer<(worldEngine?worldEngine.AGGRO_RADIUS:32);
+        e.leashed=distHome>(worldEngine?worldEngine.LEASH_RADIUS:90);
+        if(e.leashed){
+          if(e.atkPhase && e.atkPhase!=='idle'){
+            if(window.EnemyCombat) EnemyCombat.clearAttack(e);
+            else e.atkPhase='idle';
+          }
+          const toHome=new THREE.Vector3(e.homeX-ep.x,0,e.homeZ-ep.z).normalize();
+          ep.add(toHome.multiplyScalar(e.speed*1.2*dt));
+          snapToGround(e.mesh,0);
+          syncEnemyCollider(e);
+          return;
         }
-      } else if(e.beh==='leaper'||e.beh==='ghost_leap'){
-        // Approach only; leap is part of attack windup/active
-        if(dist>4){
-          ep.add(dir.clone().multiplyScalar(e.speed*0.55*moveMult*dt));
-          moved=true;
-        }
-      } else if(e.beh==='charger'){
-        // Approach until engage; charge is attack active
-        if(!busy && dist>5){
-          ep.add(dir.clone().multiplyScalar(e.speed*0.7*dt));
-          moved=true;
-        }
-      } else if(e.beh==='spitter'||e.beh==='poison'||e.beh==='titan'){
-        const prefer=profile&&profile.preferRange?profile.preferRange:(e.beh==='titan'?5:9);
-        if(dist>prefer+1.5){
-          ep.add(dir.clone().multiplyScalar(e.speed*0.6*moveMult*dt));
-          moved=true;
-        } else if(dist<prefer-2 && !busy){
-          // Kite back slightly
-          ep.add(dir.clone().multiplyScalar(-e.speed*0.45*dt));
-          moved=true;
+        if(!e.aggro){
+          if(e.atkPhase && e.atkPhase!=='idle'){
+            if(window.EnemyCombat) EnemyCombat.clearAttack(e);
+            else e.atkPhase='idle';
+          }
+          e.patrolAngle=(e.patrolAngle||0)+dt*0.4;
+          const pr=(worldEngine?worldEngine.PATROL_RADIUS:14)*0.45;
+          const tx=e.homeX+Math.cos(e.patrolAngle)*pr;
+          const tz=e.homeZ+Math.sin(e.patrolAngle)*pr;
+          const toP=new THREE.Vector3(tx-ep.x,0,tz-ep.z);
+          if(toP.length()>0.5) ep.add(toP.normalize().multiplyScalar(e.speed*0.35*dt));
+          snapToGround(e.mesh,0);
+          syncEnemyCollider(e);
+          return;
         }
       }
+      if(!busy || moveMult>0.05){
+        if(e.beh==='chase'||e.beh==='heavy'||e.beh==='berserker'||e.beh==='swoop'||e.beh==='tank'){
+          const spd = (e.beh==='berserker'&&dist<10 ? e.speed*1.5 : e.speed) * moveMult;
+          const stopAt=(e.radius||0.5)+PLAYER_BODY_RADIUS+0.15;
+          if(dist>stopAt){ ep.add(dir.clone().multiplyScalar(spd*dt)); moved=true; }
+        } else if(e.beh==='leaper'||e.beh==='ghost_leap'){
+          if(dist>4){ ep.add(dir.clone().multiplyScalar(e.speed*0.55*moveMult*dt)); moved=true; }
+        } else if(e.beh==='charger'){
+          if(!busy && dist>5){ ep.add(dir.clone().multiplyScalar(e.speed*0.7*dt)); moved=true; }
+        } else if(e.beh==='spitter'||e.beh==='poison'||e.beh==='titan'){
+          const prefer=profile&&profile.preferRange?profile.preferRange:(e.beh==='titan'?5:9);
+          if(dist>prefer+1.5){ ep.add(dir.clone().multiplyScalar(e.speed*0.6*moveMult*dt)); moved=true; }
+          else if(dist<prefer-2 && !busy){ ep.add(dir.clone().multiplyScalar(-e.speed*0.45*dt)); moved=true; }
+        }
+      }
+      if(!busy) tryStartEnemyAttack(e, pp, dist, dir);
     }
-
-    // Try to open an attack when idle
-    if(!busy) tryStartEnemyAttack(e, pp, dist, dir);
 
     snapToGround(e.mesh,0);
     syncEnemyCollider(e);
 
-    // Face player (models use -Z forward)
+    // Face intent / player (models use -Z forward)
     if(dist>0.1){
-      const ad=(e.atkPhase==='windup'||e.atkPhase==='active') ? (e.atkDir||dir) : dir;
+      const ad=(e.atkPhase==='windup'||e.atkPhase==='active') ? (e.atkDir||dir) : face;
       if(e.atkPhase==='windup'||e.atkPhase==='active'||moved){
         e.mesh.rotation.y = Math.atan2(-ad.x, -ad.z);
       }
@@ -5013,6 +5065,7 @@ function updateDayNight(dt){
       dayNumber++;
       document.getElementById('day-num').textContent='Day '+dayNumber;
       showFlash('DAWN — Day '+dayNumber);
+      if(window.GameFlow){ GameFlow.endNightRaid(); GameFlow.updateDayNight(dayNumber,false); }
     }
     const pct=(phase/DAY_LEN)*100;
     document.getElementById('day-bar').style.width=pct+'%';
@@ -5028,6 +5081,7 @@ function updateDayNight(dt){
       ambientLight.intensity=0.2;
       dirLight.intensity=0.3;
       showRaidAlert();
+      if(window.GameFlow) GameFlow.enterNightRaid(dayNumber);
       for(let i=0;i<3+nightRaidCount;i++) setTimeout(()=>{ if(!isGameOver) spawnEnemy(true); }, i*800+500);
     }
     // Additional raid waves during night
@@ -6366,6 +6420,25 @@ function animate(){
   updateEnergyOrbs(dt);
   updateParry(dt);
   refreshGameCursorStyle();
+  // Camera combat zoom + move bob hints + enemy LOD (asset standards)
+  if(playerController && playerMesh){
+    let nearThreat=false;
+    const aggroR=(window.VoxStandards&&VoxStandards.SCALE.AGGRO_RADIUS)||32;
+    for(let i=0;i<enemies.length;i++){
+      const en=enemies[i];
+      if(!en.alive||!en.aggro) continue;
+      if(en.mesh.position.distanceTo(playerMesh.position)<aggroR*0.55){ nearThreat=true; break; }
+    }
+    if(playerController.setCombatZoom) playerController.setCombatZoom(nearThreat||isNight);
+    if(playerController.setMoveSpeedHint){
+      const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight'];
+      playerController.setMoveSpeedHint(moving?1:0);
+    }
+  }
+  if(window.VoxAssets && VoxAssets.updateLod && playerMesh){
+    VoxAssets.updateLod(enemies, playerMesh.position.x, playerMesh.position.z);
+    if(minions&&minions.length) VoxAssets.updateLod(minions, playerMesh.position.x, playerMesh.position.z);
+  }
   if(playerMesh && playerMesh.userData && playerMesh.userData.updateMixer){
     playerMesh.userData.updateMixer(dt);
   } else if(playerMixer) {

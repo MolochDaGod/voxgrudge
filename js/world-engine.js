@@ -2,12 +2,13 @@
  * Voxgrudge World Engine — 10× Albion-style chunked zones with seeded generation.
  */
 (function (global) {
-  const WORLD_SCALE = 10;
-  const CHUNK_SIZE = 96;
-  const LOAD_RADIUS = 3;
-  const AGGRO_RADIUS = 32;
-  const LEASH_RADIUS = 90;
-  const PATROL_RADIUS = 14;
+  const S = (global.VoxStandards && global.VoxStandards.SCALE) || {};
+  const WORLD_SCALE = S.WORLD_SCALE || 10;
+  const CHUNK_SIZE = S.CHUNK || 96;
+  const LOAD_RADIUS = S.LOAD_RADIUS_CHUNKS || 3;
+  const AGGRO_RADIUS = S.AGGRO_RADIUS || 32;
+  const LEASH_RADIUS = S.LEASH_RADIUS || 90;
+  const PATROL_RADIUS = S.PATROL_RADIUS || 14;
 
   function mulberry32(seed) {
     return function () {
@@ -190,12 +191,13 @@
       const worldR = getWorldRadius();
 
       if (global.VoxTerrain) {
+        const segs = (global.VoxStandards && global.VoxStandards.SCALE.TERRAIN_SEGMENTS) || 160;
         const terrain = global.VoxTerrain.build({
           THREE: THREE,
           scene: sceneRef,
           seed: seed,
           size: worldR * 2.15,
-          segments: 128,
+          segments: segs,
           getBiomeAt: function (x, z) { return getBiomeAt(x, z, biomes); },
           genProcTexture: genProcTexture,
           biomeTexTypes: biomeTexTypes,

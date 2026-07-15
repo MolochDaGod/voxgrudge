@@ -1,5 +1,12 @@
 /**
  * Procedural heightfield terrain with mesh-level ground collider + height sampling.
+ *
+ * Standards-aligned heightmap:
+ *   - Domain-warped FBM (macro continents)
+ *   - Ridge noise (peaks / ruined spines)
+ *   - Biome blend across zone rings
+ *   - River / valley carving
+ *   - Multi-biome vertex colors + procedural texture
  */
 (function (global) {
   'use strict';
@@ -46,23 +53,33 @@
     return sum / norm;
   }
 
+  /** Ridge / mountain creases (1 - |2n-1|). */
+  function ridge(x, z, seed, octaves) {
+    var n = fbm(x, z, seed, octaves || 4);
+    return 1 - Math.abs(n * 2 - 1);
+  }
+
   function biomeProfile(zoneId) {
     var profiles = [
-      { base: 0.4, amp: 2.2, rough: 0.35 },
-      { base: 0.2, amp: 1.8, rough: 0.55, dip: 1.4 },
-      { base: 1.8, amp: 4.5, rough: 0.45 },
-      { base: 2.5, amp: 5.5, rough: 0.5 },
-      { base: 3.5, amp: 8.0, rough: 0.55 },
+      { base: 0.55, amp: 2.4, rough: 0.32, ridge: 0.15, river: 0.35 }, // starter grass
+      { base: 0.15, amp: 1.9, rough: 0.58, ridge: 0.1, river: 0.85, dip: 1.6 }, // swamp
+      { base: 2.0, amp: 5.0, rough: 0.48, ridge: 0.55, river: 0.25 }, // ruins
+      { base: 2.8, amp: 6.2, rough: 0.52, ridge: 0.45, river: 0.2 }, // wasteland
+      { base: 4.0, amp: 9.5, rough: 0.58, ridge: 0.75, river: 0.15 }, // dark / outer
     ];
     return profiles[Math.min(zoneId, profiles.length - 1)];
   }
+
+  var biomeColors = [0x3a6a2a, 0x2a4a1a, 0x554444, 0x7a5a2a, 0x220033];
 
   function build(opts) {
     var THREE = opts.THREE;
     var scene = opts.scene;
     var seed = (opts.seed >>> 0) || 1;
     var size = opts.size || 1400;
-    var segments = opts.segments || 128;
+    var stdSeg =
+      (global.VoxStandards && global.VoxStandards.SCALE.TERRAIN_SEGMENTS) || 160;
+    var segments = opts.segments || stdSeg;
     var getBiomeAt = opts.getBiomeAt;
     var genProcTexture = opts.genProcTexture;
     var biomeTexTypes = opts.biomeTexTypes || ['grass', 'swamp', 'ruins', 'wasteland', 'dark'];
@@ -71,15 +88,57 @@
     function heightAt(x, z) {
       var d = Math.sqrt(x * x + z * z);
       var biome = getBiomeAt ? getBiomeAt(x, z) : { zoneId: 0 };
-      var prof = biomeProfile(biome.zoneId || 0);
+      var zoneId = biome.zoneId || 0;
+      var prof = biomeProfile(zoneId);
+
+      // Soft blend with neighboring biome rings for less cliff seams
+      var blend = 0;
+      var prof2 = prof;
+      if (getBiomeAt && d > 8) {
+        var outer = getBiomeAt(x * 1.02, z * 1.02);
+        if (outer && outer.zoneId !== zoneId) {
+          blend = 0.35;
+          prof2 = biomeProfile(outer.zoneId || 0);
+        }
+      }
+
       var edgeR = half * 0.92;
-      var edge = d > edgeR ? Math.max(0, 1 - (d - edgeR) / (half - edgeR)) : 1;
-      var macro = (fbm(x * 0.004, z * 0.004, seed, 5) - 0.5) * prof.amp;
-      var meso = (fbm(x * 0.02, z * 0.02, seed + 99, 3) - 0.5) * prof.amp * prof.rough;
-      var micro = (fbm(x * 0.08, z * 0.08, seed + 199, 2) - 0.5) * 0.8;
-      var dip = prof.dip ? -fbm(x * 0.03, z * 0.03, seed + 7, 2) * prof.dip : 0;
-      var h = (prof.base + macro + meso + micro + dip) * edge;
-      if (d > half) h -= (d - half) * 0.35;
+      var edge = d > edgeR ? Math.max(0, 1 - (d - edgeR) / Math.max(1, half - edgeR)) : 1;
+
+      // Domain warp — organic continents instead of grid-aligned hills
+      var wx = x + (fbm(x * 0.003, z * 0.003, seed + 3, 3) - 0.5) * 48;
+      var wz = z + (fbm(x * 0.003, z * 0.003, seed + 11, 3) - 0.5) * 48;
+
+      var macro = (fbm(wx * 0.0038, wz * 0.0038, seed, 5) - 0.5) * prof.amp;
+      var meso = (fbm(wx * 0.018, wz * 0.018, seed + 99, 4) - 0.5) * prof.amp * prof.rough;
+      var micro = (fbm(wx * 0.07, wz * 0.07, seed + 199, 2) - 0.5) * 0.95;
+      var rid = Math.pow(ridge(wx * 0.006, wz * 0.006, seed + 50, 4), 1.6) * prof.amp * (prof.ridge || 0.3);
+      var dip = prof.dip ? -fbm(wx * 0.028, wz * 0.028, seed + 7, 2) * prof.dip : 0;
+
+      // River / valley mask (meandering low bands)
+      var riverN = fbm(wx * 0.0055, wz * 0.0055, seed + 300, 3);
+      var river = Math.max(0, 1 - Math.abs(riverN - 0.5) * 6.5);
+      var riverCarve = -river * river * (2.2 + prof.amp * 0.15) * (prof.river || 0.3);
+
+      var base = prof.base * (1 - blend) + prof2.base * blend;
+      var ampMix = prof.amp * (1 - blend) + prof2.amp * blend;
+      var h =
+        (base +
+          macro * (ampMix / Math.max(0.001, prof.amp)) +
+          meso +
+          micro +
+          rid +
+          dip +
+          riverCarve) *
+        edge;
+
+      // Soft beach / coast drop near world edge
+      if (d > half * 0.88) {
+        var coast = (d - half * 0.88) / (half * 0.12);
+        h *= Math.max(0.05, 1 - coast * 0.85);
+        h -= coast * 1.8;
+      }
+      if (d > half) h -= (d - half) * 0.4;
       return h;
     }
 
@@ -88,7 +147,7 @@
     var pos = geo.attributes.position;
     var colors = [];
     var color = new THREE.Color();
-    var biomeColors = [0x3a6a2a, 0x2a4a1a, 0x554444, 0x7a5a2a, 0x220033];
+    var colorB = new THREE.Color();
 
     for (var i = 0; i < pos.count; i++) {
       var x = pos.getX(i);
@@ -96,25 +155,51 @@
       var y = heightAt(x, z);
       pos.setY(i, y);
       var biome = getBiomeAt ? getBiomeAt(x, z) : { zoneId: 0 };
-      color.setHex(biomeColors[biome.zoneId || 0] || 0x3a6a2a);
+      var zid = biome.zoneId || 0;
+      color.setHex(biomeColors[zid] || 0x3a6a2a);
+      // Slope darkening from local height variance (approx)
+      var slope = Math.min(1, Math.abs(y - heightAt(x + 2, z)) * 0.18);
+      color.multiplyScalar(1 - slope * 0.35);
+      // Peak snow tint on high outer zones
+      if (y > 6.5 && zid >= 3) {
+        colorB.setHex(0xddeeff);
+        color.lerp(colorB, Math.min(0.55, (y - 6.5) * 0.08));
+      }
+      // River bed darker
+      if (y < 0.15 && zid <= 1) {
+        colorB.setHex(0x1a3020);
+        color.lerp(colorB, 0.4);
+      }
       colors.push(color.r, color.g, color.b);
     }
     geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
 
-    var tex = genProcTexture ? genProcTexture(biomeTexTypes[0] || 'grass') : null;
-    if (tex) tex.repeat.set(48, 48);
+    // Prefer VoxTextures seeded maps when available
+    var tex = null;
+    if (global.VoxTextures && global.VoxTextures.createBiomeTexture) {
+      tex = global.VoxTextures.createBiomeTexture(THREE, biomeTexTypes[0] || 'grass', {
+        seed: seed,
+        size: 256,
+        repeat: 56,
+      });
+    } else if (genProcTexture) {
+      tex = genProcTexture(biomeTexTypes[0] || 'grass');
+      if (tex && tex.repeat) tex.repeat.set(56, 56);
+    }
     var mat = new THREE.MeshStandardMaterial({
       map: tex,
       vertexColors: true,
-      roughness: 0.92,
+      roughness: 0.9,
       metalness: 0.04,
+      flatShading: false,
     });
     var mesh = new THREE.Mesh(geo, mat);
     mesh.receiveShadow = true;
     mesh.name = 'vox-terrain';
     scene.add(mesh);
 
+    // Dense heightmap grid for O(1) bilinear sampling (gameplay / camera / snap)
     var cols = segments + 1;
     var heights = new Float32Array(cols * cols);
     for (var iz = 0; iz < cols; iz++) {
@@ -147,10 +232,23 @@
     }
 
     function sampleNormal(x, z) {
-      var e = 1.2;
+      var e =
+        (global.VoxStandards && global.VoxStandards.SCALE.HEIGHT_SAMPLE_EPS) || 1.2;
       var hx = sampleHeight(x + e, z) - sampleHeight(x - e, z);
       var hz = sampleHeight(x, z + e) - sampleHeight(x, z - e);
       return new THREE.Vector3(-hx, 2 * e, -hz).normalize();
+    }
+
+    /** Export raw heightmap (Float32 grid) for tools / debug. */
+    function getHeightmap() {
+      return {
+        widths: cols,
+        heights: cols,
+        size: size,
+        half: half,
+        data: heights,
+        seed: seed,
+      };
     }
 
     return {
@@ -163,6 +261,7 @@
       sampleHeight: sampleHeight,
       sampleNormal: sampleNormal,
       heights: heights,
+      getHeightmap: getHeightmap,
     };
   }
 

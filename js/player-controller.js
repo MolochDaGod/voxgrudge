@@ -6,6 +6,8 @@
  *   TPS — Action third-person: hold RMB free-look orbit (Alt/MMB also); otherwise soft aim.
  *         Host can claim RMB for mine/shield via claimRmbCombat / releaseRmbCombat.
  *   FPS — Pointer-lock look; center crosshair; hold RMB = ADS (host also uses for block/mine).
+ *
+ * Enhancements: shoulder offset, terrain camera collision, combat zoom, FPS head bob.
  */
 (function (global) {
   'use strict';
@@ -31,6 +33,11 @@
     var THREE = opts.THREE;
     if (!THREE) throw new Error('PlayerController requires THREE');
 
+    var camStd = (global.VoxStandards && global.VoxStandards.CAMERA) || {};
+    var tpsStd = camStd.tps || {};
+    var isoStd = camStd.iso || {};
+    var fpsStd = camStd.fps || {};
+
     var mode = opts.mode || 'tps';
     var target = null;
     var camera = opts.camera || null;
@@ -38,38 +45,50 @@
     var yaw = 0;
     var pitch = 0.42;
     var fpsPitch = 0;
-    var dist = opts.distance != null ? opts.distance : 11;
-    var minDist = 4;
-    var maxDist = 28;
-    var minPitch = 0.12;
-    var maxPitch = 1.25;
+    var dist = opts.distance != null ? opts.distance : tpsStd.distance || 12;
+    var minDist = tpsStd.minDist || 3.5;
+    var maxDist = tpsStd.maxDist || 30;
+    var minPitch = tpsStd.minPitch != null ? tpsStd.minPitch : 0.1;
+    var maxPitch = tpsStd.maxPitch != null ? tpsStd.maxPitch : 1.35;
     var minFpsPitch = -1.15;
     var maxFpsPitch = 1.15;
     var followHeight = opts.followHeight != null ? opts.followHeight : 1.45;
     var lookHeight = opts.lookHeight != null ? opts.lookHeight : 1.35;
-    var smooth = opts.smooth != null ? opts.smooth : 10;
+    var smooth = opts.smooth != null ? opts.smooth : tpsStd.smooth || 11;
     var orbitSensitivity = opts.orbitSensitivity != null ? opts.orbitSensitivity : 0.0045;
     var fpsSensitivity = opts.fpsSensitivity != null ? opts.fpsSensitivity : 0.0022;
     var invertY = !!opts.invertY;
-    var adsFovMult = opts.adsFovMult != null ? opts.adsFovMult : 0.82;
+    var adsFovMult = opts.adsFovMult != null ? opts.adsFovMult : fpsStd.adsFovMult || 0.78;
     var baseFov = opts.baseFov != null ? opts.baseFov : 60;
+    var shoulder = opts.shoulder != null ? opts.shoulder : tpsStd.shoulder != null ? tpsStd.shoulder : 0.55;
+    var collisionPad = tpsStd.collisionPad != null ? tpsStd.collisionPad : 0.45;
+    var combatZoom = tpsStd.combatZoom != null ? tpsStd.combatZoom : 0.82;
+    var combatZoomActive = false;
+    var bobPhase = 0;
+    var moveSpeedHint = 0;
 
     var desired = new THREE.Vector3();
     var lookAt = new THREE.Vector3();
     var _fwd = new THREE.Vector3();
+    var _right = new THREE.Vector3();
+    var _camRay = new THREE.Raycaster();
+    var _camFrom = new THREE.Vector3();
+    var _camTo = new THREE.Vector3();
+    var _camDir = new THREE.Vector3();
 
     // Input state
-    var orbiting = false; // Alt+LMB / MMB
-    var freeLooking = false; // TPS RMB free-look
+    var orbiting = false;
+    var freeLooking = false;
     var rmbHeld = false;
-    var ads = false; // FPS RMB hold
-    var rmbCombatClaimed = false; // host uses RMB for mine/block — suppress free-look
+    var ads = false;
+    var rmbCombatClaimed = false;
     var lastMX = 0;
     var lastMY = 0;
     var pointerNdc = { x: 0, y: 0 };
     var pointerClient = { x: 0, y: 0 };
     var pointerLocked = false;
     var lockEl = null;
+    var collisionMeshes = null; // optional array or single mesh
 
     function setCamera(cam) {
       camera = cam;
@@ -85,6 +104,19 @@
       }
     }
 
+    /** Provide terrain / world meshes for camera collision. */
+    function setCollisionMeshes(meshes) {
+      collisionMeshes = meshes || null;
+    }
+
+    function setCombatZoom(on) {
+      combatZoomActive = !!on;
+    }
+
+    function setMoveSpeedHint(speed) {
+      moveSpeedHint = speed || 0;
+    }
+
     function setMode(m) {
       if (m !== 'tps' && m !== 'iso' && m !== 'fps') return;
       var prev = mode;
@@ -97,12 +129,21 @@
       if (m === 'fps') {
         if (target) yaw = target.rotation.y;
         fpsPitch = 0;
+        if (camera && fpsStd.fov) {
+          baseFov = opts.baseFov != null ? opts.baseFov : fpsStd.fov;
+        }
       } else if (prev === 'fps' && target) {
         yaw = target.rotation.y + Math.PI;
         pitch = 0.42;
         exitPointerLock();
+        if (m === 'tps' && tpsStd.fov) baseFov = opts.baseFov != null ? opts.baseFov : tpsStd.fov;
+        if (m === 'iso' && isoStd.fov) baseFov = opts.baseFov != null ? opts.baseFov : isoStd.fov;
+      } else if (m === 'iso' && isoStd.fov) {
+        baseFov = opts.baseFov != null ? opts.baseFov : isoStd.fov;
+      } else if (m === 'tps' && tpsStd.fov) {
+        baseFov = opts.baseFov != null ? opts.baseFov : tpsStd.fov;
       }
-      applyFov(false);
+      applyFov(false, 1);
       if (camera && target) forceSnap();
     }
 
@@ -116,7 +157,7 @@
 
     function forceSnap() {
       if (!camera || !target) return;
-      applyCamera(1);
+      applyCamera(1, 0);
     }
 
     function isLooking() {
@@ -141,7 +182,6 @@
       return rmbHeld;
     }
 
-    /** Host: RMB used for mine/block this press — do not start TPS free-look. */
     function claimRmbCombat() {
       rmbCombatClaimed = true;
       freeLooking = false;
@@ -151,9 +191,6 @@
       rmbCombatClaimed = false;
     }
 
-    /**
-     * Cursor presentation for HUD. style drives CSS class on custom cursor.
-     */
     function getCursorState() {
       var style = CURSOR_STYLES.iso;
       var hideOs = false;
@@ -177,7 +214,6 @@
           follow = true;
         }
       } else {
-        // fps
         hideOs = true;
         center = true;
         follow = false;
@@ -199,10 +235,15 @@
       };
     }
 
-    function applyFov(adsOn) {
+    function applyFov(adsOn, hard) {
       if (!camera || camera.fov == null) return;
       var targetFov = adsOn ? baseFov * adsFovMult : baseFov;
-      camera.fov += (targetFov - camera.fov) * 0.25;
+      if (mode === 'tps' && combatZoomActive) targetFov *= 0.94;
+      if (hard) {
+        camera.fov = targetFov;
+      } else {
+        camera.fov += (targetFov - camera.fov) * 0.22;
+      }
       camera.updateProjectionMatrix();
     }
 
@@ -211,13 +252,10 @@
         rmbHeld = true;
         lastMX = e.clientX;
         lastMY = e.clientY;
-        // TPS free-look is deferred: host may claimRmbCombat() on same click (mine/shield).
-        // Actual freeLooking starts on move or in update() if still unclaimed.
         if (mode === 'fps') {
           ads = true;
         }
       }
-      // MMB or Alt+LMB: orbit (ISO pan feel / TPS orbit backup)
       if (e.button === 1 || (e.button === 0 && e.altKey)) {
         if (mode !== 'fps') {
           orbiting = true;
@@ -226,7 +264,6 @@
           e.preventDefault();
         }
       }
-      // FPS: click canvas to pointer-lock
       if (mode === 'fps' && e.button === 0 && !e.altKey) {
         requestPointerLock();
       }
@@ -260,7 +297,6 @@
       }
 
       if (pointerLocked && (e.movementX != null || e.movementY != null)) {
-        // Keep NDC at center while locked
         pointerNdc.x = 0;
         pointerNdc.y = 0;
       } else {
@@ -289,7 +325,6 @@
         return;
       }
 
-      // Start TPS free-look on first move while RMB held and host did not claim combat
       if (mode === 'tps' && rmbHeld && !rmbCombatClaimed) {
         freeLooking = true;
       }
@@ -321,7 +356,7 @@
     }
 
     function requestPointerLock() {
-      var el = lockEl || (camera && camera.domElement) || global.document && global.document.body;
+      var el = lockEl || (camera && camera.domElement) || (global.document && global.document.body);
       if (!el || !el.requestPointerLock) return;
       if (global.document.pointerLockElement === el) return;
       try {
@@ -338,11 +373,7 @@
     }
 
     function onPointerLockChange() {
-      var el = lockEl || (global.document && global.document.body);
       pointerLocked = !!(global.document && global.document.pointerLockElement);
-      if (!pointerLocked && mode === 'fps') {
-        // stay in fps without lock; mouse look only while locked or via movementX when locked
-      }
     }
 
     function getMoveInput(keys) {
@@ -360,9 +391,6 @@
         return { dx: s / len, dz: -f / len, moving: true, forward: f, strafe: s };
       }
 
-      // Camera-relative on XZ (TPS orbit yaw or FPS look yaw)
-      var lookYaw = mode === 'fps' ? yaw : yaw;
-      // TPS: orbit yaw places camera behind; forward is opposite cam offset
       var fx, fz, rx, rz;
       if (mode === 'fps') {
         fx = Math.sin(yaw);
@@ -381,18 +409,60 @@
       return { dx: dx / len2, dz: dz / len2, moving: true, forward: f, strafe: s };
     }
 
-    function applyCamera(alpha) {
+    function resolveCameraCollision(from, to) {
+      if (!collisionMeshes) return to;
+      var list = Array.isArray(collisionMeshes) ? collisionMeshes : [collisionMeshes];
+      var valid = list.filter(function (m) {
+        return m && m.isObject3D !== false;
+      });
+      if (!valid.length) return to;
+
+      _camDir.subVectors(to, from);
+      var maxDist = _camDir.length();
+      if (maxDist < 1e-4) return to;
+      _camDir.multiplyScalar(1 / maxDist);
+      _camRay.set(from, _camDir);
+      _camRay.far = maxDist;
+      var hits = _camRay.intersectObjects(valid, true);
+      if (!hits || !hits.length) return to;
+      // Ignore hits very close to pivot (character self)
+      for (var i = 0; i < hits.length; i++) {
+        if (hits[i].distance > 0.35) {
+          var d = Math.max(minDist * 0.55, hits[i].distance - collisionPad);
+          return from.clone().add(_camDir.clone().multiplyScalar(d));
+        }
+      }
+      return to;
+    }
+
+    function applyCamera(alpha, dt) {
       if (!camera || !target) return;
       var px = target.position.x;
       var py = target.position.y;
       var pz = target.position.z;
       var groundY = py;
+      dt = dt || 0.016;
+
+      // Pull camera in during combat
+      var useDist = dist;
+      if (mode === 'tps' && combatZoomActive) useDist = dist * combatZoom;
 
       if (mode === 'iso') {
-        desired.set(px, groundY + 34, pz + 28);
+        var isoH = isoStd.height || 36;
+        var isoB = isoStd.back || 30;
+        desired.set(px, groundY + isoH, pz + isoB);
         lookAt.set(px, groundY + 1.2, pz);
       } else if (mode === 'fps') {
-        var eyeY = groundY + followHeight + 0.35;
+        var eyeY = groundY + followHeight + (fpsStd.eyeOffset != null ? fpsStd.eyeOffset : 0.35);
+        // Head bob when moving
+        var bobAmp = fpsStd.bobAmp != null ? fpsStd.bobAmp : 0.028;
+        var bobFreq = fpsStd.bobFreq != null ? fpsStd.bobFreq : 9.5;
+        if (moveSpeedHint > 0.15) {
+          bobPhase += dt * bobFreq * (0.7 + moveSpeedHint * 0.5);
+          eyeY += Math.sin(bobPhase) * bobAmp * Math.min(1, moveSpeedHint);
+        } else {
+          bobPhase *= 0.9;
+        }
         desired.set(px, eyeY, pz);
         var cp = Math.cos(fpsPitch);
         var sp = Math.sin(fpsPitch);
@@ -403,11 +473,22 @@
       } else {
         var cp2 = Math.cos(pitch);
         var sp2 = Math.sin(pitch);
-        var ox = Math.sin(yaw) * cp2 * dist;
-        var oy = sp2 * dist;
-        var oz = Math.cos(yaw) * cp2 * dist;
-        desired.set(px + ox, groundY + followHeight + oy, pz + oz);
-        lookAt.set(px, groundY + lookHeight, pz);
+        var ox = Math.sin(yaw) * cp2 * useDist;
+        var oy = sp2 * useDist;
+        var oz = Math.cos(yaw) * cp2 * useDist;
+        // Shoulder offset along camera right
+        _right.set(Math.cos(yaw), 0, -Math.sin(yaw));
+        var sh = shoulder * (freeLooking || orbiting ? 1 : 0.75);
+        desired.set(
+          px + ox + _right.x * sh,
+          groundY + followHeight + oy,
+          pz + oz + _right.z * sh
+        );
+        lookAt.set(px + _right.x * sh * 0.35, groundY + lookHeight, pz + _right.z * sh * 0.35);
+
+        // Camera vs terrain / world
+        _camFrom.set(px, groundY + lookHeight + 0.35, pz);
+        desired.copy(resolveCameraCollision(_camFrom, desired));
       }
 
       if (alpha >= 1) {
@@ -420,13 +501,12 @@
 
     function update(dt) {
       if (!camera || !target) return;
-      // Hold RMB without move still enters free-look if combat did not claim
       tryBeginTpsFreeLook();
       var a = 1 - Math.exp(-smooth * Math.max(0.001, dt));
-      // FPS snaps tighter for responsiveness
       if (mode === 'fps') a = Math.min(1, a * 1.8 + 0.35);
-      applyCamera(a);
-      applyFov(mode === 'fps' && ads && rmbHeld);
+      if (mode === 'iso') a = Math.min(1, a * 0.85);
+      applyCamera(a, dt);
+      applyFov(mode === 'fps' && ads && rmbHeld, false);
     }
 
     function alignBehindCharacter() {
@@ -439,11 +519,6 @@
       }
     }
 
-    /**
-     * Aim direction for combat.
-     * ISO / TPS (not free-looking): ground plane under cursor.
-     * TPS free-look / FPS: camera forward on XZ (or full 3D for projectiles).
-     */
     function getAimDir(raycaster, mouseNdc, optsAim) {
       if (!camera || !target) return new THREE.Vector3(0, 0, 1);
       var useCamForward = mode === 'fps' || (mode === 'tps' && (freeLooking || orbiting));
@@ -461,7 +536,14 @@
 
       var ndc = mouseNdc || pointerNdc;
       raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
-      var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -target.position.y);
+      // Prefer heightmap plane when available
+      var planeY = target.position.y;
+      if (global._terrainHandle && global._terrainHandle.sampleHeight) {
+        try {
+          planeY = global._terrainHandle.sampleHeight(target.position.x, target.position.z);
+        } catch (_) {}
+      }
+      var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
       var hit = new THREE.Vector3();
       if (raycaster.ray.intersectPlane(plane, hit)) {
         hit.sub(target.position);
@@ -474,10 +556,9 @@
       return _fwd.normalize();
     }
 
-    /** Character face yaw: FPS uses look yaw; others use aim. */
     function getFaceYaw() {
       if (mode === 'fps') return yaw;
-      return null; // host uses getAimDir
+      return null;
     }
 
     function getPointerNdc() {
@@ -543,6 +624,9 @@
       releaseRmbCombat: releaseRmbCombat,
       requestPointerLock: requestPointerLock,
       exitPointerLock: exitPointerLock,
+      setCollisionMeshes: setCollisionMeshes,
+      setCombatZoom: setCombatZoom,
+      setMoveSpeedHint: setMoveSpeedHint,
       CURSOR_STYLES: CURSOR_STYLES,
       MODE_HINTS: MODE_HINTS,
     };
