@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-knights\\voxel-knights-knight-helm-down\\voxel-knights-knight-helm-down.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\characters\\voxel-knights-knight-helm-down.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9433153867721558,
+      3.9037928445395664e-8,
+      -0.42705363035202026
+    ],
+    "max": [
+      0.945573627948761,
+      2,
+      0.1840575486421585
+    ],
+    "size": [
+      1.8888890147209167,
+      1.9999999609620716,
+      0.6111111789941788
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\characters\\voxel-knights-knight-helm-down.collider.json",
+  "producedAt": "2026-07-15T23:19:15.061Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

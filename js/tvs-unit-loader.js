@@ -48,6 +48,14 @@
    * Normalize a roster unit so loaders always see consistent absolute URLs.
    * Accepts modelUrl | meshUrl | url | r2Key aliases.
    */
+  /** Derive production GLB URL beside FBX path (converted + compressed pack). */
+  function glbUrlFromModel(modelUrl) {
+    if (!modelUrl) return null;
+    var s = String(modelUrl);
+    if (/\.glb($|\?)/i.test(s)) return s;
+    return s.replace(/\.fbx($|\?)/i, ".glb$1");
+  }
+
   function normalizeUnit(unit) {
     if (!unit) return null;
     var u = Object.assign({}, unit);
@@ -70,15 +78,22 @@
       (u.animsR2Key ? absCdnUrl(u.animsR2Key) : null);
     var collider = u.colliderUrl || (u.colliderR2Key ? absCdnUrl(u.colliderR2Key) : null);
     var brain = u.brainUrl || (u.brainR2Key ? absCdnUrl(u.brainR2Key) : null);
+    var glb =
+      u.glbUrl ||
+      u.productionGlbUrl ||
+      (u.glbR2Key ? absCdnUrl(u.glbR2Key) : null) ||
+      glbUrlFromModel(model);
 
     u.modelUrl = absCdnUrl(model);
     u.textureUrl = absCdnUrl(tex);
     u.animationPackUrl = absCdnUrl(anims);
     u.colliderUrl = absCdnUrl(collider);
     u.brainUrl = absCdnUrl(brain);
+    u.glbUrl = absCdnUrl(glb);
     // Back-compat aliases
     u.meshUrl = u.modelUrl;
     u.animsUrl = u.animationPackUrl;
+    u.production = u.production || null;
     return u;
   }
 
@@ -278,24 +293,62 @@
   // ── roster ─────────────────────────────────────────────────────────────────
 
   async function loadTvsRoster(force) {
-    if (global.TvsVoxelAssets && global.TvsVoxelAssets.loadRoster) {
-      var r = await global.TvsVoxelAssets.loadRoster(force);
-      return normalizeRoster(r);
+    // Prefer production roster (glbUrl + baked meta) when published
+    var prodUrls = [
+      CDN + "/" + TVS_PREFIX + "/unit-roster.production.json",
+      CDN_ROSTER,
+      "/assets/voxels/unit-roster.json",
+      "assets/voxels/unit-roster.json",
+    ];
+    if (global.TvsVoxelAssets && global.TvsVoxelAssets.loadRoster && !force) {
+      try {
+        var r0 = await global.TvsVoxelAssets.loadRoster(force);
+        // Still try production overlay if units lack glbUrl
+        var prod = await fetchJson(prodUrls[0]);
+        if (prod && prod.units && prod.units.length) {
+          return normalizeRoster(mergeProductionRoster(r0, prod));
+        }
+        return normalizeRoster(r0);
+      } catch (e0) { /* fall through */ }
     }
     if (global.GrudgeFleet && global.GrudgeFleet.loadTvsVoxelRoster) {
-      return normalizeRoster(await global.GrudgeFleet.loadTvsVoxelRoster());
+      try {
+        return normalizeRoster(await global.GrudgeFleet.loadTvsVoxelRoster());
+      } catch (e1) { /* fall through */ }
     }
-    try {
-      var res = await fetch(CDN_ROSTER, { mode: "cors" });
-      if (!res.ok) throw new Error("roster " + res.status);
-      return normalizeRoster(await res.json());
-    } catch (e) {
-      var local =
-        (await fetchJson("/assets/voxels/unit-roster.json")) ||
-        (await fetchJson("assets/voxels/unit-roster.json"));
-      if (local) return normalizeRoster(local);
-      throw e;
+    var lastErr = null;
+    for (var i = 0; i < prodUrls.length; i++) {
+      try {
+        var data = await fetchJson(prodUrls[i]);
+        if (data && data.units) return normalizeRoster(data);
+      } catch (e) {
+        lastErr = e;
+      }
     }
+    throw lastErr || new Error("TVS roster unavailable");
+  }
+
+  /** Overlay glbUrl/production fields from production roster onto base units. */
+  function mergeProductionRoster(base, prod) {
+    if (!base || !prod) return prod || base;
+    var byId = {};
+    (prod.units || []).forEach(function (u) {
+      if (u && u.unitId) byId[u.unitId] = u;
+    });
+    var units = (base.units || []).map(function (u) {
+      var p = byId[u.unitId];
+      if (!p) return u;
+      return Object.assign({}, u, {
+        glbUrl: p.glbUrl || u.glbUrl,
+        production: p.production || u.production,
+        textureUrl: p.textureUrl || u.textureUrl,
+      });
+    });
+    return Object.assign({}, base, {
+      version: prod.version || base.version,
+      playerHeightM: prod.playerHeightM || base.playerHeightM || DEFAULT_HEIGHT,
+      units: units,
+    });
   }
 
   async function loadTvsCatalog(force) {
@@ -420,10 +473,37 @@
 
   /**
    * Normalize character height in meters.
-   * Reset scale → optional cm unit fix → scale to target → ground feet at local y=0.
+   * Production GLBs from grudge-convert are already ~2.0m with feet at y=0 —
+   * use lightGroundOnly to avoid double-scale.
    */
-  function normalizeHeight(object3d, targetHeight, THREE) {
+  function normalizeHeight(object3d, targetHeight, THREE, opts) {
+    opts = opts || {};
     if (!object3d || !targetHeight || !THREE) return object3d;
+
+    if (opts.alreadyBaked || object3d.userData.productionBaked) {
+      // Light pass: only ground feet; keep baked mesh scale
+      object3d.updateMatrixWorld(true);
+      var boxB = measureBodyBox(object3d, THREE);
+      var sizeB = new THREE.Vector3();
+      boxB.getSize(sizeB);
+      if (sizeB.y > 0.1) {
+        var err = Math.abs(sizeB.y - targetHeight) / targetHeight;
+        if (err > 0.2) {
+          // Baked height drifted — full renormalize
+          object3d.userData.productionBaked = false;
+        } else {
+          object3d.position.y -= boxB.min.y;
+          object3d.userData.nativeHeight = sizeB.y;
+          object3d.userData.targetHeight = targetHeight;
+          object3d.userData.scaleFactor = object3d.scale.x;
+          object3d.userData.unitFix = 1;
+          object3d.userData.feetGrounded = true;
+          object3d.userData.productionBaked = true;
+          return object3d;
+        }
+      }
+    }
+
     object3d.scale.set(1, 1, 1);
     object3d.position.set(0, 0, 0);
     object3d.rotation.set(0, 0, 0);
@@ -452,7 +532,6 @@
     }
 
     var s = targetHeight / size.y;
-    // Clamp pathological factors (after unit fix)
     if (s > 50) s = 50;
     if (s < 0.02) s = 0.02;
     if (s > 20 || s < 0.05) {
@@ -462,7 +541,6 @@
     object3d.scale.multiplyScalar(s);
     object3d.updateMatrixWorld(true);
     var box2 = measureBodyBox(object3d, THREE);
-    // Feet on local y=0
     object3d.position.y -= box2.min.y;
     object3d.userData.nativeHeight = size.y / (unitFix || 1);
     object3d.userData.measuredAfterUnitFix = size.y;
@@ -471,6 +549,129 @@
     object3d.userData.unitFix = unitFix;
     object3d.userData.feetGrounded = true;
     return object3d;
+  }
+
+  /** Prep embedded GLB maps for voxel strip atlases (often 256×1). */
+  function prepEmbeddedTextures(root, THREE) {
+    root.traverse(function (ch) {
+      if (!ch.isMesh && !ch.isSkinnedMesh) return;
+      var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
+      mats.forEach(function (m) {
+        if (!m) return;
+        if (m.map) {
+          m.map.magFilter = THREE.NearestFilter;
+          m.map.minFilter = THREE.NearestFilter;
+          m.map.generateMipmaps = false;
+          m.map.wrapS = THREE.ClampToEdgeWrapping;
+          m.map.wrapT = THREE.ClampToEdgeWrapping;
+          // Baked GLB usually has correct flipY; do not force false if already set by loader
+          if ("colorSpace" in m.map && THREE.SRGBColorSpace != null) {
+            m.map.colorSpace = THREE.SRGBColorSpace;
+          } else if (THREE.sRGBEncoding != null) {
+            m.map.encoding = THREE.sRGBEncoding;
+          }
+          m.map.needsUpdate = true;
+        }
+        if ("metalness" in m) m.metalness = 0;
+        if ("roughness" in m) m.roughness = Math.max(m.roughness || 0, 0.8);
+        if ("flatShading" in m) m.flatShading = true;
+        if (m.color && m.color.getHex() === 0x000000 && m.map) m.color.setHex(0xffffff);
+        m.needsUpdate = true;
+      });
+      ch.castShadow = true;
+      ch.receiveShadow = true;
+      if (ch.isSkinnedMesh) ch.frustumCulled = false;
+    });
+  }
+
+  function hasUsableMap(root) {
+    var ok = false;
+    root.traverse(function (ch) {
+      if ((!ch.isMesh && !ch.isSkinnedMesh) || !ch.material) return;
+      var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
+      mats.forEach(function (m) {
+        if (m && m.map && m.map.image) ok = true;
+      });
+    });
+    return ok;
+  }
+
+  async function headOk(url) {
+    if (!url) return false;
+    try {
+      var r = await fetch(url, { method: "HEAD", mode: "cors" });
+      if (r.ok) return true;
+      var g = await fetch(url, { method: "GET", headers: { Range: "bytes=0-15" }, mode: "cors" });
+      return g.ok || g.status === 206;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** Candidate GLB URLs: CDN production → same-origin Vercel mirror. */
+  function glbCandidates(unit) {
+    var list = [];
+    var seen = {};
+    function push(u) {
+      u = absCdnUrl(u) || u;
+      if (!u || seen[u]) return;
+      seen[u] = 1;
+      list.push(u);
+    }
+    push(unit.glbUrl);
+    push(glbUrlFromModel(unit.modelUrl));
+    // Same-origin mirror shipped with Vercel (models/voxels/tvs/…)
+    if (unit.pack && unit.unitId) {
+      push("/models/voxels/tvs/" + unit.pack + "/characters/" + unit.unitId + ".glb");
+      push("models/voxels/tvs/" + unit.pack + "/characters/" + unit.unitId + ".glb");
+    }
+    return list;
+  }
+
+  async function loadGlbFromUrl(THREE, url, opts) {
+    opts = opts || {};
+    var GLTFLoader = opts.GLTFLoader || (THREE && THREE.GLTFLoader) || global.GLTFLoader;
+    if (!GLTFLoader) throw new Error("GLTFLoader required for GLB");
+    var loader = new GLTFLoader();
+    if (global.VoxGltfConfigure) {
+      try {
+        loader = global.VoxGltfConfigure(loader) || loader;
+      } catch (e) {}
+    } else if (global.VoxGameCanvas && VoxGameCanvas.configureGltfLoader) {
+      try {
+        loader = VoxGameCanvas.configureGltfLoader(loader) || loader;
+      } catch (e) {}
+    }
+    // Magic-byte verify glTF
+    if (opts.verify !== false) {
+      var res = await fetch(url, { mode: "cors" });
+      if (!res.ok) throw new Error("GLB HTTP " + res.status);
+      var buf = await res.arrayBuffer();
+      var u8 = new Uint8Array(buf);
+      var magic = String.fromCharCode(u8[0], u8[1], u8[2], u8[3]);
+      if (magic !== "glTF") {
+        var head = new TextDecoder().decode(u8.slice(0, 32));
+        if (head.indexOf("<!DOCTYPE") >= 0 || head.indexOf("<html") >= 0) {
+          throw new Error("HTML fake-200 (not GLB): " + url);
+        }
+        throw new Error("Not glTF/GLB: " + url);
+      }
+      if (typeof loader.parse === "function") {
+        return new Promise(function (resolve, reject) {
+          loader.parse(
+            buf,
+            url.replace(/[^/]+$/, ""),
+            function (gltf) {
+              resolve(gltf);
+            },
+            reject
+          );
+        });
+      }
+    }
+    return new Promise(function (resolve, reject) {
+      loader.load(url, resolve, undefined, reject);
+    });
   }
 
   // ── materials / color ──────────────────────────────────────────────────────
@@ -730,25 +931,65 @@
     opts = opts || {};
     var THREE = opts.THREE || global.THREE;
     var FBXLoader = opts.FBXLoader || (THREE && THREE.FBXLoader) || global.FBXLoader;
-    if (!FBXLoader) throw new Error("FBXLoader required");
     if (!THREE) throw new Error("THREE required");
 
     var unit = normalizeUnit(unitIn);
-    if (!unit || !unit.modelUrl) throw new Error("unit.modelUrl required (got " + (unitIn && unitIn.unitId) + ")");
+    if (!unit || (!unit.modelUrl && !unit.glbUrl)) {
+      throw new Error("unit.modelUrl/glbUrl required (got " + (unitIn && unitIn.unitId) + ")");
+    }
 
     var height = opts.height != null ? opts.height : DEFAULT_HEIGHT;
-    var group = await loadFbxFromUrl(FBXLoader, unit.modelUrl, { verify: opts.verify !== false });
+    var group = null;
+    var format = "fbx";
+    var sourceUrl = unit.modelUrl;
+
+    // ── Prefer production GLB (converted + compressed, height baked 2.0m) ───
+    var preferGlb = opts.preferGlb !== false;
+    if (preferGlb) {
+      var glbList = glbCandidates(unit);
+      for (var gi = 0; gi < glbList.length && !group; gi++) {
+        var gUrl = glbList[gi];
+        var exists = opts.skipGlbProbe ? true : await headOk(gUrl);
+        if (!exists) continue;
+        try {
+          var gltf = await loadGlbFromUrl(THREE, gUrl, {
+            verify: opts.verify !== false,
+            GLTFLoader: opts.GLTFLoader,
+          });
+          group = gltf.scene || gltf.scenes[0];
+          if (gltf.animations && gltf.animations.length) {
+            group.animations = gltf.animations;
+          }
+          format = "glb";
+          sourceUrl = gUrl;
+          group.userData.productionBaked = true;
+        } catch (glbErr) {
+          console.warn("[TvsUnitLoader] GLB candidate fail", gUrl, glbErr && glbErr.message);
+          group = null;
+        }
+      }
+    }
+
+    if (!group) {
+      if (!FBXLoader) throw new Error("FBXLoader required (GLB unavailable)");
+      group = await loadFbxFromUrl(FBXLoader, unit.modelUrl, { verify: opts.verify !== false });
+      format = "fbx";
+      sourceUrl = unit.modelUrl;
+    }
 
     group.userData.tvsUnit = unit;
     group.userData.grudgeUuid = unit.grudgeUuid;
     group.userData.assetSource = "tvs-voxel";
-    group.userData.r2Key = String(unit.modelUrl).replace(CDN + "/", "");
+    group.userData.assetFormat = format;
+    group.userData.sourceUrl = sourceUrl;
+    group.userData.r2Key = String(sourceUrl).replace(CDN + "/", "");
     group.userData.d1 = {
       grudgeUuid: unit.grudgeUuid,
       unitId: unit.unitId,
       pack: unit.pack,
       classHint: unit.classHint,
       modelUrl: unit.modelUrl,
+      glbUrl: unit.glbUrl,
       textureUrl: unit.textureUrl,
       animationPackUrl: unit.animationPackUrl,
       colliderUrl: unit.colliderUrl,
@@ -756,8 +997,23 @@
     };
     group.name = unit.unitId || unit.displayName || "tvs-unit";
 
-    // Texture rebind (before scale) — aliases + pack fallbacks for 404 roster rows
-    if (opts.withTexture !== false && (unit.textureUrl || TEXTURE_ALIASES[unit.unitId])) {
+    // ── Textures ────────────────────────────────────────────────────────────
+    // GLB: prefer embedded atlas (already compressed); rebind only if missing.
+    // FBX: always rebind external 256×1 strip (NearestFilter).
+    if (format === "glb") {
+      prepEmbeddedTextures(group, THREE);
+      if (opts.withTexture !== false && !hasUsableMap(group) && (unit.textureUrl || TEXTURE_ALIASES[unit.unitId])) {
+        try {
+          var loadedGlb = await loadTextureWithFallbacks(THREE, unit);
+          applyTextureToRoot(group, loadedGlb.tex, THREE);
+          group.userData.texture = loadedGlb.tex;
+          group.userData.textureUrl = loadedGlb.url;
+          group.userData.textureFlipY = loadedGlb.flipY;
+        } catch (err) {
+          console.warn("[TvsUnitLoader] GLB texture rebind fail", err && err.message);
+        }
+      }
+    } else if (opts.withTexture !== false && (unit.textureUrl || TEXTURE_ALIASES[unit.unitId])) {
       try {
         var loaded = await loadTextureWithFallbacks(THREE, unit);
         applyTextureToRoot(group, loaded.tex, THREE);
@@ -772,7 +1028,9 @@
       }
     }
 
-    normalizeHeight(group, height, THREE);
+    normalizeHeight(group, height, THREE, {
+      alreadyBaked: format === "glb" || group.userData.productionBaked,
+    });
     attachColorApi(group, THREE);
     if (opts.colorTint != null) group.userData.setColorTint(opts.colorTint);
 
@@ -843,13 +1101,19 @@
     // Consistency report for debugging #hero / showcase
     group.userData.importReport = {
       unitId: unit.unitId,
+      format: format,
+      sourceUrl: sourceUrl,
+      glbUrl: unit.glbUrl,
       modelUrl: unit.modelUrl,
-      textureUrl: unit.textureUrl,
+      textureUrl: group.userData.textureUrl || unit.textureUrl,
       height: group.userData.targetHeight,
+      measuredHeight: group.userData.measuredAfterUnitFix || group.userData.nativeHeight,
       scale: group.userData.scaleFactor,
       unitFix: group.userData.unitFix,
-      hasTexture: !!group.userData.texture,
+      productionBaked: !!group.userData.productionBaked,
+      hasTexture: !!group.userData.texture || hasUsableMap(group),
       hasMixer: !!group.userData.mixer,
+      compressed: format === "glb",
     };
     console.info("[TvsUnitLoader] loaded", group.userData.importReport);
 
@@ -879,6 +1143,7 @@
     CLASS_HINT_MAP: CLASS_HINT_MAP,
     CLASS_UNIT_PREFS: CLASS_UNIT_PREFS,
     absCdnUrl: absCdnUrl,
+    glbUrlFromModel: glbUrlFromModel,
     normalizeUnit: normalizeUnit,
     normalizeRoster: normalizeRoster,
     loadTvsRoster: loadTvsRoster,
@@ -891,8 +1156,10 @@
     loadTvsUnit: loadTvsUnit,
     loadArmySample: loadArmySample,
     normalizeHeight: normalizeHeight,
+    prepEmbeddedTextures: prepEmbeddedTextures,
     resolveClipMap: resolveClipMap,
     assertRealFbx: assertRealFbx,
+    headOk: headOk,
   };
 
   global.TvsUnitLoader = api;

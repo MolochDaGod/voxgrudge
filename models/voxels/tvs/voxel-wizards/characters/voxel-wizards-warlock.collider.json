@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert",
+  "colliders": [
+    {
+      "mesh": "VS_Wizards_Character_Warlock_001",
+      "type": "capsule",
+      "center": [
+        -0.006880342960357666,
+        0.9999999932417776,
+        -0.2536489926278591
+      ],
+      "size": [
+        2.0482276678085327,
+        2.000000013516445,
+        0.682742603123188
+      ],
+      "min": [
+        -1.030994176864624,
+        -1.3516444852257337e-8,
+        -0.5950202941894531
+      ],
+      "max": [
+        1.0172334909439087,
+        2,
+        0.0877223089337349
+      ],
+      "capsule": {
+        "align": "Y",
+        "radius": 1.0441,
+        "height": 0.01,
+        "offsetY": 0.15
+      },
+      "box": {
+        "halfExtents": [
+          1.0441,
+          1.02,
+          0.3614
+        ]
+      }
+    }
+  ],
+  "rootCollider": {
+    "type": "capsule",
+    "role": "character_root",
+    "center": [
+      0,
+      1,
+      0
+    ],
+    "size": [
+      0.7,
+      2,
+      0.7
+    ],
+    "capsule": {
+      "align": "Y",
+      "radius": 0.35,
+      "height": 1.3
+    },
+    "practice": "Attach Cannon/Rapier body to hips/Y root; do not per-mesh armor RB on grudge6."
+  }
+}

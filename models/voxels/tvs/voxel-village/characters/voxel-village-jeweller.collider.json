@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert",
+  "colliders": [
+    {
+      "mesh": "VS_Villagers_Jewellery_Salesman",
+      "type": "capsule",
+      "center": [
+        0.0011154711246490479,
+        1.0000000438782521,
+        0.024359852075576782
+      ],
+      "size": [
+        1.9428570866584778,
+        1.9999999122434957,
+        0.5714285373687744
+      ],
+      "min": [
+        -0.9703130722045898,
+        8.775650428560766e-8,
+        -0.2613544166088104
+      ],
+      "max": [
+        0.9725440144538879,
+        2,
+        0.310074120759964
+      ],
+      "capsule": {
+        "align": "Y",
+        "radius": 0.9914,
+        "height": 0.0171,
+        "offsetY": 0.15
+      },
+      "box": {
+        "halfExtents": [
+          0.9914,
+          1.02,
+          0.3057
+        ]
+      }
+    }
+  ],
+  "rootCollider": {
+    "type": "capsule",
+    "role": "character_root",
+    "center": [
+      0,
+      1,
+      0
+    ],
+    "size": [
+      0.7,
+      2,
+      0.7
+    ],
+    "capsule": {
+      "align": "Y",
+      "radius": 0.35,
+      "height": 1.3
+    },
+    "practice": "Attach Cannon/Rapier body to hips/Y root; do not per-mesh armor RB on grudge6."
+  }
+}

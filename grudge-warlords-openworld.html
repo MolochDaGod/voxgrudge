@@ -315,10 +315,11 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
   <div id="vox-panel-hero" class="vox-section-panel">
     <div class="vox-container" style="width:min(96vw,980px);margin:0 auto">
-      <div class="vox-container__header"><h2 class="vox-container__title">TVS hero · tint · Kenney fallback</h2></div>
+      <div class="vox-container__header"><h2 class="vox-container__title">TVS hero · scale · texture · production GLB</h2></div>
       <div class="vox-container__body">
+        <div id="tvs-hero-preview" aria-label="Hero 3D preview (2m stick)"></div>
         <div id="skin-picker">
-          <div class="skin-picker-label">TVS Hero (carousel · D1/R2)</div>
+          <div class="skin-picker-label">TVS Hero (carousel · D1/R2 · compressed GLB when available)</div>
           <div id="tvs-hero-carousel" aria-label="TVS hero carousel"></div>
           <div id="tvs-unit-row" class="char-select-row" style="display:none"></div>
           <div class="skin-picker-label">Color Tint</div>
@@ -684,6 +685,7 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/vox-ui-kit.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
+<script src="js/tvs-hero-preview.js"></script>
 <script src="js/tvs-world-content.js"></script>
 <script src="js/tvs-settlement-builder.js"></script>
 <script src="js/collision-layers.js"></script>
@@ -1249,11 +1251,31 @@ function selectCharacter(letter){
   }
 }
 
+let tvsHeroPreviewApi = null;
+function refreshHeroPreview(unit){
+  if(!window.TvsHeroPreview || typeof THREE==='undefined') return;
+  const host = document.getElementById('tvs-hero-preview');
+  if(!host) return;
+  const u = unit || playerTvsUnit;
+  if(!u) return;
+  if(!tvsHeroPreviewApi){
+    tvsHeroPreviewApi = TvsHeroPreview.mount({
+      host: host,
+      THREE: THREE,
+      unit: u,
+      colorTint: playerColorTint,
+    });
+  } else {
+    tvsHeroPreviewApi.loadUnit(u, playerColorTint);
+  }
+}
+
 function selectTvsUnit(unit){
   if(!unit) return;
   playerTvsUnit = unit;
   playerTvsUnitId = unit.unitId;
   updateSkinPickerUI();
+  refreshHeroPreview(unit);
   if(gameStarted && typeof swapPlayerTvsUnit==='function'){
     try{ swapPlayerTvsUnit(unit); }catch(e){ console.warn('[tvs]', e); }
   }
@@ -1361,6 +1383,9 @@ function renderTvsUnitPicker(){
         if(playerMesh && playerMesh.userData && playerMesh.userData.setColorTint){
           playerMesh.userData.setColorTint(hex);
         }
+        if(tvsHeroPreviewApi && playerTvsUnit){
+          try{ tvsHeroPreviewApi.loadUnit(playerTvsUnit, hex); }catch(e){}
+        }
       };
       tintRow.appendChild(sw);
     });
@@ -1371,6 +1396,11 @@ function renderTvsUnitPicker(){
       tvsRosterCache = r;
       renderTvsUnitPicker();
       refreshTvsHeroCarousel();
+      if(playerTvsUnit) refreshHeroPreview(playerTvsUnit);
+      else if(r.units && r.units[0]){
+        const pref = playerClass ? TvsUnitLoader.pickBestUnit(r, playerClass) : r.units[0];
+        if(pref){ playerTvsUnit = pref; playerTvsUnitId = pref.unitId; refreshHeroPreview(pref); }
+      }
     }).catch(function(err){
       console.warn('[VoxGrudge] TVS roster failed', err);
       const row = document.getElementById('tvs-unit-row');

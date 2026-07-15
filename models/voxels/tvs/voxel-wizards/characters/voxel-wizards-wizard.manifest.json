@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-wizards\\voxel-wizards-wizard\\voxel-wizards-wizard.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-wizard.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9246072173118591,
+      -9.823569513400798e-9,
+      -0.5226002335548401
+    ],
+    "max": [
+      0.9246072173118591,
+      2,
+      0.145171657204628
+    ],
+    "size": [
+      1.8492144346237183,
+      2.0000000098235695,
+      0.6677718907594681
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-wizard.collider.json",
+  "producedAt": "2026-07-15T23:19:44.642Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

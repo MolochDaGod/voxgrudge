@@ -4,3 +4,7 @@
 .env
 _asset_unpack/
 _hud_unpack/
+node_modules/
+dist/tvs/work/
+.DS_Store
+Mine-Loader/

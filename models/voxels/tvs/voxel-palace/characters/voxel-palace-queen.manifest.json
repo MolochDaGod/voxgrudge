@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-palace\\voxel-palace-queen\\voxel-palace-queen.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\characters\\voxel-palace-queen.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9988766312599182,
+      5.016284632120005e-8,
+      -0.5744554996490479
+    ],
+    "max": [
+      1.0011231899261475,
+      2,
+      0.072603240609169
+    ],
+    "size": [
+      1.9999998211860657,
+      1.9999999498371537,
+      0.6470587402582169
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\characters\\voxel-palace-queen.collider.json",
+  "producedAt": "2026-07-15T23:19:22.169Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

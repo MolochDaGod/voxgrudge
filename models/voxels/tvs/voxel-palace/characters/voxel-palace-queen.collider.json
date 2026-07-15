@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert",
+  "colliders": [
+    {
+      "mesh": "VS_Palace_Character_Queen_001",
+      "type": "capsule",
+      "center": [
+        0.001123279333114624,
+        1.0000000250814232,
+        -0.2509261295199394
+      ],
+      "size": [
+        1.9999998211860657,
+        1.9999999498371537,
+        0.6470587402582169
+      ],
+      "min": [
+        -0.9988766312599182,
+        5.016284632120005e-8,
+        -0.5744554996490479
+      ],
+      "max": [
+        1.0011231899261475,
+        2,
+        0.072603240609169
+      ],
+      "capsule": {
+        "align": "Y",
+        "radius": 1.02,
+        "height": 0.01,
+        "offsetY": 0.15
+      },
+      "box": {
+        "halfExtents": [
+          1.02,
+          1.02,
+          0.3435
+        ]
+      }
+    }
+  ],
+  "rootCollider": {
+    "type": "capsule",
+    "role": "character_root",
+    "center": [
+      0,
+      1,
+      0
+    ],
+    "size": [
+      0.7,
+      2,
+      0.7
+    ],
+    "capsule": {
+      "align": "Y",
+      "radius": 0.35,
+      "height": 1.3
+    },
+    "practice": "Attach Cannon/Rapier body to hips/Y root; do not per-mesh armor RB on grudge6."
+  }
+}

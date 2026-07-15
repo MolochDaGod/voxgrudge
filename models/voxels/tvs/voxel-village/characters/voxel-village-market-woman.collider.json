@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert",
+  "colliders": [
+    {
+      "mesh": "VS_Villagers_Market_Woman",
+      "type": "capsule",
+      "center": [
+        -0.006894946098327637,
+        1.0000000264690172,
+        -0.32212742790579796
+      ],
+      "size": [
+        1.999999761581421,
+        1.9999999470619656,
+        0.8235293105244637
+      ],
+      "min": [
+        -1.006894826889038,
+        5.2938034400540346e-8,
+        -0.7338920831680298
+      ],
+      "max": [
+        0.9931049346923828,
+        2,
+        0.08963722735643387
+      ],
+      "capsule": {
+        "align": "Y",
+        "radius": 1.02,
+        "height": 0.01,
+        "offsetY": 0.15
+      },
+      "box": {
+        "halfExtents": [
+          1.02,
+          1.02,
+          0.4318
+        ]
+      }
+    }
+  ],
+  "rootCollider": {
+    "type": "capsule",
+    "role": "character_root",
+    "center": [
+      0,
+      1,
+      0
+    ],
+    "size": [
+      0.7,
+      2,
+      0.7
+    ],
+    "capsule": {
+      "align": "Y",
+      "radius": 0.35,
+      "height": 1.3
+    },
+    "practice": "Attach Cannon/Rapier body to hips/Y root; do not per-mesh armor RB on grudge6."
+  }
+}

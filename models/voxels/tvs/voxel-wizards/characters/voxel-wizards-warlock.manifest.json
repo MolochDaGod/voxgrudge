@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-wizards\\voxel-wizards-warlock\\voxel-wizards-warlock.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-warlock.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.030994176864624,
+      -1.3516444852257337e-8,
+      -0.5950202941894531
+    ],
+    "max": [
+      1.0172334909439087,
+      2,
+      0.0877223089337349
+    ],
+    "size": [
+      2.0482276678085327,
+      2.000000013516445,
+      0.682742603123188
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-warlock.collider.json",
+  "producedAt": "2026-07-15T23:19:42.631Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

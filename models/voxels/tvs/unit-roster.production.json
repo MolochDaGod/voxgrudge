@@ -1,9 +1,10 @@
 {
   "version": "3.0.0-production",
   "generatedAt": "2026-07-15T23:19:44.680Z",
-  "description": "TVS voxel units with colliders, animations, and AI brains",
+  "description": "TVS heroes with production GLB (height 2.0m, compressed, atlas baked)",
   "cdnBase": "https://assets.grudge-studio.com",
   "r2Prefix": "models/voxels/tvs",
+  "playerHeightM": 2,
   "units": [
     {
       "unitId": "voxel-cathedral-crusader",
@@ -1031,14 +1032,5 @@
         "bakedAt": "2026-07-15T23:19:44.680Z"
       }
     }
-  ],
-  "counts": {
-    "units": 38,
-    "melee": 8,
-    "ranged": 6,
-    "magic": 8,
-    "civilian": 16
-  },
-  "textureNotes": "7 missing unit PNGs aliased to pack sibling atlases (R2 gaps)",
-  "playerHeightM": 2
+  ]
 }

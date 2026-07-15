@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-rangers\\voxel-rangers-hooded-with-stubble\\voxel-rangers-hooded-with-stubble.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-hooded-with-stubble.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.0588234663009644,
+      7.168890903130887e-8,
+      -0.3835059404373169
+    ],
+    "max": [
+      0.9411764740943909,
+      2,
+      0.3223763406276703
+    ],
+    "size": [
+      1.9999999403953552,
+      1.999999928311091,
+      0.7058822810649872
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-hooded-with-stubble.collider.json",
+  "producedAt": "2026-07-15T23:19:25.886Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

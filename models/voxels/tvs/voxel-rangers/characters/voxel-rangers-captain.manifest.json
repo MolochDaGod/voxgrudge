@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-rangers\\voxel-rangers-captain\\voxel-rangers-captain.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-captain.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.0309144258499146,
+      7.077613872752408e-8,
+      -0.3891085088253021
+    ],
+    "max": [
+      0.9690855145454407,
+      2,
+      0.31677377223968506
+    ],
+    "size": [
+      1.9999999403953552,
+      1.9999999292238613,
+      0.7058822810649872
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-captain.collider.json",
+  "producedAt": "2026-07-15T23:19:23.644Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}
