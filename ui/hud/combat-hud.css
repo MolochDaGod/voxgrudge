@@ -6,28 +6,29 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --ab-slot: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Background.png');
-  --ab-slot-hover: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Hover.png');
-  --ab-slot-press: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Press.png');
-  --ab-slot-extra: url('../../assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Extra_Slot_Background.png');
-  --ab-main: url('../../assets/grudge-game/ui/Action_Bar/ActionBar_Main_Background.png');
-  --ab-globe: url('../../assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Background.png');
-  --ab-globe-hp: url('../../assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Fill_Red.png');
-  --ab-globe-mp: url('../../assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Fill_Blue.png');
-  --ab-globe-empty: url('../../assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Fill_Empty.png');
-  --ab-xp-bg: url('../../assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Background.png');
-  --ab-xp-fill: url('../../assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Fill.png');
-  --uf-main: url('../../assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Background.png');
-  --uf-elite: url('../../assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Elite.png');
-  --uf-hostile: url('../../assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Red_Border.png');
-  --uf-hp: url('../../assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_HP_Fill_Red.png');
-  --uf-mp: url('../../assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_MP_Fill_Green.png');
-  --uf-avatar: url('../../assets/grudge-game/ui/Unit_Frames/Main/Avatar/UnitFrame_Avatar_Overlay.png');
-  --uf-level: url('../../assets/grudge-game/ui/Unit_Frames/Main/Level/UnitFrame_Level_Background.png');
-  --uf-party: url('../../assets/grudge-game/ui/Unit_Frames/Party/UnitFrame_Party_Background.png');
-  --uf-party-hp: url('../../assets/grudge-game/ui/Unit_Frames/Party/Bars/UnitFrame_Party_HP_Fill_Red.png');
-  --uf-party-mp: url('../../assets/grudge-game/ui/Unit_Frames/Party/Bars/UnitFrame_Party_MP_Fill_Green.png');
-  --uf-party-avatar: url('../../assets/grudge-game/ui/Unit_Frames/Party/Avatar/UnitFrame_Party_Avatar_Overlay.png');
+  /* Absolute /assets paths — never break under /ui/hud/ CSS resolution */
+  --ab-slot: url("/assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Background.png");
+  --ab-slot-hover: url("/assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Hover.png");
+  --ab-slot-press: url("/assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Slot_Press.png");
+  --ab-slot-extra: url("/assets/grudge-game/ui/Action_Bar/Slots/ActionBar_Extra_Slot_Background.png");
+  --ab-main: url("/assets/grudge-game/ui/Action_Bar/ActionBar_Main_Background.png");
+  --ab-globe: url("/assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Background.png");
+  --ab-globe-hp: url("/assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Fill_Red.png");
+  --ab-globe-mp: url("/assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Fill_Blue.png");
+  --ab-globe-empty: url("/assets/grudge-game/ui/Action_Bar/Globes/ActionBar_Globe_Fill_Empty.png");
+  --ab-xp-bg: url("/assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Background.png");
+  --ab-xp-fill: url("/assets/grudge-game/ui/Action_Bar/XP_Bar/ActionBar_XP_Fill.png");
+  --uf-main: url("/assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Background.png");
+  --uf-elite: url("/assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Elite.png");
+  --uf-hostile: url("/assets/grudge-game/ui/Unit_Frames/Main/UnitFrame_Red_Border.png");
+  --uf-hp: url("/assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_HP_Fill_Red.png");
+  --uf-mp: url("/assets/grudge-game/ui/Unit_Frames/Main/Bars/UnitFrame_MP_Fill_Green.png");
+  --uf-avatar: url("/assets/grudge-game/ui/Unit_Frames/Main/Avatar/UnitFrame_Avatar_Overlay.png");
+  --uf-level: url("/assets/grudge-game/ui/Unit_Frames/Main/Level/UnitFrame_Level_Background.png");
+  --uf-party: url("/assets/grudge-game/ui/Unit_Frames/Party/UnitFrame_Party_Background.png");
+  --uf-party-hp: url("/assets/grudge-game/ui/Unit_Frames/Party/Bars/UnitFrame_Party_HP_Fill_Red.png");
+  --uf-party-mp: url("/assets/grudge-game/ui/Unit_Frames/Party/Bars/UnitFrame_Party_MP_Fill_Green.png");
+  --uf-party-avatar: url("/assets/grudge-game/ui/Unit_Frames/Party/Avatar/UnitFrame_Party_Avatar_Overlay.png");
 }
 
 /* Hide legacy loose bars once combat HUD is active */

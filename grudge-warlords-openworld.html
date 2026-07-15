@@ -267,7 +267,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
 <div id="class-screen">
   <header class="gw-brand">
-    <img class="gw-logo" src="branding/logo-256.png" alt="" width="96" height="96" decoding="async">
+    <img class="gw-logo" src="/branding/logo-256.png" alt="" width="96" height="96" decoding="async">
     <h1>GRUDGE WARLORDS</h1>
   </header>
   <div class="sub">Nexus Era · Open World Survival</div>
@@ -600,12 +600,12 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 <div id="world-loading" class="gw-load-screen screen-overlay" style="display:none">
   <!-- Video assets optional — poster/CSS gradient is enough when webm/mp4 are not shipped -->
   <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="branding/og-image.png" preload="none">
-    <source src="branding/load-screen.webm" type="video/webm">
-    <source src="branding/load-screen.mp4" type="video/mp4">
+    <source src="/branding/load-screen.webm" type="video/webm">
+    <source src="/branding/load-screen.mp4" type="video/mp4">
   </video>
   <div class="gw-load-scrim"></div>
   <div class="gw-load-panel">
-    <img src="branding/logo-256.png" alt="" class="gw-load-logo" width="72" height="72" decoding="async">
+    <img src="/branding/logo-256.png" alt="" class="gw-load-logo" width="72" height="72" decoding="async">
     <h1>Entering the Surface</h1>
     <div id="world-loading-msg" class="gw-load-stage">Connecting to asset registry…</div>
     <div class="gw-load-bar-track"><div id="world-loading-bar" class="gw-load-bar-fill"></div></div>
@@ -5319,7 +5319,7 @@ function updateHUD(){
     const cls = CLASSES[playerClass]||{};
     const embMap = {swordsman:'warrior',archer:'ranger',mage:'mage',druid:'ranger',paladin:'warrior',necromancer:'mage'};
     const emb = embMap[playerClass]||'warrior';
-    const av = (window.VoxUiDeps && VoxUiDeps.url('emblem.'+emb)) || ('assets/grudge-game/class-emblems/'+emb+'.webp');
+    const av = (window.VoxUiDeps && VoxUiDeps.url('emblem.'+emb)) || ('/assets/grudge-game/class-emblems/'+emb+'.webp');
     VoxUiKit.setPlayerFrame({
       name: (playerTvsUnit && playerTvsUnit.displayName) || cls.name || 'Hero',
       level: level||1,

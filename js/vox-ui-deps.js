@@ -22,6 +22,11 @@
     "tab.bg": UI + "Spell_Book/Tabs/SpellBook_Tab_Background.png",
     "tab.active": UI + "Spell_Book/Tabs/SpellBook_Tab_Background_Active.png",
     "tab.hover": UI + "Spell_Book/Tabs/SpellBook_Tab_Hover.png",
+    "chat.tab": UI + "Chat/Tabs/Chat_Tab_Normal.png",
+    "chat.tab.active": UI + "Chat/Tabs/Chat_Tab_Active.png",
+    "chat.tab.hover": UI + "Chat/Tabs/Chat_Tab_Hover.png",
+    "chat.tab.press": UI + "Chat/Tabs/Chat_Tab_Press.png",
+    "tooltip.anchor": UI + "Tooltip/Tooltip_Anchor.png",
 
     "btn.lg": UI + "Buttons/Rectangular/Large/Button_RL_Background.png",
     "btn.lg.yellow": UI + "Buttons/Rectangular/Large/Button_RL_Background_Yellow.png",
@@ -106,14 +111,16 @@
       critical: [
         "window.bg", "window.header", "modal.bg", "btn.lg", "btn.lg.yellow", "btn.md",
         "carousel.left", "carousel.glow", "tab.bg", "tab.active", "menu.bg", "menu.active",
+        "chat.tab", "chat.tab.active",
         "unitFrame.bg", "unitFrame.hp", "unitFrame.mp", "unitFrame.avatar.overlay",
         "party.bg", "party.hp", "brand.logo",
         "emblem.warrior", "emblem.ranger", "emblem.mage", "emblem.worge",
-        "slot.skill", "slot.inv",
+        "slot.skill", "slot.inv", "notif.bg", "tooltip.bg",
       ],
       hud: [
         "cast.track", "cast.fill", "xp.track", "xp.fill",
         "unitFrame.level", "unitFrame.role.sword", "unitFrame.border", "notif.bg", "tooltip.bg",
+        "chat.tab", "chat.tab.active", "chat.tab.hover",
       ],
       optional: Object.keys(MANIFEST),
     };
@@ -197,6 +204,11 @@
       "--vox-png-tab-active": "tab.active",
       "--vox-png-menu": "menu.bg",
       "--vox-png-menu-active": "menu.active",
+      "--vox-png-chat-tab": "chat.tab",
+      "--vox-png-chat-tab-active": "chat.tab.active",
+      "--vox-png-chat-tab-hover": "chat.tab.hover",
+      "--vox-png-tooltip": "tooltip.bg",
+      "--vox-png-notif": "notif.bg",
     };
     Object.keys(map).forEach(function (cssVar) {
       root.style.setProperty(cssVar, "url('" + url(map[cssVar]) + "')");
@@ -233,6 +245,13 @@
     imgs.forEach(function (img) {
       if (img.dataset.voxRepaired) return;
       img.dataset.voxRepaired = "1";
+      // rewrite relative asset paths to absolute
+      var src = img.getAttribute("src") || "";
+      if (src && src.charAt(0) !== "/" && src.indexOf("http") !== 0 && src.indexOf("data:") !== 0 && src.indexOf("blob:") !== 0) {
+        if (src.indexOf("assets/") === 0 || src.indexOf("branding/") === 0 || src.indexOf("ui/") === 0) {
+          img.setAttribute("src", "/" + src.replace(/^\.?\//, ""));
+        }
+      }
       img.addEventListener("error", function onErr() {
         img.removeEventListener("error", onErr);
         if (img.src.indexOf("logo-256") >= 0) return;
@@ -243,6 +262,27 @@
       // already broken naturalWidth 0 after load
       if (img.complete && img.naturalWidth === 0 && img.src) {
         img.src = FALLBACK_ICON;
+      }
+    });
+  }
+
+  /** Rewrite relative url(...) in inline styles + known CSS vars */
+  function repairBackgrounds(root) {
+    root = root || document;
+    var nodes = root.querySelectorAll("[style*='background']");
+    nodes.forEach(function (node) {
+      var bg = node.style.backgroundImage || "";
+      if (!bg || bg.indexOf("url(") < 0) return;
+      var m = bg.match(/url\(['"]?([^'")]+)['"]?\)/);
+      if (!m) return;
+      var p = m[1];
+      if (p.charAt(0) === "/" || p.indexOf("http") === 0 || p.indexOf("data:") === 0) return;
+      if (p.indexOf("assets/") >= 0 || p.indexOf("branding/") >= 0) {
+        var abs = absUrl(p.replace(/^\.\.\//, "").replace(/^\.\//, ""));
+        if (abs.indexOf("/assets") < 0 && p.indexOf("assets/") >= 0) {
+          abs = "/" + p.replace(/^.*?assets\//, "assets/");
+        }
+        node.style.backgroundImage = "url('" + abs + "')";
       }
     });
   }
@@ -267,6 +307,11 @@
       "--gg-tab-active": UI + "Spell_Book/Tabs/SpellBook_Tab_Background_Active.png",
       "--gg-menu": UI + "Window/Menu/Window_Menu_Background.png",
       "--gg-menu-active": UI + "Window/Menu/Window_Menu_Active.png",
+      "--ab-slot": UI + "Action_Bar/Slots/ActionBar_Slot_Background.png",
+      "--ab-main": UI + "Action_Bar/ActionBar_Main_Background.png",
+      "--ab-globe": UI + "Action_Bar/Globes/ActionBar_Globe_Background.png",
+      "--uf-main": UI + "Unit_Frames/Main/UnitFrame_Background.png",
+      "--uf-party": UI + "Unit_Frames/Party/UnitFrame_Party_Background.png",
     };
     Object.keys(patches).forEach(function (k) {
       root.style.setProperty(k, "url('" + patches[k] + "')");
@@ -284,6 +329,7 @@
     applyCssVars: applyCssVars,
     setImage: setImage,
     repairBrokenImages: repairBrokenImages,
+    repairBackgrounds: repairBackgrounds,
     patchHudCssBase: patchHudCssBase,
     isReady: function () { return ready; },
   };

@@ -24,6 +24,11 @@
   --vox-png-tab-active: url("/assets/grudge-game/ui/Spell_Book/Tabs/SpellBook_Tab_Background_Active.png");
   --vox-png-menu: url("/assets/grudge-game/ui/Window/Menu/Window_Menu_Background.png");
   --vox-png-menu-active: url("/assets/grudge-game/ui/Window/Menu/Window_Menu_Active.png");
+  --vox-png-chat-tab: url("/assets/grudge-game/ui/Chat/Tabs/Chat_Tab_Normal.png");
+  --vox-png-chat-tab-active: url("/assets/grudge-game/ui/Chat/Tabs/Chat_Tab_Active.png");
+  --vox-png-chat-tab-hover: url("/assets/grudge-game/ui/Chat/Tabs/Chat_Tab_Hover.png");
+  --vox-png-tooltip: url("/assets/grudge-game/ui/Tooltip/Tooltip_Background.png");
+  --vox-png-notif: url("/assets/grudge-game/ui/Notifications/Notification_Background.png");
 }
 
 /* ── PNG panel containers ─────────────────────────────────────── */
@@ -460,56 +465,127 @@
   max-width: 92vw;
 }
 
-/* ── Class screen section tabs (smarter UX) ───────────────────── */
+/* ── Class screen section tabs (smarter UX · Chat_Tab PNG chrome) ─ */
 .vox-section-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
   margin: 0 auto 14px;
   max-width: min(96vw, 720px);
   position: relative;
   z-index: 2;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 .vox-section-tabs button {
+  position: relative;
   border: 0;
   cursor: pointer;
   pointer-events: auto;
-  min-width: 88px;
-  min-height: 40px;
-  padding: 8px 14px;
+  min-width: 100px;
+  min-height: 42px;
+  padding: 10px 18px 12px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #c8b89a;
   background-color: transparent;
-  background-image: var(--vox-png-tab);
+  background-image: var(--vox-png-chat-tab);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   text-shadow: 0 1px 2px #000;
-  opacity: 0.85;
+  opacity: 0.88;
   transition: filter 0.12s, opacity 0.12s, transform 0.12s;
 }
-.vox-section-tabs button:hover { opacity: 1; filter: brightness(1.1); }
+.vox-section-tabs button:hover {
+  opacity: 1;
+  filter: brightness(1.12);
+  background-image: var(--vox-png-chat-tab-hover);
+}
 .vox-section-tabs button.active {
-  background-image: var(--vox-png-tab-active);
+  background-image: var(--vox-png-chat-tab-active);
   color: #fff6e0;
   opacity: 1;
   transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(232, 168, 110, 0.28);
 }
+.vox-section-tabs .vox-tab-hot {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 8px;
+  opacity: 0.55;
+  letter-spacing: 0;
+  font-weight: 700;
+  color: #9ab;
+}
+.vox-section-tabs button.active .vox-tab-hot { color: #ffe0b0; opacity: 0.85; }
 .vox-section-panel { display: none; width: min(96vw, 980px); margin: 0 auto; }
-.vox-section-panel.active { display: block; }
+.vox-section-panel.active { display: block; animation: voxPanelIn 0.22s ease; }
+@keyframes voxPanelIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
 
-/* ── Main panel smart tabs (K menu) ───────────────────────────── */
+/* ── Main panel smart tabs (K menu · two-level) ───────────────── */
 .gcc-tab-nav--smart {
   display: flex !important;
-  flex-wrap: wrap;
-  gap: 10px 14px;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 8px;
   justify-content: center;
-  padding: 8px 10px 12px !important;
-  background: rgba(0,0,0,0.25);
+  align-items: stretch;
+  padding: 10px 12px 12px !important;
+  background: rgba(0,0,0,0.32);
   border-top: 1px solid rgba(255,255,255,0.06);
+}
+.gcc-group-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.gcc-group-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: var(--vox-png-chat-tab);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  color: #a8b0c0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  transition: filter 0.12s, opacity 0.12s, transform 0.12s;
+}
+.gcc-group-pill:hover { opacity: 1; filter: brightness(1.1); }
+.gcc-group-pill.active {
+  background-image: var(--vox-png-chat-tab-active);
+  color: #fff4d8;
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(232, 168, 110, 0.3);
+}
+.gcc-group-pill-ico { font-size: 12px; }
+.gcc-group-pill-count {
+  font-size: 8px;
+  opacity: 0.55;
+  min-width: 14px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 0 4px;
 }
 .gcc-tab-group {
   display: flex;
@@ -519,11 +595,21 @@
 }
 .gcc-tab-group-label {
   font-size: 8px;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #6a7a90;
   text-align: center;
   padding: 0 4px;
+}
+.gcc-tab-group-label kbd {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid #3a4458;
+  border-radius: 3px;
+  background: #121820;
+  color: #9ab;
+  font-size: 8px;
+  font-family: inherit;
 }
 .gcc-tab-group.has-active .gcc-tab-group-label { color: #e8a86e; }
 .gcc-tab-group-btns {
@@ -532,15 +618,38 @@
   gap: 4px;
   justify-content: center;
 }
+.gcc-tab-peek {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  opacity: 0.75;
+}
+.gcc-tab-peek-btn {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(12, 16, 24, 0.7);
+  color: #7a8aa0;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.gcc-tab-peek-btn:hover {
+  color: #cde;
+  border-color: #4a6080;
+}
 .gcc-smart-ui .gcc-tab-btn {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: 56px;
-  min-height: 44px;
-  padding: 6px 10px;
+  min-width: 64px;
+  min-height: 48px;
+  padding: 8px 12px 10px;
   border: 0;
   cursor: pointer;
   background-color: transparent;
@@ -568,6 +677,15 @@
 }
 .gcc-tab-ico { font-size: 13px; line-height: 1; }
 .gcc-tab-lbl { line-height: 1.1; }
+.gcc-tab-hot {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  font-size: 8px;
+  opacity: 0.45;
+  color: #9ab;
+}
+.gcc-smart-ui .gcc-tab-btn.active .gcc-tab-hot { opacity: 0.8; color: #ffe0b0; }
 .gcc-title-icon { margin-right: 6px; opacity: 0.9; }
 .gcc-title-desc {
   display: block;
@@ -578,6 +696,62 @@
   color: #7a8aa0;
   margin-top: 2px;
 }
+
+/* ── Toast + tooltip systems ──────────────────────────────────── */
+.vox-toast-host {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: min(92vw, 420px);
+  width: 100%;
+  align-items: center;
+}
+.vox-toast {
+  pointer-events: none;
+  min-width: 200px;
+  max-width: 100%;
+  padding: 12px 18px;
+  color: #f0e6d0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  background-image: var(--vox-png-notif);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.vox-toast.on { opacity: 1; transform: none; }
+.vox-toast--ok { color: #b8f0d0; }
+.vox-toast--bad { color: #ffb0b0; }
+.vox-toast--info { color: #d8e8ff; }
+
+.vox-tooltip {
+  position: fixed;
+  z-index: 220;
+  max-width: min(280px, 80vw);
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #e8e0d0;
+  text-shadow: 0 1px 1px #000;
+  background-image: var(--vox-png-tooltip);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.vox-tooltip.on { opacity: 1; }
 
 /* Inventory / equip slots use PNG slot frames when available */
 .gcc-inv-slot,

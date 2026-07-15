@@ -10,7 +10,63 @@
   var ASSET_BASE = '/assets/grudge-game/';
   var UI_BASE = ASSET_BASE + 'ui/';
   var CLASS_EMBLEM_BASE = ASSET_BASE + 'class-emblems/';
+  var MINE_UI = '/assets/mine-loader/ui-icons/';
   var LOCAL_FALLBACK = '/branding/logo-256.png';
+  /** Canonical feed (weaponSkills.json is archived → master-weaponSkills.json). */
+  var WEAPON_SKILLS_URL = GRUDGE_API_BASE + '/api/v1/master-weaponSkills.json';
+  var WEAPON_SKILLS_FALLBACK = GRUDGE_API_BASE + '/api/v1/archive/weaponSkills.v1.json';
+  var MASTER_ITEMS_URL = GRUDGE_API_BASE + '/api/v1/master-items.json';
+
+  /** Local mine-loader / CraftPix when ObjectStore skill row is missing. */
+  var LOCAL_SKILL_ICONS = {
+    heroic_cleave: MINE_UI + 'attack.png',
+    shadow_edge: MINE_UI + 'ambush.png',
+    blood_rush: MINE_UI + 'charge.png',
+    execute: MINE_UI + 'boss-fight.png',
+    whirl_pain: MINE_UI + 'aoe-blast.png',
+    carnage_spin: MINE_UI + 'combat-pad.png',
+    bloodletting: MINE_UI + 'damage-log.png',
+    apocalypse_cleave: MINE_UI + 'explosive-charge.png',
+    aimed_shot: MINE_UI + 'scout.png',
+    multi_shot: MINE_UI + 'projectile-launcher.png',
+    piercing_arrow: MINE_UI + 'attack.png',
+    rain_of_arrows: MINE_UI + 'aoe-blast.png',
+    fireball: MINE_UI + 'aoe-blast.png',
+    chain_lightning: MINE_UI + 'skill-vfx-lab.png',
+    blink: MINE_UI + 'parkour.png',
+    emberwrath_nova: MINE_UI + 'boss-core.png',
+    burst_fire: MINE_UI + 'projectile-launcher.png',
+    sniper_shot: MINE_UI + 'scout.png',
+    explosive_round: MINE_UI + 'explosive-barrel.png',
+    ironstorm_minigun: MINE_UI + 'combat-pad.png',
+  };
+  var LOCAL_WEAPON_ICONS = {
+    sword: UI_BASE + 'Icons_128x128/Icon_Sword_128.png',
+    axe: MINE_UI + 'attack.png',
+    bow: MINE_UI + 'scout.png',
+    staff: UI_BASE + 'Icons_128x128/Icon_Fireball_128.png',
+    gun: MINE_UI + 'projectile-launcher.png',
+    greatsword: UI_BASE + 'Icons_128x128/Icon_Sword_128.png',
+    sword_shield: UI_BASE + 'Icons_128x128/Icon_Shield_128.png',
+    hammer: MINE_UI + 'build.png',
+    mace: UI_BASE + 'Icons_128x128/Icon_Shield_128.png',
+    dagger: MINE_UI + 'ambush.png',
+    crossbow: MINE_UI + 'projectile-launcher.png',
+    spear: MINE_UI + 'attack.png',
+    wand: UI_BASE + 'Icons_128x128/Icon_Fireball_128.png',
+    tome: UI_BASE + 'Icons_128x128/Icon_Leafs_128.png',
+  };
+  var LOCAL_RESOURCE_ICONS = {
+    wood: MINE_UI + 'support-beam.png',
+    stone: MINE_UI + 'stone-block.png',
+    ore: MINE_UI + 'iron-ore.png',
+  };
+  var LOCAL_BUILD_ICONS = {
+    wood: MINE_UI + 'support-beam.png',
+    stone: MINE_UI + 'stone-block.png',
+    floor: MINE_UI + 'dirt-block.png',
+    heal: MINE_UI + 'health-pack.png',
+  };
 
   var GAME_TO_API_WEAPON = {
     sword: 'SWORD',
@@ -136,16 +192,34 @@
     return map;
   }
 
+  function normalizeWeaponDoc(doc) {
+    if (!doc) return null;
+    // Archived stub: { deprecated, replacement }
+    if (doc.deprecated || doc.archived) return null;
+    if (Array.isArray(doc.weaponTypes) && doc.weaponTypes.length) return doc;
+    return null;
+  }
+
+  function fetchJson(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error(url + ' ' + r.status);
+      return r.json();
+    });
+  }
+
   function loadFeeds() {
     if (state.loadPromise) return state.loadPromise;
     state.loadPromise = Promise.all([
-      fetch(GRUDGE_API_BASE + '/api/v1/weaponSkills.json').then(function (r) {
-        if (!r.ok) throw new Error('weaponSkills.json ' + r.status);
-        return r.json();
-      }),
-      fetch(GRUDGE_API_BASE + '/api/v1/master-items.json')
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; }),
+      fetchJson(WEAPON_SKILLS_URL)
+        .then(function (doc) {
+          var n = normalizeWeaponDoc(doc);
+          if (n) return n;
+          return fetchJson(WEAPON_SKILLS_FALLBACK).then(normalizeWeaponDoc);
+        })
+        .catch(function () {
+          return fetchJson(WEAPON_SKILLS_FALLBACK).then(normalizeWeaponDoc).catch(function () { return null; });
+        }),
+      fetchJson(MASTER_ITEMS_URL).catch(function () { return null; }),
     ])
       .then(function (pair) {
         state.weaponSkills = pair[0];
@@ -164,6 +238,7 @@
 
   function skillIconUrl(id) {
     if (!id) return null;
+    if (LOCAL_SKILL_ICONS[id]) return LOCAL_SKILL_ICONS[id];
     var keys = Object.keys(VOX_WEAPON_SKILLS);
     for (var i = 0; i < keys.length; i++) {
       var wid = keys[i];
@@ -173,17 +248,27 @@
       var wt = findWeaponType(GAME_TO_API_WEAPON[wid]);
       if (!wt) continue;
       var flat = flattenSkills(wt);
+      // Prefer matching skill id token; else index into primary→other slots
+      var byId = flat.find(function (sk) {
+        return sk && sk.id && (sk.id === id || String(sk.id).indexOf(id) >= 0 || id.indexOf(String(sk.id)) >= 0);
+      });
+      if (byId && byId.icon) return grudgeAssetUrl(byId.icon);
       if (flat[idx] && flat[idx].icon) return grudgeAssetUrl(flat[idx].icon);
+      if (wt.icon) return grudgeAssetUrl(wt.icon);
     }
-    return null;
+    return MINE_UI + 'skill-slot.png';
   }
 
   function weaponIconUrl(wid) {
+    if (LOCAL_WEAPON_ICONS[wid]) return LOCAL_WEAPON_ICONS[wid];
     var wt = findWeaponType(GAME_TO_API_WEAPON[wid]);
-    if (!wt) return null;
-    var flat = flattenSkills(wt);
-    if (flat[0] && flat[0].icon) return grudgeAssetUrl(flat[0].icon);
-    return null;
+    if (wt && wt.icon) return grudgeAssetUrl(wt.icon);
+    if (wt) {
+      var flat = flattenSkills(wt);
+      if (flat[0] && flat[0].icon) return grudgeAssetUrl(flat[0].icon);
+    }
+    if (global.GrudgeCodex) return GrudgeCodex.weaponIconUrl(wid);
+    return UI_BASE + 'Icons_128x128/Icon_Sword_128.png';
   }
 
   function classIconUrl(cid) {
@@ -220,16 +305,20 @@
   }
 
   function resourceIconUrl(res) {
+    if (LOCAL_RESOURCE_ICONS[res]) return LOCAL_RESOURCE_ICONS[res];
     if (res === 'wood') return grudgeAssetUrl('/icons/pack/weapons/Axe_01.png');
     if (res === 'stone') return grudgeAssetUrl('/icons/pack/weapons/Hammer_01.png');
     if (res === 'ore') return grudgeAssetUrl('/icons/pack/weapons/Sword_01.png');
+    if (global.GrudgeCodex) return GrudgeCodex.resourceIconUrl(res);
     return null;
   }
 
   function buildIconUrl(blockId) {
+    if (LOCAL_BUILD_ICONS[blockId]) return LOCAL_BUILD_ICONS[blockId];
     if (blockId === 'wood' || blockId === 'floor') return grudgeAssetUrl('/icons/pack/weapons/Axe_01.png');
     if (blockId === 'stone') return grudgeAssetUrl('/icons/pack/weapons/Hammer_01.png');
     if (blockId === 'heal') return grudgeAssetUrl('/icons/pack/weapons/Staff_01.png');
+    if (global.GrudgeCodex) return GrudgeCodex.buildIconUrl(blockId);
     return null;
   }
 
@@ -250,29 +339,36 @@
       el.appendChild(img);
     }
     if (!url) {
-      // Local emblem / logo before emoji
       url = LOCAL_FALLBACK;
     }
     el.textContent = '';
     el.appendChild(img);
     img.style.display = '';
     img.classList.add('is-loading');
+    var chain = [url];
+    if (url.indexOf(GRUDGE_API_BASE) === 0) {
+      // nothing — ObjectStore is primary for pack icons
+    } else if (url.indexOf('assets.grudge-studio.com') >= 0) {
+      chain.push(url.replace('https://assets.grudge-studio.com', GRUDGE_API_BASE));
+    }
+    if (chain.indexOf(LOCAL_FALLBACK) < 0) chain.push(LOCAL_FALLBACK);
+    var step = 0;
     img.onload = function () {
       img.classList.remove('is-loading');
       el.classList.add('has-hud-icon');
     };
     img.onerror = function () {
-      img.classList.remove('is-loading');
-      // Try local branding once, then emoji text
-      if (img.getAttribute('src') !== LOCAL_FALLBACK) {
-        img.setAttribute('src', LOCAL_FALLBACK);
+      step++;
+      if (step < chain.length) {
+        img.setAttribute('src', chain[step]);
         return;
       }
+      img.classList.remove('is-loading');
       img.style.display = 'none';
       el.classList.remove('has-hud-icon');
       if (fallbackEmoji) el.textContent = fallbackEmoji;
     };
-    if (img.getAttribute('src') !== url) img.setAttribute('src', url);
+    if (img.getAttribute('src') !== chain[0]) img.setAttribute('src', chain[0]);
   }
 
   function refreshHudIcons() {

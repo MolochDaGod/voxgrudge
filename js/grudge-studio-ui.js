@@ -14,6 +14,7 @@
     item1: 'Digit1', item2: 'Digit2', item3: 'Digit3', item4: 'Digit4', item5: 'Digit5', item6: 'Digit6',
     build: 'KeyB', craft: 'KeyC', inventory: 'KeyI', equip: 'KeyG', allies: 'KeyT', interact: 'KeyX', mine: 'KeyM',
     commandCenter: 'KeyK',
+    tabPrev: 'BracketLeft', tabNext: 'BracketRight',
   };
 
   var BIND_LABELS = {
@@ -36,33 +37,38 @@
     mainHand: '⚔️', offHand: '🛡️', gloves: '🧤', cape: '🧣', ring: '💍', necklace: '📿',
   };
 
-  /** Smarter tabs — grouped, keyed, PNG chrome via .gcc-tab-btn */
+  /**
+   * Smarter tabs — two-level nav:
+   *   1) Group pills (Hero / Combat / World / System) with PNG chrome
+   *   2) Sub-tabs within the active group
+   * Remembers last panel + group; keyboard [ ] cycles groups, 1–9 sub-tabs.
+   */
   var TAB_GROUPS = [
     {
-      id: 'hero', label: 'Hero',
+      id: 'hero', label: 'Hero', icon: '◆',
       tabs: [
         { id: 'equipment', label: 'Gear', short: 'Gear', icon: '🛡️', key: 'G', group: 'hero', desc: 'Paper doll, tiers, and slot bonuses' },
-        { id: 'attributes', label: 'Stats', short: 'Stats', icon: '◆', key: '—', group: 'hero', desc: '8 Nexus attributes · 160 points' },
-        { id: 'skills', label: 'Perks', short: 'Perks', icon: '✦', key: '—', group: 'hero', desc: 'Class perk tree and gateway nodes' },
+        { id: 'attributes', label: 'Stats', short: 'Stats', icon: '◆', key: '1', group: 'hero', desc: '8 Nexus attributes · 160 points' },
+        { id: 'skills', label: 'Perks', short: 'Perks', icon: '✦', key: '2', group: 'hero', desc: 'Class perk tree and gateway nodes' },
       ],
     },
     {
-      id: 'combat', label: 'Combat',
+      id: 'combat', label: 'Combat', icon: '⚔',
       tabs: [
-        { id: 'weapons', label: 'Weapons', short: 'Arms', icon: '⚔', key: '—', group: 'combat', desc: 'Owned weapons and skill loadouts' },
-        { id: 'bestiary', label: 'Bestiary', short: 'Bestiary', icon: '☠', key: '—', group: 'combat', desc: 'Enemy tiers by biome distance' },
+        { id: 'weapons', label: 'Weapons', short: 'Arms', icon: '⚔', key: '3', group: 'combat', desc: 'Owned weapons and skill loadouts' },
+        { id: 'bestiary', label: 'Bestiary', short: 'Bestiary', icon: '☠', key: '4', group: 'combat', desc: 'Enemy tiers by biome distance' },
         { id: 'allies', label: 'Allies', short: 'Allies', icon: '⚑', key: 'T', group: 'combat', desc: 'Warband and recruitable allies' },
       ],
     },
     {
-      id: 'world', label: 'World',
+      id: 'world', label: 'World', icon: '▣',
       tabs: [
         { id: 'craft', label: 'Craft', short: 'Craft', icon: '⚒', key: 'C', group: 'world', desc: 'Consumables, gear, and station recipes' },
         { id: 'building', label: 'Build', short: 'Build', icon: '▣', key: 'B', group: 'world', desc: 'Survival structures and place costs' },
       ],
     },
     {
-      id: 'system', label: 'System',
+      id: 'system', label: 'System', icon: '⚙',
       tabs: [
         { id: 'hotkeys', label: 'Hotkeys', short: 'Keys', icon: '⌨', key: '—', group: 'system', desc: 'Rebind movement, combat, and panels' },
         { id: 'settings', label: 'Settings', short: 'Opts', icon: '⚙', key: '—', group: 'system', desc: 'Volume, camera, minimap, numbers' },
@@ -76,6 +82,8 @@
 
   var TAB_BY_ID = {};
   MAIN_TABS.forEach(function (t) { TAB_BY_ID[t.id] = t; });
+  var GROUP_BY_ID = {};
+  TAB_GROUPS.forEach(function (g) { GROUP_BY_ID[g.id] = g; });
 
   var NEXUS_PERK_TREES = {
     warrior: {
@@ -182,6 +190,8 @@
     settings: { masterVolume: 80, cameraHeight: 1, showDamageNumbers: true, showMinimap: true },
     open: false,
     panel: 'equipment',
+    activeGroup: 'hero',
+    lastPanelByGroup: {},
     listening: null,
     invSelected: null,
   };
@@ -683,30 +693,103 @@
     }
   }
 
+  function groupForPanel(panelId) {
+    var tab = TAB_BY_ID[panelId];
+    return (tab && tab.group) || state.activeGroup || 'hero';
+  }
+
+  function setPanel(panelId, opts) {
+    if (!TAB_BY_ID[panelId]) return;
+    state.panel = panelId;
+    state.activeGroup = groupForPanel(panelId);
+    state.lastPanelByGroup[state.activeGroup] = panelId;
+    try {
+      localStorage.setItem(STORAGE_KEY + '_last_tab', state.panel);
+      localStorage.setItem(STORAGE_KEY + '_last_group', state.activeGroup);
+    } catch (e) { /* ignore */ }
+    renderTabNav();
+    renderPanel(state.panel, opts || initOpts);
+  }
+
+  function setGroup(groupId, opts) {
+    var group = GROUP_BY_ID[groupId];
+    if (!group) return;
+    state.activeGroup = groupId;
+    var preferred = state.lastPanelByGroup[groupId];
+    var panelId = preferred && TAB_BY_ID[preferred] && TAB_BY_ID[preferred].group === groupId
+      ? preferred
+      : group.tabs[0].id;
+    setPanel(panelId, opts);
+  }
+
+  function cycleGroup(dir) {
+    var idx = TAB_GROUPS.findIndex(function (g) { return g.id === state.activeGroup; });
+    if (idx < 0) idx = 0;
+    idx = (idx + dir + TAB_GROUPS.length) % TAB_GROUPS.length;
+    setGroup(TAB_GROUPS[idx].id);
+  }
+
+  function cycleTabInGroup(dir) {
+    var group = GROUP_BY_ID[state.activeGroup];
+    if (!group) return;
+    var idx = group.tabs.findIndex(function (t) { return t.id === state.panel; });
+    if (idx < 0) idx = 0;
+    idx = (idx + dir + group.tabs.length) % group.tabs.length;
+    setPanel(group.tabs[idx].id);
+  }
+
   function renderTabNav() {
     var nav = document.getElementById('gcc-tab-nav');
     if (!nav) return;
     nav.classList.add('gcc-tab-nav--smart');
-    nav.innerHTML = TAB_GROUPS.map(function (group) {
-      var activeInGroup = group.tabs.some(function (t) { return t.id === state.panel; });
-      return '<div class="gcc-tab-group' + (activeInGroup ? ' has-active' : '') + '" data-group="' + group.id + '">' +
-        '<div class="gcc-tab-group-label">' + group.label + '</div>' +
-        '<div class="gcc-tab-group-btns">' +
-        group.tabs.map(function (t) {
-          return '<button type="button" class="gcc-tab-btn' + (state.panel === t.id ? ' active' : '') +
-            '" data-panel="' + t.id + '" title="' + (t.desc || t.label) + (t.key && t.key !== '—' ? ' [' + t.key + ']' : '') + '">' +
-            '<span class="gcc-tab-ico">' + (t.icon || '') + '</span>' +
-            '<span class="gcc-tab-lbl">' + (t.short || t.label) + '</span>' +
-            '</button>';
-        }).join('') +
-        '</div></div>';
-    }).join('');
+    state.activeGroup = groupForPanel(state.panel);
+
+    var groupPills = '<div class="gcc-group-pills" role="tablist" aria-label="Command center groups">' +
+      TAB_GROUPS.map(function (group, gi) {
+        var active = group.id === state.activeGroup;
+        return '<button type="button" role="tab" class="gcc-group-pill' + (active ? ' active' : '') +
+          '" data-group="' + group.id + '" aria-selected="' + (active ? 'true' : 'false') +
+          '" title="' + group.label + ' group · [' + (gi + 1) + ']">' +
+          '<span class="gcc-group-pill-ico">' + (group.icon || '') + '</span>' +
+          '<span class="gcc-group-pill-lbl">' + group.label + '</span>' +
+          '<span class="gcc-group-pill-count">' + group.tabs.length + '</span>' +
+          '</button>';
+      }).join('') +
+      '</div>';
+
+    var group = GROUP_BY_ID[state.activeGroup] || TAB_GROUPS[0];
+    var subTabs = '<div class="gcc-tab-group has-active" data-group="' + group.id + '">' +
+      '<div class="gcc-tab-group-label">' + group.label + ' · <kbd>[</kbd>/<kbd>]</kbd> groups · 1–9 tabs</div>' +
+      '<div class="gcc-tab-group-btns" role="tablist">' +
+      group.tabs.map(function (t, ti) {
+        return '<button type="button" role="tab" class="gcc-tab-btn' + (state.panel === t.id ? ' active' : '') +
+          '" data-panel="' + t.id + '" aria-selected="' + (state.panel === t.id ? 'true' : 'false') +
+          '" title="' + (t.desc || t.label) + (t.key && t.key !== '—' ? ' [' + t.key + ']' : ' [' + (ti + 1) + ']') + '">' +
+          '<span class="gcc-tab-ico">' + (t.icon || '') + '</span>' +
+          '<span class="gcc-tab-lbl">' + (t.short || t.label) + '</span>' +
+          '<span class="gcc-tab-hot">' + (ti + 1) + '</span>' +
+          '</button>';
+      }).join('') +
+      '</div></div>';
+
+    // Compact overview of other groups (peek chips)
+    var peek = '<div class="gcc-tab-peek">' +
+      TAB_GROUPS.filter(function (g) { return g.id !== state.activeGroup; }).map(function (g) {
+        return '<button type="button" class="gcc-tab-peek-btn" data-group="' + g.id + '" title="Jump to ' + g.label + '">' +
+          (g.icon || '') + ' ' + g.label + '</button>';
+      }).join('') +
+      '</div>';
+
+    nav.innerHTML = groupPills + subTabs + peek;
+
+    nav.querySelectorAll('.gcc-group-pill, .gcc-tab-peek-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setGroup(btn.dataset.group);
+      });
+    });
     nav.querySelectorAll('.gcc-tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        state.panel = btn.dataset.panel;
-        try { localStorage.setItem(STORAGE_KEY + '_last_tab', state.panel); } catch (e) {}
-        renderTabNav();
-        renderPanel(state.panel, initOpts);
+        setPanel(btn.dataset.panel);
       });
     });
   }
@@ -724,7 +807,14 @@
     load();
     try {
       var last = localStorage.getItem(STORAGE_KEY + '_last_tab');
-      if (last && TAB_BY_ID[last]) state.panel = last;
+      var lastGroup = localStorage.getItem(STORAGE_KEY + '_last_group');
+      if (last && TAB_BY_ID[last]) {
+        state.panel = last;
+        state.activeGroup = groupForPanel(last);
+      } else if (lastGroup && GROUP_BY_ID[lastGroup]) {
+        state.activeGroup = lastGroup;
+        state.panel = GROUP_BY_ID[lastGroup].tabs[0].id;
+      }
     } catch (e) { /* ignore */ }
     var root = document.getElementById('grudge-command-center');
     if (!root) return;
@@ -739,25 +829,72 @@
       if (state.open) {
         renderAll(opts);
         if (global.VoxUiDeps && VoxUiDeps.repairBrokenImages) VoxUiDeps.repairBrokenImages(root);
+        if (global.VoxUiKit && VoxUiKit.toast) {
+          VoxUiKit.toast('Command Center · [ ] groups · 1–9 tabs · Esc close', { kind: 'info', ms: 2200 });
+        }
         if (opts.onOpen) opts.onOpen();
       } else if (opts.onClose) opts.onClose();
     }
 
     function openPanel(id) {
       if (!id) return;
-      // Allow group open → first tab in group
-      var group = TAB_GROUPS.find(function (g) { return g.id === id; });
-      if (group) id = group.tabs[0].id;
+      // Allow group open → last/first tab in group
+      if (GROUP_BY_ID[id]) {
+        if (!state.open) toggle(true);
+        setGroup(id, opts);
+        return;
+      }
       if (!TAB_BY_ID[id]) return;
-      state.panel = id;
-      try { localStorage.setItem(STORAGE_KEY + '_last_tab', state.panel); } catch (e) {}
       if (!state.open) toggle(true);
-      else renderAll(opts);
+      setPanel(id, opts);
     }
 
     root.querySelector('.gcc-backdrop').addEventListener('click', function () { toggle(false); });
     if (fab) fab.addEventListener('click', function () { toggle(true); });
     if (closeBtn) closeBtn.addEventListener('click', function () { toggle(false); });
+
+    // Smart keyboard when panel is open (and not rebinding)
+    if (!root._gccKeyWired) {
+      root._gccKeyWired = true;
+      document.addEventListener('keydown', function (e) {
+        if (!state.open || state.listening) return;
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
+        if (e.code === 'Escape') {
+          e.preventDefault();
+          toggle(false);
+          return;
+        }
+        if (e.code === 'BracketLeft' || e.code === 'PageUp') {
+          e.preventDefault();
+          cycleGroup(-1);
+          return;
+        }
+        if (e.code === 'BracketRight' || e.code === 'PageDown') {
+          e.preventDefault();
+          cycleGroup(1);
+          return;
+        }
+        if (e.code === 'ArrowLeft') {
+          e.preventDefault();
+          cycleTabInGroup(-1);
+          return;
+        }
+        if (e.code === 'ArrowRight') {
+          e.preventDefault();
+          cycleTabInGroup(1);
+          return;
+        }
+        // Digit 1-9 → sub-tab in active group
+        if (e.code && e.code.indexOf('Digit') === 0) {
+          var n = parseInt(e.code.replace('Digit', ''), 10);
+          var group = GROUP_BY_ID[state.activeGroup];
+          if (group && n >= 1 && n <= group.tabs.length) {
+            e.preventDefault();
+            setPanel(group.tabs[n - 1].id);
+          }
+        }
+      });
+    }
 
     // Merge runtime API onto the bootstrap export so openPanel/toggle always exist
     // after init (callers also use getPassives from the pre-init surface).
@@ -765,8 +902,12 @@
       init: init,
       toggle: toggle,
       openPanel: openPanel,
+      setGroup: setGroup,
+      setPanel: setPanel,
+      cycleGroup: cycleGroup,
       isOpen: function () { return state.open; },
       getPanel: function () { return state.panel; },
+      getGroup: function () { return state.activeGroup; },
       getBinds: function () { return state.binds; },
       getBind: function (id) { return state.binds[id] || DEFAULT_BINDS[id]; },
       setBind: function (id, code) { state.binds[id] = code; save(); renderPanel('hotkeys', opts); },

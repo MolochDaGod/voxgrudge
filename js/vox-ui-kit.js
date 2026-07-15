@@ -363,6 +363,97 @@
     });
   }
 
+  // ── Toast / tooltip UI systems ─────────────────────────────────────────────
+
+  var toastHost = null;
+
+  function ensureToastHost() {
+    if (toastHost && toastHost.isConnected) return toastHost;
+    toastHost = document.getElementById("vox-toast-host");
+    if (!toastHost) {
+      toastHost = el("div", "vox-toast-host");
+      toastHost.id = "vox-toast-host";
+      document.body.appendChild(toastHost);
+    }
+    return toastHost;
+  }
+
+  function toast(message, opts) {
+    opts = opts || {};
+    var host = ensureToastHost();
+    var n = el("div", "vox-toast" + (opts.kind ? " vox-toast--" + opts.kind : ""));
+    n.setAttribute("role", "status");
+    n.textContent = message || "";
+    host.appendChild(n);
+    requestAnimationFrame(function () {
+      n.classList.add("on");
+    });
+    var ms = opts.ms != null ? opts.ms : 2800;
+    setTimeout(function () {
+      n.classList.remove("on");
+      setTimeout(function () {
+        if (n.parentNode) n.parentNode.removeChild(n);
+      }, 220);
+    }, ms);
+    return n;
+  }
+
+  var tipEl = null;
+  function ensureTip() {
+    if (tipEl && tipEl.isConnected) return tipEl;
+    tipEl = document.getElementById("vox-tooltip");
+    if (!tipEl) {
+      tipEl = el("div", "vox-tooltip");
+      tipEl.id = "vox-tooltip";
+      tipEl.setAttribute("role", "tooltip");
+      document.body.appendChild(tipEl);
+    }
+    return tipEl;
+  }
+
+  function showTooltip(target, html) {
+    if (!target) return;
+    var tip = ensureTip();
+    tip.innerHTML = html || target.getAttribute("data-tip") || target.getAttribute("title") || "";
+    tip.classList.add("on");
+    var r = target.getBoundingClientRect();
+    var tw = tip.offsetWidth || 160;
+    var th = tip.offsetHeight || 40;
+    var left = Math.min(window.innerWidth - tw - 8, Math.max(8, r.left + r.width / 2 - tw / 2));
+    var top = r.top - th - 10;
+    if (top < 8) top = r.bottom + 10;
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+  }
+
+  function hideTooltip() {
+    if (tipEl) tipEl.classList.remove("on");
+  }
+
+  function bindTooltips(root) {
+    root = root || document;
+    root.querySelectorAll("[data-tip], [title]").forEach(function (node) {
+      if (node.dataset.voxTipBound) return;
+      node.dataset.voxTipBound = "1";
+      // Prefer data-tip; keep title for a11y but suppress native delay tooltip via empty title on hover
+      node.addEventListener("mouseenter", function () {
+        var t = node.getAttribute("data-tip") || node.getAttribute("title");
+        if (!t) return;
+        if (node.getAttribute("title")) {
+          node.dataset.nativeTitle = node.getAttribute("title");
+          node.removeAttribute("title");
+        }
+        showTooltip(node, t);
+      });
+      node.addEventListener("mouseleave", function () {
+        hideTooltip();
+        if (node.dataset.nativeTitle) {
+          node.setAttribute("title", node.dataset.nativeTitle);
+        }
+      });
+    });
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────────
 
   async function init(opts) {
@@ -376,11 +467,13 @@
       });
       VoxUiDeps.preload({ group: "hud" }).catch(function () {});
       VoxUiDeps.repairBrokenImages(document);
+      if (VoxUiDeps.repairBackgrounds) VoxUiDeps.repairBackgrounds(document);
       var boot = document.getElementById("vox-boot-status");
       if (boot) {
         var chk = VoxUiDeps.check();
         if (chk.ok) {
-          boot.textContent = "UI ready · " + report.loaded + "/" + report.total + " PNGs · tabs · carousels · frames";
+          boot.textContent =
+            "UI ready · " + report.loaded + "/" + report.total + " PNGs · smart tabs · carousels · frames · icons";
           boot.className = "ok";
         } else {
           boot.textContent =
@@ -393,38 +486,108 @@
     if (cs) cs.classList.add("vox-ui-ready");
     mountUnitFrames();
     initSectionTabs();
+    ensureToastHost();
+    bindTooltips(document);
     return true;
   }
 
-  /** Class-screen section tabs: Class | Hero | World */
+  /**
+   * Class-screen section tabs: Class | Hero | World
+   * Keyboard 1/2/3, hash deep-link, flow-rail sync, PNG chat-tab chrome.
+   */
   function initSectionTabs() {
     var bar = document.getElementById("vox-section-tabs");
     if (!bar) return;
+    bar.classList.add("vox-section-tabs--smart");
+    var order = ["class", "hero", "world"];
     var panels = {
       class: document.getElementById("vox-panel-class"),
       hero: document.getElementById("vox-panel-hero"),
       world: document.getElementById("vox-panel-world"),
     };
+    var current = "class";
+
+    function syncFlow(id) {
+      var rail = document.getElementById("vox-flow-rail");
+      if (!rail) return;
+      var map = { class: "select", hero: "select", world: "world" };
+      var step = map[id] || "select";
+      rail.querySelectorAll(".step").forEach(function (s) {
+        s.classList.toggle("on", s.dataset.step === step);
+      });
+    }
+
     function show(id) {
+      if (!panels[id] && id !== "class") id = "class";
+      current = id;
       bar.querySelectorAll("button").forEach(function (b) {
-        b.classList.toggle("active", b.dataset.section === id);
+        var on = b.dataset.section === id;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
       });
       Object.keys(panels).forEach(function (k) {
         if (panels[k]) panels[k].classList.toggle("active", k === id);
       });
-      // reflow carousels when shown
+      syncFlow(id);
+      try {
+        if (history.replaceState) {
+          var hash = id === "class" ? "" : "#" + id;
+          history.replaceState(null, "", hash || location.pathname + location.search);
+        }
+      } catch (e) { /* ignore */ }
       if (global.requestAnimationFrame) {
         requestAnimationFrame(function () {
           window.dispatchEvent(new Event("resize"));
         });
       }
     }
-    bar.querySelectorAll("button").forEach(function (btn) {
+
+    // Enrich buttons with hotkey badges + tips
+    bar.querySelectorAll("button").forEach(function (btn, i) {
+      if (!btn.querySelector(".vox-tab-hot")) {
+        var hot = el("span", "vox-tab-hot", String(i + 1));
+        btn.appendChild(hot);
+      }
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("data-tip", (btn.textContent || "").trim() + " · press " + (i + 1));
       btn.addEventListener("click", function () {
         show(btn.dataset.section);
       });
     });
-    show("class");
+    bar.setAttribute("role", "tablist");
+
+    // Keyboard 1/2/3 on class screen
+    if (!bar._voxKeyWired) {
+      bar._voxKeyWired = true;
+      document.addEventListener("keydown", function (e) {
+        var cs = document.getElementById("class-screen");
+        if (!cs || cs.style.display === "none" || cs.classList.contains("hidden")) return;
+        if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+        if (e.code === "Digit1") {
+          e.preventDefault();
+          show("class");
+        } else if (e.code === "Digit2") {
+          e.preventDefault();
+          show("hero");
+        } else if (e.code === "Digit3") {
+          e.preventDefault();
+          show("world");
+        } else if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
+          var idx = order.indexOf(current);
+          if (idx < 0) idx = 0;
+          idx = e.code === "ArrowLeft" ? (idx - 1 + order.length) % order.length : (idx + 1) % order.length;
+          e.preventDefault();
+          show(order[idx]);
+        }
+      });
+    }
+
+    // Hash deep-link
+    var hash = (location.hash || "").replace(/^#/, "");
+    if (hash === "hero" || hash === "world" || hash === "class") show(hash);
+    else show("class");
+
+    global.VoxUiKit._sectionShow = show;
   }
 
   global.VoxUiKit = {
@@ -438,5 +601,12 @@
     showGameChrome: showGameChrome,
     classItemsFromDefs: classItemsFromDefs,
     settlementItems: settlementItems,
+    toast: toast,
+    showTooltip: showTooltip,
+    hideTooltip: hideTooltip,
+    bindTooltips: bindTooltips,
+    showSection: function (id) {
+      if (global.VoxUiKit._sectionShow) global.VoxUiKit._sectionShow(id);
+    },
   };
 })(typeof window !== "undefined" ? window : globalThis);

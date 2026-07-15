@@ -5,8 +5,9 @@
 (function (global) {
   'use strict';
 
-  var CDN_PRIMARY = 'https://assets.grudge-studio.com';
-  var CDN_FALLBACK = 'https://molochdagod.github.io/ObjectStore';
+  // ObjectStore pack icons are reliable; assets.grudge-studio.com skills often 404
+  var CDN_PRIMARY = 'https://molochdagod.github.io/ObjectStore';
+  var CDN_FALLBACK = 'https://assets.grudge-studio.com';
 
   var SKILL_PACK_CODEX = {
     swordsman: 'swordsman',
