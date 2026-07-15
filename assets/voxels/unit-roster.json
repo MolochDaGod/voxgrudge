@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "generatedAt": "2026-07-12T11:27:03.157Z",
+  "generatedAt": "2026-07-15T19:41:20.390Z",
   "description": "TVS voxel units with colliders, animations, and AI brains",
   "cdnBase": "https://assets.grudge-studio.com",
   "r2Prefix": "models/voxels/tvs",
@@ -130,13 +130,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.brain.json",
       "brainId": "brain-voxel-farm-farm-hand",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/voxel-farm-farm-hand-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/voxel-farm-farmer-texture.png",
       "tags": [
         "tvs-voxel",
         "civilian",
         "voxel-farm",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-knights-archer",
@@ -244,13 +245,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight-helm-down.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-knight-helm-down.brain.json",
       "brainId": "brain-voxel-knights-knight-helm-down",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-knight-helm-down-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/textures/voxel-knights-knight-texture.png",
       "tags": [
         "tvs-voxel",
         "melee",
         "voxel-knights",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-palace-guard",
@@ -377,13 +379,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded.brain.json",
       "brainId": "brain-voxel-rangers-hooded",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-hooded-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-captain-texture.png",
       "tags": [
         "tvs-voxel",
         "ranged",
         "voxel-rangers",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-rangers-hooded-with-stubble",
@@ -396,13 +399,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded-with-stubble.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-hooded-with-stubble.brain.json",
       "brainId": "brain-voxel-rangers-hooded-with-stubble",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-hooded-with-stubble-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-captain-texture.png",
       "tags": [
         "tvs-voxel",
         "ranged",
         "voxel-rangers",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-rangers-long-hair",
@@ -415,13 +419,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair.brain.json",
       "brainId": "brain-voxel-rangers-long-hair",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-long-hair-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-captain-texture.png",
       "tags": [
         "tvs-voxel",
         "ranged",
         "voxel-rangers",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-rangers-long-hair-and-beard",
@@ -434,13 +439,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair-and-beard.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/characters/voxel-rangers-long-hair-and-beard.brain.json",
       "brainId": "brain-voxel-rangers-long-hair-and-beard",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-long-hair-and-beard-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-rangers/textures/voxel-rangers-captain-texture.png",
       "tags": [
         "tvs-voxel",
         "ranged",
         "voxel-rangers",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-village-barmaid",
@@ -510,13 +516,14 @@
       "animationPackUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-jeweller.anims.json",
       "brainUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/characters/voxel-village-jeweller.brain.json",
       "brainId": "brain-voxel-village-jeweller",
-      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-jeweller-texture.png",
+      "textureUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/textures/voxel-village-barmaid-texture.png",
       "tags": [
         "tvs-voxel",
         "civilian",
         "voxel-village",
         "character"
-      ]
+      ],
+      "textureFallback": true
     },
     {
       "unitId": "voxel-village-market-woman",
@@ -734,5 +741,6 @@
     "ranged": 6,
     "magic": 8,
     "civilian": 16
-  }
+  },
+  "textureNotes": "7 missing unit PNGs aliased to pack sibling atlases (R2 gaps)"
 }

@@ -153,27 +153,97 @@
     return true;
   }
 
-  async function loadTexture(THREE, url) {
+  /**
+   * Known missing CDN texture keys → working pack sibling atlas.
+   * (7 roster rows still point at PNGs that 404 on R2.)
+   */
+  var TEXTURE_ALIASES = {
+    "voxel-farm-farm-hand":
+      CDN + "/" + TVS_PREFIX + "/voxel-farm/textures/voxel-farm-farmer-texture.png",
+    "voxel-knights-knight-helm-down":
+      CDN + "/" + TVS_PREFIX + "/voxel-knights/textures/voxel-knights-knight-texture.png",
+    "voxel-rangers-hooded":
+      CDN + "/" + TVS_PREFIX + "/voxel-rangers/textures/voxel-rangers-captain-texture.png",
+    "voxel-rangers-hooded-with-stubble":
+      CDN + "/" + TVS_PREFIX + "/voxel-rangers/textures/voxel-rangers-captain-texture.png",
+    "voxel-rangers-long-hair":
+      CDN + "/" + TVS_PREFIX + "/voxel-rangers/textures/voxel-rangers-captain-texture.png",
+    "voxel-rangers-long-hair-and-beard":
+      CDN + "/" + TVS_PREFIX + "/voxel-rangers/textures/voxel-rangers-captain-texture.png",
+    "voxel-village-jeweller":
+      CDN + "/" + TVS_PREFIX + "/voxel-village/textures/voxel-village-barmaid-texture.png",
+  };
+
+  /** Prefer pack sibling when unit-specific PNG is missing. */
+  function textureCandidates(unit) {
+    var list = [];
+    var seen = {};
+    function push(u) {
+      u = absCdnUrl(u);
+      if (!u || seen[u]) return;
+      seen[u] = 1;
+      list.push(u);
+    }
+    if (unit && unit.unitId && TEXTURE_ALIASES[unit.unitId]) {
+      push(TEXTURE_ALIASES[unit.unitId]);
+    }
+    push(unit && unit.textureUrl);
+    // Derive pack default: models/voxels/tvs/{pack}/textures/{pack}-*-texture.png via alias table only
+    // + strip variant suffixes for near-miss names
+    if (unit && unit.textureUrl) {
+      var t = String(unit.textureUrl);
+      // helm-down → base knight, long-hair-and-beard → long-hair, etc.
+      push(t.replace(/-helm-down-texture/, "-texture").replace(/-helm-down/, ""));
+      push(t.replace(/-with-stubble-texture/, "-texture"));
+      push(t.replace(/-and-beard-texture/, "-texture"));
+      push(t.replace(/-long-hair-texture/, "-captain-texture"));
+      push(t.replace(/-hooded-texture/, "-captain-texture"));
+      push(t.replace(/-farm-hand-texture/, "-farmer-texture"));
+      push(t.replace(/-jeweller-texture/, "-barmaid-texture"));
+    }
+    if (unit && unit.pack) {
+      // Last resort: any known-good atlas for pack
+      var packDefaults = {
+        "voxel-farm": "voxel-farm-farmer-texture.png",
+        "voxel-knights": "voxel-knights-knight-texture.png",
+        "voxel-rangers": "voxel-rangers-captain-texture.png",
+        "voxel-village": "voxel-village-barmaid-texture.png",
+        "voxel-wizards": "voxel-wizards-wizard-texture.png",
+        "voxel-cathedral": "voxel-cathedral-crusader-texture.png",
+        "voxel-palace": "voxel-palace-guard-texture.png",
+      };
+      if (packDefaults[unit.pack]) {
+        push(CDN + "/" + TVS_PREFIX + "/" + unit.pack + "/textures/" + packDefaults[unit.pack]);
+      }
+    }
+    return list;
+  }
+
+  function prepVoxelTexture(THREE, tex, flipY) {
+    // External TVS PNG atlases + FBX UVs: flipY false by default
+    tex.flipY = flipY === true;
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    if ("colorSpace" in tex && THREE.SRGBColorSpace != null) {
+      tex.colorSpace = THREE.SRGBColorSpace;
+    } else if (THREE.sRGBEncoding != null) {
+      tex.encoding = THREE.sRGBEncoding;
+    }
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  async function loadTexture(THREE, url, flipY) {
     return new Promise(function (resolve, reject) {
       var loader = new THREE.TextureLoader();
       if (loader.setCrossOrigin) loader.setCrossOrigin("anonymous");
       loader.load(
         url,
         function (tex) {
-          // External PNG atlases for TVS FBX: flipY false (FBX UV space)
-          tex.flipY = false;
-          tex.magFilter = THREE.NearestFilter;
-          tex.minFilter = THREE.NearestFilter;
-          tex.generateMipmaps = false;
-          tex.wrapS = THREE.ClampToEdgeWrapping;
-          tex.wrapT = THREE.ClampToEdgeWrapping;
-          if ("colorSpace" in tex && THREE.SRGBColorSpace != null) {
-            tex.colorSpace = THREE.SRGBColorSpace;
-          } else if (THREE.sRGBEncoding != null) {
-            tex.encoding = THREE.sRGBEncoding;
-          }
-          tex.needsUpdate = true;
-          resolve(tex);
+          resolve(prepVoxelTexture(THREE, tex, flipY));
         },
         undefined,
         function (err) {
@@ -181,6 +251,28 @@
         }
       );
     });
+  }
+
+  /** Try primary + alias/fallback texture URLs until one loads. */
+  async function loadTextureWithFallbacks(THREE, unit) {
+    var cands = textureCandidates(unit);
+    var lastErr = null;
+    for (var i = 0; i < cands.length; i++) {
+      var url = cands[i];
+      try {
+        var tex = await loadTexture(THREE, url, false);
+        return { tex: tex, url: url, flipY: false };
+      } catch (e1) {
+        lastErr = e1;
+        try {
+          var tex2 = await loadTexture(THREE, url, true);
+          return { tex: tex2, url: url, flipY: true };
+        } catch (e2) {
+          lastErr = e2;
+        }
+      }
+    }
+    throw lastErr || new Error("no texture candidates for " + (unit && unit.unitId));
   }
 
   // ── roster ─────────────────────────────────────────────────────────────────
@@ -664,42 +756,19 @@
     };
     group.name = unit.unitId || unit.displayName || "tvs-unit";
 
-    // Texture rebind (before scale so materials exist)
-    if (opts.withTexture !== false && unit.textureUrl) {
+    // Texture rebind (before scale) — aliases + pack fallbacks for 404 roster rows
+    if (opts.withTexture !== false && (unit.textureUrl || TEXTURE_ALIASES[unit.unitId])) {
       try {
-        var tex = await loadTexture(THREE, unit.textureUrl);
-        applyTextureToRoot(group, tex, THREE);
-        group.userData.texture = tex;
-        group.userData.textureUrl = unit.textureUrl;
-      } catch (err) {
-        console.warn("[TvsUnitLoader] texture fail", unit.textureUrl, err && err.message);
-        // Retry flipY true once (some packs authored for TGALoader default)
-        try {
-          var tex2 = await new Promise(function (resolve, reject) {
-            var loader = new THREE.TextureLoader();
-            if (loader.setCrossOrigin) loader.setCrossOrigin("anonymous");
-            loader.load(
-              unit.textureUrl,
-              function (t) {
-                t.flipY = true;
-                t.magFilter = THREE.NearestFilter;
-                t.minFilter = THREE.NearestFilter;
-                t.generateMipmaps = false;
-                if (THREE.sRGBEncoding != null) t.encoding = THREE.sRGBEncoding;
-                t.needsUpdate = true;
-                resolve(t);
-              },
-              undefined,
-              reject
-            );
-          });
-          applyTextureToRoot(group, tex2, THREE);
-          group.userData.texture = tex2;
-          group.userData.textureUrl = unit.textureUrl;
-          group.userData.textureFlipY = true;
-        } catch (err2) {
-          console.warn("[TvsUnitLoader] texture retry fail", err2 && err2.message);
+        var loaded = await loadTextureWithFallbacks(THREE, unit);
+        applyTextureToRoot(group, loaded.tex, THREE);
+        group.userData.texture = loaded.tex;
+        group.userData.textureUrl = loaded.url;
+        group.userData.textureFlipY = loaded.flipY;
+        if (loaded.url !== unit.textureUrl) {
+          console.info("[TvsUnitLoader] texture fallback", unit.unitId, "→", loaded.url);
         }
+      } catch (err) {
+        console.warn("[TvsUnitLoader] texture fail", unit.unitId, unit.textureUrl, err && err.message);
       }
     }
 
