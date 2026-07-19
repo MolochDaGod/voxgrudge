@@ -297,7 +297,9 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
       <div class="vox-container__header"><h2 class="vox-container__title">Survivor class</h2></div>
       <div class="vox-container__body">
         <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
-        <div class="class-grid" id="class-grid" style="display:none" aria-hidden="true"></div>
+        <!-- Grid visible by default so Choose Survivor never ships empty if carousel/boot stalls.
+             ensureSurvivorsUI() hides grid when carousel cards are ready. -->
+        <div class="class-grid" id="class-grid" style="display:grid" aria-hidden="false"></div>
       </div>
     </div>
     <aside class="vox-container class-preview" id="class-preview" style="width:min(96vw,420px);margin:0 auto">
@@ -1465,9 +1467,64 @@ let classCarouselApi = null;
 let tvsHeroCarouselApi = null;
 let settlementCarouselApi = null;
 
+/**
+ * Ensure survivor class cards are always visible.
+ * Prefer VoxUiKit carousel; if kit missing/failed, unhide the legacy class-grid
+ * (which buildClassUI already populated). Fixes empty "Choose Survivor" screen
+ * when boot hangs or VoxUiKit.init never finishes.
+ */
+function ensureSurvivorsUI(){
+  const carouselHost = document.getElementById('class-carousel');
+  const grid = document.getElementById('class-grid');
+  const hasCarouselCards = !!(carouselHost && carouselHost.querySelector('.vox-card'));
+  const hasGridCards = !!(grid && grid.querySelector('.class-card'));
+
+  // Always show class screen shell if present (boot must not leave it blank forever)
+  const classScreen = document.getElementById('class-screen');
+  if(classScreen){
+    classScreen.style.display = '';
+    classScreen.classList.remove('pre-game-hidden');
+  }
+
+  if(hasCarouselCards){
+    if(carouselHost) carouselHost.style.display = '';
+    if(grid){ grid.style.display = 'none'; grid.setAttribute('aria-hidden','true'); }
+    return true;
+  }
+
+  // Try kit carousel first
+  if(window.VoxUiKit && carouselHost && typeof VoxUiKit.classItemsFromDefs === 'function'){
+    try{
+      buildClassCarousel();
+      if(carouselHost.querySelector('.vox-card')){
+        carouselHost.style.display = '';
+        if(grid){ grid.style.display = 'none'; grid.setAttribute('aria-hidden','true'); }
+        return true;
+      }
+    }catch(err){
+      console.warn('[ensureSurvivorsUI] carousel failed', err);
+    }
+  }
+
+  // Fallback: visible 3-column class grid (always has CLASSES data)
+  if(grid){
+    if(!hasGridCards && typeof buildClassUICards === 'function') buildClassUICards();
+    grid.style.display = 'grid';
+    grid.removeAttribute('aria-hidden');
+    if(carouselHost) carouselHost.style.display = 'none';
+    console.info('[ensureSurvivorsUI] using class-grid fallback ·', Object.keys(CLASSES).length, 'survivors');
+    return !!(grid.querySelector('.class-card'));
+  }
+  return false;
+}
+
 function buildClassCarousel(){
-  if(!window.VoxUiKit || !document.getElementById('class-carousel')) return;
+  if(!window.VoxUiKit || !document.getElementById('class-carousel')) return null;
   const items = VoxUiKit.classItemsFromDefs(CLASSES);
+  if(!items || !items.length){
+    console.warn('[buildClassCarousel] no class items from CLASSES');
+    return null;
+  }
   classCarouselApi = VoxUiKit.carousel(document.getElementById('class-carousel'), {
     items: items,
     visible: 4,
@@ -1488,6 +1545,7 @@ function buildClassCarousel(){
       });
     },
   });
+  return classCarouselApi;
 }
 
 function refreshTvsHeroCarousel(){
@@ -1661,25 +1719,57 @@ function initGameShell(){
           onProgress: function(p){
             if(bootEl && bootEl.className!=='bad') bootEl.textContent = 'UI kit '+p.pct+'% · '+p.id;
           },
+        }).catch(function(e){
+          console.warn('[VoxUiKit.init]', e);
+          return null;
         })
       : Promise.resolve();
     return kit.then(function(){
-      buildClassCarousel();
+      ensureSurvivorsUI();
       buildSettlementCarousel();
-      // Enter hero select after boot (legal: boot → select)
-      if(gameFlow && gameFlow.state==='boot') gameFlow.goto('select');
-      if(report && !report.ok && gameFlow){
-        gameFlow.goto('error', { message: (report.issues&&report.issues[0]) || 'Boot failed' });
+      // Always enter select so Choose Survivor is playable even if some deps warn
+      if(gameFlow && (gameFlow.state==='boot' || gameFlow.state==='error')){
+        try{ gameFlow.goto('select'); }catch(e){ /* ignore illegal if already select */ }
       }
+      // Soft-warn only — do not leave the player on a blank/error shell with no classes
+      if(report && !report.ok){
+        console.warn('[VoxBoot] soft fail (survivors still available)', report.issues);
+        if(bootEl && bootEl.className!=='ok'){
+          bootEl.textContent = 'Ready with warnings · pick a survivor · '+(report.issues&&report.issues[0]||'');
+          bootEl.className = '';
+        }
+      }
+      ensureSurvivorsUI();
     });
   }).catch(function(err){
     console.error('[initGameShell] boot', err);
-    if(bootEl){ bootEl.textContent = 'Boot error: '+(err&&err.message||err); bootEl.className='bad'; }
-    if(gameFlow) gameFlow.goto('error', { message: String(err&&err.message||err) });
+    if(bootEl){ bootEl.textContent = 'Boot warn: '+(err&&err.message||err)+' · pick a survivor below'; bootEl.className=''; }
+    // Still show survivors — empty choose-survivor is worse than soft boot errors
+    try{ ensureSurvivorsUI(); }catch(e){}
+    if(gameFlow){
+      try{ gameFlow.goto('select'); }catch(e2){
+        try{ gameFlow.goto('error', { message: String(err&&err.message||err) }); }catch(e3){}
+      }
+    }
   });
 
-  // Legacy path: no VoxBoot → go straight to select
-  if(gameFlow && !window.VoxBoot) gameFlow.goto('select');
+  // Legacy path: no VoxBoot → go straight to select + paint survivors
+  if(gameFlow && !window.VoxBoot){
+    gameFlow.goto('select');
+    try{ ensureSurvivorsUI(); }catch(e){}
+  }
+
+  // Safety net: if boot is slow, unhide grid after 2.5s so page is never empty
+  setTimeout(function(){
+    try{
+      const host = document.getElementById('class-carousel');
+      const empty = !host || !host.querySelector('.vox-card');
+      if(empty) ensureSurvivorsUI();
+      if(gameFlow && gameFlow.state==='boot'){
+        try{ gameFlow.goto('select'); }catch(e){}
+      }
+    }catch(e){ console.warn('[survivors safety]', e); }
+  }, 2500);
 
   if(window.TvsWorldContent){
     TvsWorldContent.loadSettlements().then(function(){
@@ -1780,9 +1870,12 @@ function updateClassPreview(cid){
   if(hintEl) hintEl.textContent=cls.desc+' · Combat uses 8-step pipeline (block before crit).';
 }
 
-(function buildClassUI(){
+function buildClassUICards(){
   const grid = document.getElementById('class-grid');
-  Object.keys(CLASSES).forEach(cid => {
+  if(!grid) return;
+  // Idempotent — clear only if empty rebuild needed
+  if(grid.querySelector('.class-card')) return;
+  Object.keys(CLASSES).forEach(function(cid){
     const cls = CLASSES[cid];
     const preview=getClassNexusPreview(cid);
     const cp=preview?preview.stats.combatPower:'—';
@@ -1794,7 +1887,7 @@ function updateClassPreview(cid){
     const classIcon=window.GrudgeHudIcons?GrudgeHudIcons.classIconUrl(cid):null;
     setHudIcon(card.querySelector('.c-icon'),classIcon,cls.emoji);
     card.onclick = function(){
-      document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
+      document.querySelectorAll('.class-card').forEach(function(c){c.classList.remove('sel');});
       card.classList.add('sel');
       playerClass = cid;
       // Only auto-pick body mesh if user hasn't chosen a character card yet
@@ -1813,6 +1906,11 @@ function updateClassPreview(cid){
     };
     grid.appendChild(card);
   });
+}
+(function buildClassUI(){
+  buildClassUICards();
+  // Immediate fallback paint — don't wait for VoxBoot/VoxUiKit
+  try{ ensureSurvivorsUI(); }catch(e){ console.warn(e); }
 })();
 
 // ═══════════════════════════════════════════════════════════════
