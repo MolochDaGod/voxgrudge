@@ -1,6 +1,6 @@
 {
   "version": "3.0.0-production",
-  "generatedAt": "2026-07-15T23:19:44.680Z",
+  "generatedAt": "2026-07-15T23:37:14.473Z",
   "description": "TVS voxel units with colliders, animations, and AI brains",
   "cdnBase": "https://assets.grudge-studio.com",
   "r2Prefix": "models/voxels/tvs",
@@ -29,7 +29,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 66764,
-        "bakedAt": "2026-07-15T23:19:03.670Z"
+        "bakedAt": "2026-07-15T23:36:52.904Z"
       }
     },
     {
@@ -56,7 +56,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 45532,
-        "bakedAt": "2026-07-15T23:19:04.318Z"
+        "bakedAt": "2026-07-15T23:36:53.469Z"
       }
     },
     {
@@ -83,7 +83,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 47908,
-        "bakedAt": "2026-07-15T23:19:05.086Z"
+        "bakedAt": "2026-07-15T23:36:54.149Z"
       }
     },
     {
@@ -110,7 +110,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 68752,
-        "bakedAt": "2026-07-15T23:19:05.968Z"
+        "bakedAt": "2026-07-15T23:36:54.720Z"
       }
     },
     {
@@ -137,7 +137,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 66072,
-        "bakedAt": "2026-07-15T23:19:07.362Z"
+        "bakedAt": "2026-07-15T23:36:55.297Z"
       }
     },
     {
@@ -164,7 +164,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 59912,
-        "bakedAt": "2026-07-15T23:19:08.619Z"
+        "bakedAt": "2026-07-15T23:36:55.861Z"
       }
     },
     {
@@ -191,7 +191,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 51312,
-        "bakedAt": "2026-07-15T23:19:10.069Z"
+        "bakedAt": "2026-07-15T23:36:56.440Z"
       }
     },
     {
@@ -218,7 +218,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 67056,
-        "bakedAt": "2026-07-15T23:19:10.959Z"
+        "bakedAt": "2026-07-15T23:36:57.011Z"
       }
     },
     {
@@ -245,7 +245,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 78156,
-        "bakedAt": "2026-07-15T23:19:11.802Z"
+        "bakedAt": "2026-07-15T23:36:57.573Z"
       }
     },
     {
@@ -272,7 +272,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 78800,
-        "bakedAt": "2026-07-15T23:19:12.375Z"
+        "bakedAt": "2026-07-15T23:36:58.136Z"
       }
     },
     {
@@ -299,7 +299,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 79080,
-        "bakedAt": "2026-07-15T23:19:13.014Z"
+        "bakedAt": "2026-07-15T23:36:58.689Z"
       }
     },
     {
@@ -326,7 +326,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 64520,
-        "bakedAt": "2026-07-15T23:19:13.810Z"
+        "bakedAt": "2026-07-15T23:36:59.254Z"
       }
     },
     {
@@ -353,7 +353,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 62984,
-        "bakedAt": "2026-07-15T23:19:15.098Z"
+        "bakedAt": "2026-07-15T23:36:59.802Z"
       }
     },
     {
@@ -380,7 +380,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 81064,
-        "bakedAt": "2026-07-15T23:19:16.843Z"
+        "bakedAt": "2026-07-15T23:37:00.371Z"
       }
     },
     {
@@ -407,7 +407,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 95544,
-        "bakedAt": "2026-07-15T23:19:18.194Z"
+        "bakedAt": "2026-07-15T23:37:00.977Z"
       }
     },
     {
@@ -434,7 +434,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 81220,
-        "bakedAt": "2026-07-15T23:19:19.605Z"
+        "bakedAt": "2026-07-15T23:37:01.570Z"
       }
     },
     {
@@ -461,7 +461,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 72696,
-        "bakedAt": "2026-07-15T23:19:20.930Z"
+        "bakedAt": "2026-07-15T23:37:02.386Z"
       }
     },
     {
@@ -488,7 +488,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 72692,
-        "bakedAt": "2026-07-15T23:19:22.207Z"
+        "bakedAt": "2026-07-15T23:37:02.956Z"
       }
     },
     {
@@ -515,7 +515,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 70676,
-        "bakedAt": "2026-07-15T23:19:23.661Z"
+        "bakedAt": "2026-07-15T23:37:03.529Z"
       }
     },
     {
@@ -542,7 +542,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 67256,
-        "bakedAt": "2026-07-15T23:19:24.834Z"
+        "bakedAt": "2026-07-15T23:37:04.068Z"
       }
     },
     {
@@ -569,7 +569,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 68344,
-        "bakedAt": "2026-07-15T23:19:25.903Z"
+        "bakedAt": "2026-07-15T23:37:04.630Z"
       }
     },
     {
@@ -596,7 +596,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 68816,
-        "bakedAt": "2026-07-15T23:19:27.469Z"
+        "bakedAt": "2026-07-15T23:37:05.180Z"
       }
     },
     {
@@ -623,7 +623,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 75580,
-        "bakedAt": "2026-07-15T23:19:28.540Z"
+        "bakedAt": "2026-07-15T23:37:05.775Z"
       }
     },
     {
@@ -650,7 +650,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 67876,
-        "bakedAt": "2026-07-15T23:19:29.582Z"
+        "bakedAt": "2026-07-15T23:37:06.463Z"
       }
     },
     {
@@ -677,7 +677,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 43140,
-        "bakedAt": "2026-07-15T23:19:30.861Z"
+        "bakedAt": "2026-07-15T23:37:06.984Z"
       }
     },
     {
@@ -704,7 +704,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 57764,
-        "bakedAt": "2026-07-15T23:19:31.906Z"
+        "bakedAt": "2026-07-15T23:37:07.542Z"
       }
     },
     {
@@ -731,7 +731,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 57648,
-        "bakedAt": "2026-07-15T23:19:32.832Z"
+        "bakedAt": "2026-07-15T23:37:08.234Z"
       }
     },
     {
@@ -758,7 +758,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 69124,
-        "bakedAt": "2026-07-15T23:19:33.868Z"
+        "bakedAt": "2026-07-15T23:37:08.815Z"
       }
     },
     {
@@ -785,7 +785,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 53396,
-        "bakedAt": "2026-07-15T23:19:34.928Z"
+        "bakedAt": "2026-07-15T23:37:09.371Z"
       }
     },
     {
@@ -812,7 +812,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 51864,
-        "bakedAt": "2026-07-15T23:19:36.232Z"
+        "bakedAt": "2026-07-15T23:37:09.918Z"
       }
     },
     {
@@ -839,7 +839,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 54688,
-        "bakedAt": "2026-07-15T23:19:37.268Z"
+        "bakedAt": "2026-07-15T23:37:10.496Z"
       }
     },
     {
@@ -866,7 +866,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 46992,
-        "bakedAt": "2026-07-15T23:19:38.329Z"
+        "bakedAt": "2026-07-15T23:37:11.099Z"
       }
     },
     {
@@ -893,7 +893,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 52632,
-        "bakedAt": "2026-07-15T23:19:39.270Z"
+        "bakedAt": "2026-07-15T23:37:11.644Z"
       }
     },
     {
@@ -920,7 +920,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 72584,
-        "bakedAt": "2026-07-15T23:19:40.431Z"
+        "bakedAt": "2026-07-15T23:37:12.226Z"
       }
     },
     {
@@ -947,7 +947,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 88188,
-        "bakedAt": "2026-07-15T23:19:41.541Z"
+        "bakedAt": "2026-07-15T23:37:12.824Z"
       }
     },
     {
@@ -974,7 +974,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 60568,
-        "bakedAt": "2026-07-15T23:19:42.645Z"
+        "bakedAt": "2026-07-15T23:37:13.369Z"
       }
     },
     {
@@ -1001,7 +1001,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 68212,
-        "bakedAt": "2026-07-15T23:19:43.658Z"
+        "bakedAt": "2026-07-15T23:37:13.921Z"
       }
     },
     {
@@ -1028,7 +1028,7 @@
         "compressed": true,
         "textureFormat": "png-in-glb",
         "glbBytes": 70460,
-        "bakedAt": "2026-07-15T23:19:44.680Z"
+        "bakedAt": "2026-07-15T23:37:14.473Z"
       }
     }
   ],
