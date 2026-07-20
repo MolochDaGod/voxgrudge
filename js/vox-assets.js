@@ -44,7 +44,8 @@
    */
   function normalizeModelHeight(THREE, root, targetHeightM) {
     if (!root || !THREE) return 1;
-    targetHeightM = targetHeightM || 1.8;
+    // Canonical humanoid / ORC height = 2.0 m (fleet SSOT)
+    targetHeightM = targetHeightM || 2.0;
     var box = new THREE.Box3().setFromObject(root);
     var size = new THREE.Vector3();
     box.getSize(size);
