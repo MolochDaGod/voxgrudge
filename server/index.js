@@ -52,7 +52,25 @@ function json(res, status, body, origin) {
 function originAllowed(origin) {
   if (!origin) return true;
   if (ALLOWED_ORIGINS.includes("*")) return true;
-  return ALLOWED_ORIGINS.includes(origin);
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // CF Pages preview deploys: https://<hash>.grudge-velocity.pages.dev
+  try {
+    const host = new URL(origin).hostname.toLowerCase();
+    if (host === "grudge-velocity.pages.dev" || host.endsWith(".grudge-velocity.pages.dev")) {
+      return true;
+    }
+    // Fleet shells that always share the same Velocity product origin
+    if (
+      host === "drive.grudge-studio.com" ||
+      host === "grudge-drive.vercel.app" ||
+      host.endsWith(".grudge-drive.vercel.app")
+    ) {
+      return true;
+    }
+  } catch {
+    /* ignore bad Origin */
+  }
+  return false;
 }
 
 const spaceRoom = getSpaceRoom();
