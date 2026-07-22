@@ -6,15 +6,20 @@
  *   WS   /api/grudox               — open-world intent relay (existing)
  *   WS   /api/space                — Live Waters naval PvP (space-net protocol)
  *   WS   /api/carrier              — Carrier combat + missiles (carrier-net protocol)
+ *   WS   /api/drive                — Houston Velocity open-world (THREE.Multiplayer poses)
  *
  * Deploy: Railway service voxgrudge-grudox-room-production
  * Optional: CARRIER_WEBHOOK_URL or DISCORD_WEBHOOK_URL for combat event posts
+ *
+ * Pattern (grudoxinfo / L2): same HTTP process, WebSocket upgrade per path —
+ * no separate socket cluster.
  */
 import http from "http";
 import { WebSocketServer } from "ws";
 import { randomUUID } from "crypto";
 import { getSpaceRoom } from "./space-room.js";
 import { getCarrierRoom } from "./carrier-room.js";
+import { getDriveRoom } from "./drive-room.js";
 
 const PORT = Number(process.env.PORT || 8787);
 const TICK_HZ = Number(process.env.TICK_HZ || 20);
@@ -52,6 +57,7 @@ function originAllowed(origin) {
 
 const spaceRoom = getSpaceRoom();
 const carrierRoom = getCarrierRoom();
+const driveRoom = getDriveRoom();
 
 const server = http.createServer((req, res) => {
   const origin = req.headers.origin || "";
@@ -71,11 +77,13 @@ const server = http.createServer((req, res) => {
         players: players.size,
         watersPlayers: spaceRoom.playerCount(),
         carrierPlayers: carrierRoom.playerCount(),
+        drivePlayers: driveRoom.playerCount(),
         tickHz: TICK_HZ,
         paths: {
           openworld: "/api/grudox",
           waters: "/api/space",
           carrier: "/api/carrier",
+          drive: "/api/drive",
         },
         arenaHalf: 6000,
         carrierArenaHalf: 12000,
@@ -140,6 +148,24 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathOnly === "/api/drive" || pathOnly === "/api/drive/") {
+    json(
+      res,
+      200,
+      {
+        ok: true,
+        room: "houston-velocity",
+        players: driveRoom.playerCount(),
+        transport: "websocket",
+        path: "/api/drive",
+        protocol: "three-multiplayer-poses",
+        features: ["introduction", "move", "userPositions"],
+      },
+      origin,
+    );
+    return;
+  }
+
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end("not found");
 });
@@ -147,6 +173,7 @@ const server = http.createServer((req, res) => {
 const wssOpenworld = new WebSocketServer({ noServer: true });
 const wssSpace = new WebSocketServer({ noServer: true });
 const wssCarrier = new WebSocketServer({ noServer: true });
+const wssDrive = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", (req, socket, head) => {
   const url = req.url || "";
@@ -166,6 +193,11 @@ server.on("upgrade", (req, socket, head) => {
 
   if (pathOnly === "/api/carrier" || pathOnly.startsWith("/api/carrier/")) {
     wssCarrier.handleUpgrade(req, socket, head, (ws) => wssCarrier.emit("connection", ws, req));
+    return;
+  }
+
+  if (pathOnly === "/api/drive" || pathOnly.startsWith("/api/drive/")) {
+    wssDrive.handleUpgrade(req, socket, head, (ws) => wssDrive.emit("connection", ws, req));
     return;
   }
 
@@ -207,6 +239,31 @@ wssCarrier.on("connection", (ws) => {
 
   ws.on("close", () => carrierRoom.remove(id));
   ws.on("error", () => carrierRoom.remove(id));
+});
+
+// ── Houston Velocity open-world (/api/drive) ────────────────────────────────
+
+wssDrive.on("connection", (ws) => {
+  const id = driveRoom.add((data) => {
+    if (ws.readyState === 1) ws.send(data);
+  });
+
+  ws.on("message", (raw) => {
+    let msg;
+    try {
+      msg = JSON.parse(String(raw));
+    } catch {
+      return;
+    }
+    if (msg.t === "join" && typeof msg.name === "string") {
+      driveRoom.setName(id, msg.name);
+    } else if (msg.t === "move" && Array.isArray(msg.position)) {
+      driveRoom.move(id, msg.position, msg.rotation ?? [0, 0, 0]);
+    }
+  });
+
+  ws.on("close", () => driveRoom.remove(id));
+  ws.on("error", () => driveRoom.remove(id));
 });
 
 // ── Open-world relay (/api/grudox) ──────────────────────────────────────────
@@ -310,6 +367,6 @@ setInterval(() => {
 
 server.listen(PORT, () => {
   console.log(
-    `[grudox-room] :${PORT} openworld=/api/grudox waters=/api/space carrier=/api/carrier`,
+    `[grudox-room] :${PORT} openworld=/api/grudox waters=/api/space carrier=/api/carrier drive=/api/drive`,
   );
 });
