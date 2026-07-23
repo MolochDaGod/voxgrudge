@@ -43,6 +43,25 @@ const RUNTIME = [
   'ui/hud/frames/panel-bg.png',
   'ui/craftpix-rpg/bars/pb_frame.png',
   'assets/mine-loader/ui-icons/skill-slot.png',
+  // Lava biome + voxel weapons + free TVS + party frames (R2-hosted binaries)
+  'assets/lava-biome/manifest.json',
+  'assets/lava-biome/Trees/LavaTree1.png',
+  'models/weapons/voxel-rpg/00.glb',
+  'models/weapons/voxel-rpg/weapons_magica.glb',
+  'assets/voxels/weapon-roster.json',
+  'models/voxels/free-rpg/TPose_Character.glb',
+  'assets/voxels/free-rpg-roster.json',
+  'ui/hud/party-frames/player-frame.png',
+];
+
+/** App shell files — Vercel same-origin only (not mirrored on R2) */
+const LOCAL_ONLY = [
+  'ui/hud/party-frames.css',
+  'js/lava-biom-loader.js',
+  'js/lava-biom-manifest.js',
+  'js/voxel-weapon-loader.js',
+  'js/player-controller.js',
+  'grudge-warlords-openworld.html',
 ];
 
 const EXTRA = [
@@ -75,6 +94,12 @@ function urls() {
   for (const rel of RUNTIME) {
     list.push(`${CDN}/${APP}/${rel}`);
     if (!cdnOnly) list.push(`${LOCAL}/${rel}`);
+  }
+  // Shell JS/CSS live on the app host (Vercel), not R2
+  if (!cdnOnly) {
+    for (const rel of LOCAL_ONLY) {
+      list.push(`${LOCAL}/${rel}`);
+    }
   }
   list.push(...EXTRA);
   return [...new Set(list)];
