@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\models\\weapons\\voxel-rpg\\15.obj",
+  "output": "F:\\GitHub\\voxgrudge\\models\\weapons\\voxel-rpg\\15.glb",
+  "intermediateBackend": "blender",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.4399999976158142,
+      -1.100000023841858,
+      -7.480000019073486
+    ],
+    "max": [
+      0.6600000262260437,
+      0,
+      -3.9599997997283936
+    ],
+    "size": [
+      1.100000023841858,
+      1.100000023841858,
+      3.5200002193450928
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\models\\weapons\\voxel-rpg\\15.collider.json",
+  "producedAt": "2026-07-23T08:09:36.089Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 1024,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

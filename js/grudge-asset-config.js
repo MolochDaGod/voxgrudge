@@ -297,6 +297,19 @@
     root.style.setProperty('--cpx-pb-fill', 'url("' + cpx('bars/pb_fill_1.png') + '")');
     root.style.setProperty('--cpx-uf-frame', 'url("' + cpx('frames/uf_frame.png') + '")');
     root.style.setProperty('--cpx-ab-frame', 'url("' + cpx('bars/ab1_main_frame.png') + '")');
+    // Party / character info frames
+    var pf = function (rel) {
+      return localOrR2('ui/hud/party-frames/' + rel, R2_APP + '/ui/hud/party-frames/' + rel);
+    };
+    root.style.setProperty('--pf-player-bg', 'url("' + pf('player-frame.png') + '")');
+    root.style.setProperty('--pf-player-border', 'url("' + pf('player-border.png') + '")');
+    root.style.setProperty('--pf-hp-fill', 'url("' + pf('hp-fill.png') + '")');
+    root.style.setProperty('--pf-mp-fill', 'url("' + pf('mp-fill.png') + '")');
+    root.style.setProperty('--pf-party-hp', 'url("' + pf('party-hp-bg.png') + '")');
+    root.style.setProperty('--pf-party-mp', 'url("' + pf('party-mp-bg.png') + '")');
+    root.style.setProperty('--pf-level', 'url("' + pf('level-frame.png') + '")');
+    root.style.setProperty('--pf-buff', 'url("' + pf('buff-frame.png') + '")');
+    root.style.setProperty('--pf-buildyourself', 'url("' + pf('buildyourself-status-bar-sheet.png') + '")');
   }
 
   global.GrudgeAssets = {

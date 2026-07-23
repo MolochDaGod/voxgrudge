@@ -1,0 +1,5 @@
+# synthetic MagicaVoxel palette
+newmtl palette
+illum 1
+Kd 0.85 0.85 0.9
+Ks 0.1 0.1 0.1

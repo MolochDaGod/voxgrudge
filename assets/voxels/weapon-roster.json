@@ -1,0 +1,296 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-23T08:08:44.060Z",
+  "count": 29,
+  "weapons": [
+    {
+      "id": "voxwpn_00",
+      "label": "Voxel Weapon 00",
+      "obj": "models/weapons/voxel-rpg/00.obj",
+      "mtl": "models/weapons/voxel-rpg/00.mtl",
+      "glb": "models/weapons/voxel-rpg/00.glb",
+      "preview": "models/weapons/voxel-rpg/00-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_01",
+      "label": "Voxel Weapon 01",
+      "obj": "models/weapons/voxel-rpg/01.obj",
+      "mtl": "models/weapons/voxel-rpg/01.mtl",
+      "glb": "models/weapons/voxel-rpg/01.glb",
+      "preview": "models/weapons/voxel-rpg/01-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_02",
+      "label": "Voxel Weapon 02",
+      "obj": "models/weapons/voxel-rpg/02.obj",
+      "mtl": "models/weapons/voxel-rpg/02.mtl",
+      "glb": "models/weapons/voxel-rpg/02.glb",
+      "preview": "models/weapons/voxel-rpg/02-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_03",
+      "label": "Voxel Weapon 03",
+      "obj": "models/weapons/voxel-rpg/03.obj",
+      "mtl": "models/weapons/voxel-rpg/03.mtl",
+      "glb": "models/weapons/voxel-rpg/03.glb",
+      "preview": "models/weapons/voxel-rpg/03-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_04",
+      "label": "Voxel Weapon 04",
+      "obj": "models/weapons/voxel-rpg/04.obj",
+      "mtl": "models/weapons/voxel-rpg/04.mtl",
+      "glb": "models/weapons/voxel-rpg/04.glb",
+      "preview": "models/weapons/voxel-rpg/04-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_05",
+      "label": "Voxel Weapon 05",
+      "obj": "models/weapons/voxel-rpg/05.obj",
+      "mtl": "models/weapons/voxel-rpg/05.mtl",
+      "glb": "models/weapons/voxel-rpg/05.glb",
+      "preview": "models/weapons/voxel-rpg/05-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_06",
+      "label": "Voxel Weapon 06",
+      "obj": "models/weapons/voxel-rpg/06.obj",
+      "mtl": "models/weapons/voxel-rpg/06.mtl",
+      "glb": "models/weapons/voxel-rpg/06.glb",
+      "preview": "models/weapons/voxel-rpg/06-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_07",
+      "label": "Voxel Weapon 07",
+      "obj": "models/weapons/voxel-rpg/07.obj",
+      "mtl": "models/weapons/voxel-rpg/07.mtl",
+      "glb": "models/weapons/voxel-rpg/07.glb",
+      "preview": "models/weapons/voxel-rpg/07-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_08",
+      "label": "Voxel Weapon 08",
+      "obj": "models/weapons/voxel-rpg/08.obj",
+      "mtl": "models/weapons/voxel-rpg/08.mtl",
+      "glb": "models/weapons/voxel-rpg/08.glb",
+      "preview": "models/weapons/voxel-rpg/08-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_09",
+      "label": "Voxel Weapon 09",
+      "obj": "models/weapons/voxel-rpg/09.obj",
+      "mtl": "models/weapons/voxel-rpg/09.mtl",
+      "glb": "models/weapons/voxel-rpg/09.glb",
+      "preview": "models/weapons/voxel-rpg/09-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_10",
+      "label": "Voxel Weapon 10",
+      "obj": "models/weapons/voxel-rpg/10.obj",
+      "mtl": "models/weapons/voxel-rpg/10.mtl",
+      "glb": "models/weapons/voxel-rpg/10.glb",
+      "preview": "models/weapons/voxel-rpg/10-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_11",
+      "label": "Voxel Weapon 11",
+      "obj": "models/weapons/voxel-rpg/11.obj",
+      "mtl": "models/weapons/voxel-rpg/11.mtl",
+      "glb": "models/weapons/voxel-rpg/11.glb",
+      "preview": "models/weapons/voxel-rpg/11-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_12",
+      "label": "Voxel Weapon 12",
+      "obj": "models/weapons/voxel-rpg/12.obj",
+      "mtl": "models/weapons/voxel-rpg/12.mtl",
+      "glb": "models/weapons/voxel-rpg/12.glb",
+      "preview": "models/weapons/voxel-rpg/12-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_13",
+      "label": "Voxel Weapon 13",
+      "obj": "models/weapons/voxel-rpg/13.obj",
+      "mtl": "models/weapons/voxel-rpg/13.mtl",
+      "glb": "models/weapons/voxel-rpg/13.glb",
+      "preview": "models/weapons/voxel-rpg/13-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_14",
+      "label": "Voxel Weapon 14",
+      "obj": "models/weapons/voxel-rpg/14.obj",
+      "mtl": "models/weapons/voxel-rpg/14.mtl",
+      "glb": "models/weapons/voxel-rpg/14.glb",
+      "preview": "models/weapons/voxel-rpg/14-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_15",
+      "label": "Voxel Weapon 15",
+      "obj": "models/weapons/voxel-rpg/15.obj",
+      "mtl": "models/weapons/voxel-rpg/15.mtl",
+      "glb": "models/weapons/voxel-rpg/15.glb",
+      "preview": "models/weapons/voxel-rpg/15-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_16",
+      "label": "Voxel Weapon 16",
+      "obj": "models/weapons/voxel-rpg/16.obj",
+      "mtl": "models/weapons/voxel-rpg/16.mtl",
+      "glb": "models/weapons/voxel-rpg/16.glb",
+      "preview": "models/weapons/voxel-rpg/16-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_17",
+      "label": "Voxel Weapon 17",
+      "obj": "models/weapons/voxel-rpg/17.obj",
+      "mtl": "models/weapons/voxel-rpg/17.mtl",
+      "glb": "models/weapons/voxel-rpg/17.glb",
+      "preview": "models/weapons/voxel-rpg/17-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_18",
+      "label": "Voxel Weapon 18",
+      "obj": "models/weapons/voxel-rpg/18.obj",
+      "mtl": "models/weapons/voxel-rpg/18.mtl",
+      "glb": "models/weapons/voxel-rpg/18.glb",
+      "preview": "models/weapons/voxel-rpg/18-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_19",
+      "label": "Voxel Weapon 19",
+      "obj": "models/weapons/voxel-rpg/19.obj",
+      "mtl": "models/weapons/voxel-rpg/19.mtl",
+      "glb": "models/weapons/voxel-rpg/19.glb",
+      "preview": "models/weapons/voxel-rpg/19-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_20",
+      "label": "Voxel Weapon 20",
+      "obj": "models/weapons/voxel-rpg/20.obj",
+      "mtl": "models/weapons/voxel-rpg/20.mtl",
+      "glb": "models/weapons/voxel-rpg/20.glb",
+      "preview": null,
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_21",
+      "label": "Voxel Weapon 21",
+      "obj": "models/weapons/voxel-rpg/21.obj",
+      "mtl": "models/weapons/voxel-rpg/21.mtl",
+      "glb": "models/weapons/voxel-rpg/21.glb",
+      "preview": "models/weapons/voxel-rpg/21-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_22",
+      "label": "Voxel Weapon 22",
+      "obj": "models/weapons/voxel-rpg/22.obj",
+      "mtl": "models/weapons/voxel-rpg/22.mtl",
+      "glb": "models/weapons/voxel-rpg/22.glb",
+      "preview": "models/weapons/voxel-rpg/22-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_23",
+      "label": "Voxel Weapon 23",
+      "obj": "models/weapons/voxel-rpg/23.obj",
+      "mtl": "models/weapons/voxel-rpg/23.mtl",
+      "glb": "models/weapons/voxel-rpg/23.glb",
+      "preview": "models/weapons/voxel-rpg/23-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_24",
+      "label": "Voxel Weapon 24",
+      "obj": "models/weapons/voxel-rpg/24.obj",
+      "mtl": "models/weapons/voxel-rpg/24.mtl",
+      "glb": "models/weapons/voxel-rpg/24.glb",
+      "preview": "models/weapons/voxel-rpg/24-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_25",
+      "label": "Voxel Weapon 25",
+      "obj": "models/weapons/voxel-rpg/25.obj",
+      "mtl": "models/weapons/voxel-rpg/25.mtl",
+      "glb": "models/weapons/voxel-rpg/25.glb",
+      "preview": "models/weapons/voxel-rpg/25-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_26",
+      "label": "Voxel Weapon 26",
+      "obj": "models/weapons/voxel-rpg/26.obj",
+      "mtl": "models/weapons/voxel-rpg/26.mtl",
+      "glb": "models/weapons/voxel-rpg/26.glb",
+      "preview": "models/weapons/voxel-rpg/26-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_27",
+      "label": "Voxel Weapon 27",
+      "obj": "models/weapons/voxel-rpg/27.obj",
+      "mtl": "models/weapons/voxel-rpg/27.mtl",
+      "glb": "models/weapons/voxel-rpg/27.glb",
+      "preview": "models/weapons/voxel-rpg/27-preview.png",
+      "heightM": 1.1,
+      "source": "Voxel RPG Weapons (Individual assets)"
+    },
+    {
+      "id": "voxwpn_magica_set",
+      "label": "Magica Voxel Weapons Set",
+      "obj": "models/weapons/voxel-rpg/weapons_magica.obj",
+      "mtl": "models/weapons/voxel-rpg/bronie.mtl",
+      "glb": "models/weapons/voxel-rpg/weapons_magica.glb",
+      "heightM": 1.2,
+      "source": "weapons.obj"
+    }
+  ]
+}

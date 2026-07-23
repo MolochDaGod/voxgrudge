@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\models\\voxels\\free-rpg\\TPose_Character09.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\models\\voxels\\free-rpg\\TPose_Character09.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.9696969985961914,
+      0,
+      -0.24242424964904785
+    ],
+    "max": [
+      0.9696969985961914,
+      2,
+      0.1818181872367859
+    ],
+    "size": [
+      1.9393939971923828,
+      2,
+      0.42424243688583374
+    ]
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\models\\voxels\\free-rpg\\TPose_Character09.collider.json",
+  "producedAt": "2026-07-23T08:10:22.462Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

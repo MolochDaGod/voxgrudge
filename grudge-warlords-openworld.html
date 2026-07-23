@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="ui/vox-game-shell.css">
 <link rel="stylesheet" href="ui/vox-ui-kit.css">
 <link rel="stylesheet" href="ui/craftpix-rpg/craftpix-rpg-ui.css">
+<link rel="stylesheet" href="ui/hud/party-frames.css">
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
@@ -698,6 +699,9 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/world-engine.js"></script>
 <script src="js/cold-biom-manifest.js"></script>
 <script src="js/cold-biom-loader.js"></script>
+<script src="js/lava-biom-manifest.js"></script>
+<script src="js/lava-biom-loader.js"></script>
+<script src="js/voxel-weapon-loader.js"></script>
 <script src="js/grudge-nexus-stats.js"></script>
 <script src="js/grudge-studio-ui.js"></script>
 <script src="js/grudge-codex-icons.js"></script>
@@ -717,9 +721,30 @@ window.VoxGltfConfigure = function (loader) {
 <!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
 <script src="js/grudge-vox-cloud.js"></script>
 <script>
-// Apply real HUD frame URLs (CraftPix / gothic panels) before first paint of chrome
+// Apply real HUD frame URLs (CraftPix / gothic panels / party frames) before first paint
 try {
   if (window.GrudgeAssets && GrudgeAssets.applyHudCssVars) GrudgeAssets.applyHudCssVars();
+  // Party / character-info frames (CraftPix Unit Frames + BuildYourself status bar art)
+  (function applyPartyFrameVars(){
+    var root = document.documentElement;
+    function u(rel){
+      if (window.GrudgeAssets && GrudgeAssets.localOrR2) return GrudgeAssets.localOrR2('ui/hud/party-frames/' + rel);
+      return '/ui/hud/party-frames/' + rel;
+    }
+    [
+      ['--pf-player-bg','player-frame.png'],
+      ['--pf-player-border','player-border.png'],
+      ['--pf-hp-fill','hp-fill.png'],
+      ['--pf-mp-fill','mp-fill.png'],
+      ['--pf-party-hp','party-hp-bg.png'],
+      ['--pf-party-mp','party-mp-bg.png'],
+      ['--pf-level','level-frame.png'],
+      ['--pf-buff','buff-frame.png'],
+      ['--pf-buildyourself','buildyourself-status-bar-sheet.png'],
+    ].forEach(function(pair){
+      root.style.setProperty(pair[0], 'url("' + u(pair[1]) + '")');
+    });
+  })();
   if (window.CraftpixRpgUI && CraftpixRpgUI.boot) {
     CraftpixRpgUI.boot({ compositions: ['hudVitals', 'hudDock', 'weaponSlots'] }).catch(function () {});
   }
@@ -954,8 +979,9 @@ const BIOMES = [
   {name:'FABLED SWAMP',    minD:28, maxD:55, ground:0x2a4a1a, fog:0x1a2a10, tiers:[2,3,3],     label:'Fabled Swamp'},
   {name:'CRUSADE RUINS',   minD:55, maxD:80, ground:0x554444, fog:0x3a2a2a, tiers:[3,4,4],     label:'Crusade Ruins'},
   {name:'PIGLIN WASTELAND',minD:80, maxD:105,ground:0x7a5a2a, fog:0x4a3a1a, tiers:[4,5,5],     label:'Piglin Wasteland'},
-  {name:'FROST REACH',     minD:105,maxD:135,ground:0xc8d8e8, fog:0x8899aa, tiers:[5,6,6],     label:'Frost Reach', coldBiom:true},
-  {name:'DARK SANCTUM',    minD:135,maxD:999,ground:0x220033, fog:0x110022, tiers:[6,7,7],     label:'Dark Sanctum'},
+  {name:'FROST REACH',     minD:105,maxD:128,ground:0xc8d8e8, fog:0x8899aa, tiers:[5,6,6],     label:'Frost Reach', coldBiom:true},
+  {name:'LAVA CALDERA',    minD:128,maxD:155,ground:0x4a1a0a, fog:0x2a0a08, tiers:[6,6,7],     label:'Lava Caldera', lavaBiom:true},
+  {name:'DARK SANCTUM',    minD:155,maxD:999,ground:0x220033, fog:0x110022, tiers:[7,7,7],     label:'Dark Sanctum'},
 ];
 
 const TIER_POOLS = {
@@ -1408,13 +1434,34 @@ function renderTvsUnitPicker(){
   if(window.TvsUnitLoader){
     TvsUnitLoader.loadTvsRoster().then(function(r){
       tvsRosterCache = r;
-      renderTvsUnitPicker();
-      refreshTvsHeroCarousel();
-      if(playerTvsUnit) refreshHeroPreview(playerTvsUnit);
-      else if(r.units && r.units[0]){
-        const pref = playerClass ? TvsUnitLoader.pickBestUnit(r, playerClass) : r.units[0];
-        if(pref){ playerTvsUnit = pref; playerTvsUnitId = pref.unitId; refreshHeroPreview(pref); }
+      function afterRosterReady(){
+        renderTvsUnitPicker();
+        refreshTvsHeroCarousel();
+        if(playerTvsUnit) refreshHeroPreview(playerTvsUnit);
+        else if(tvsRosterCache.units && tvsRosterCache.units[0]){
+          const pref = playerClass ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass) : tvsRosterCache.units[0];
+          if(pref){ playerTvsUnit = pref; playerTvsUnitId = pref.unitId; refreshHeroPreview(pref); }
+        }
       }
+      // Merge free TVS T-pose heroes (baked 2.0m + atlas) into picker roster
+      const freeUrl = (window.GrudgeAssets&&GrudgeAssets.localOrR2)
+        ? GrudgeAssets.localOrR2('assets/voxels/free-rpg-roster.json')
+        : '/assets/voxels/free-rpg-roster.json';
+      fetch(freeUrl).then(function(res){ return res.ok?res.json():null; }).then(function(free){
+        if(free&&free.units&&tvsRosterCache){
+          tvsRosterCache.units = (tvsRosterCache.units||[]).concat(free.units.map(function(u){
+            return Object.assign({}, u, {
+              displayName: u.label || u.unitId,
+              glbUrl: u.glbUrl,
+              modelUrl: u.glbUrl || u.modelUrl,
+              textureUrl: u.textureUrl,
+              heightM: 2.0,
+              tags: ['free-rpg','voxel'],
+            });
+          }));
+        }
+        afterRosterReady();
+      }).catch(function(){ afterRosterReady(); });
     }).catch(function(err){
       console.warn('[VoxGrudge] TVS roster failed', err);
       const row = document.getElementById('tvs-unit-row');
@@ -2250,6 +2297,29 @@ function init(){
   // TVS settlements: cities, villages, farms, camps, castles, cathedrals, towers
   spawnSelectedSettlements();
 
+  // Lava Caldera scatter (2D isometric LavaBiome pack as billboards)
+  if(window.LavaBiomLoader){
+    try{
+      window._lavaBiomLoader = LavaBiomLoader.create({ THREE:THREE, scene:scene });
+      window._lavaBiomLoader.preloadCore().then(function(){
+        // Place volcanic clusters on mid-far ring (LAVA CALDERA band ~128–155 unscaled*WORLD_SCALE)
+        const scale = (window.VoxStandards && VoxStandards.SCALE && VoxStandards.SCALE.WORLD_SCALE) || 10;
+        const ring = 140 * scale;
+        [[1,0],[-0.7,0.7],[0.2,-1],[-0.9,-0.4]].forEach(function(dir, i){
+          const len = Math.hypot(dir[0], dir[1]) || 1;
+          const cx = (dir[0]/len) * ring * (0.85 + i*0.04);
+          const cz = (dir[1]/len) * ring * (0.85 + i*0.04);
+          window._lavaBiomLoader.populateZone(cx, cz, 48 + i*8, 0.42, Math.random);
+        });
+      }).catch(function(e){ console.warn('[LavaBiom]', e); });
+    }catch(e){ console.warn('[LavaBiom] init', e); }
+  }
+
+  // Voxel weapon roster preload
+  if(window.VoxelWeaponLoader){
+    VoxelWeaponLoader.loadRoster().catch(function(){});
+  }
+
   if (window.GrudgeWorldFires) {
     worldFires = new GrudgeWorldFires(scene, { worldEngine, maxCount: 96 });
   }
@@ -2985,6 +3055,22 @@ function buildVoxChar(bodyColor, pantsColor, scale){
 
 function buildWeaponMesh(id){
   const g = new THREE.Group();
+  g.name = 'weaponRoot';
+  g.userData.weaponId = id;
+  // Async swap-in of production voxel weapon GLB when available
+  if(window.VoxelWeaponLoader && window.THREE){
+    const loader = makeGltfLoader ? makeGltfLoader() : null;
+    VoxelWeaponLoader.loadForGameWeapon(THREE, loader, id).then(function(mesh){
+      if(!mesh || !g.parent) return;
+      // Clear procedural children, keep group transform
+      while(g.children.length) g.remove(g.children[0]);
+      mesh.position.set(0.55, 0.95, 0.15);
+      mesh.rotation.set(-0.2, 0.4, 0.15);
+      mesh.scale.multiplyScalar(0.85);
+      g.add(mesh);
+      g.userData.voxelWeapon = true;
+    }).catch(function(){ /* keep procedural fallback */ });
+  }
   if(id==='sword'){
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12,1.6,0.06),new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.9,roughness:0.2}));
     blade.position.set(0.9,1.2,0);
@@ -5472,12 +5558,36 @@ function craftItem(recId){
 function switchWeapon(id){
   if(!WEAPONS[id].owned) return;
   currentWeapon=WEAPONS[id];
-  playerMesh.remove(weaponMeshObj);
+  if(weaponMeshObj && playerMesh){
+    try{ playerMesh.remove(weaponMeshObj); }catch(e){}
+  }
   weaponMeshObj=buildWeaponMesh(id);
-  playerMesh.add(weaponMeshObj);
+  if(playerMesh) playerMesh.add(weaponMeshObj);
   resetSkillCDs();
   updateWeaponUI();
   updateSkillUI();
+}
+
+/** Party / ally unit frames (CraftPix + BuildYourself status bars) */
+function refreshPartyFrames(){
+  const host=document.getElementById('uf-party');
+  if(!host) return;
+  host.className='party-frame-list';
+  host.innerHTML='';
+  const allies=(typeof minions!=='undefined' && minions)?minions.slice(0,5):[];
+  allies.forEach(function(m,i){
+    const hp=Math.max(0,m.hp||0), max=Math.max(1,m.maxHp||m.hp||1);
+    const pct=Math.round(hp/max*100);
+    const el=document.createElement('div');
+    el.className='party-frame unit-frame--party';
+    el.innerHTML='<div class="pf-name">'+(m.name||m.type||('Ally '+(i+1)))+'</div>'+
+      '<div class="pf-hp"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="pf-level">'+(m.level||1)+'</div>'+
+      '<div class="buildyourself-pips">'+[0,1,2,3,4].map(function(j){
+        return '<span class="'+(j<Math.ceil(pct/20)?'on':'')+'"></span>';
+      }).join('')+'</div>';
+    host.appendChild(el);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5811,6 +5921,13 @@ function updateHUD(){
   const levelEl=document.getElementById('level-val');
   if(levelEl) levelEl.textContent='Lv.'+(level||1)+' — '+(exp||0)+'/'+(expToNext||1);
   if(window.VoxCombatHud) VoxCombatHud.tick();
+  if(gameStarted && typeof refreshPartyFrames==='function'){
+    // Throttle ally frames to ~4Hz
+    if(!updateHUD._pfT || performance.now()-updateHUD._pfT>250){
+      updateHUD._pfT=performance.now();
+      refreshPartyFrames();
+    }
+  }
 
   // PNG unit frames (player XY + AI targets)
   if(window.VoxUiKit && gameStarted){

@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "source": "LavaBiome.zip (2D isometric sprites)",
+  "itchPreview": "https://img.itch.zone/aW1hZ2UvNjAxNTMzLzMyMTUyMTYucG5n/original/rDFE%2Fa.png",
+  "categories": {
+    "Bubble": [
+      "Bubble/LavaBubble1.png",
+      "Bubble/LavaBubble2.png",
+      "Bubble/LavaBubble3.png",
+      "Bubble/LavaBubble4.png",
+      "Bubble/LavaBubbles_SpriteSheet_1024x1024.png"
+    ],
+    "Constructions": [
+      "Constructions/Constructions_SpriteSheet_1024x1024.png",
+      "Constructions/LavaAnvile.png",
+      "Constructions/LavaFence.png",
+      "Constructions/LavaForge.png",
+      "Constructions/LavaObelsik.png",
+      "Constructions/LavaPortal.png",
+      "Constructions/LavaTotem.png"
+    ],
+    "MiniVolcans": [
+      "MiniVolcans/VolcanicMound1.png",
+      "MiniVolcans/VolcanicMound2.png",
+      "MiniVolcans/VolcanicMound3.png",
+      "MiniVolcans/VolcanicMound4.png",
+      "MiniVolcans/VolcanicMound_SpriteSheet_1024x1024.png"
+    ],
+    "Plants": [
+      "Plants/LavaPlant1.png",
+      "Plants/LavaPlant2.png",
+      "Plants/LavaPlant3.png",
+      "Plants/LavaPlant4.png",
+      "Plants/LavaPlant_SpriteSheet_1024x1024.png"
+    ],
+    "Rocks": [
+      "Rocks/VolcanicRock1.png",
+      "Rocks/VolcanicRock2.png",
+      "Rocks/VolcanicRock3.png",
+      "Rocks/VolcanicRock4.png",
+      "Rocks/VolcanicRock_SpriteSheet_1024x1024.png"
+    ],
+    "Shadows": [
+      "Shadows/Shadow_circle.png",
+      "Shadows/Shadow_square.png"
+    ],
+    "Tiles": [
+      "Tiles/Lava1_ISO_Cube.png",
+      "Tiles/LavaTile_SpriteSheet_512x512.png",
+      "Tiles/Lava_ISO_HalfSlab.png",
+      "Tiles/Lava_ISO_Stairs.png",
+      "Tiles/Lava_SIDES_Texture.png",
+      "Tiles/Lava_TOP_Texture.png"
+    ],
+    "Trees": [
+      "Trees/LavaTree1.png",
+      "Trees/LavaTree2.png",
+      "Trees/LavaTree3.png",
+      "Trees/LavaTree4.png",
+      "Trees/LavaTree_SpriteSheet_1024x1024.png"
+    ],
+    "Volcano": [
+      "Volcano/Volcano1.png",
+      "Volcano/Volcano2.png",
+      "Volcano/Volcano3.png",
+      "Volcano/Volcano4.png",
+      "Volcano/Volcano_SpriteSheet_1024x1024.png"
+    ]
+  },
+  "scatter": {
+    "trees": [
+      "Trees/LavaTree1.png",
+      "Trees/LavaTree2.png",
+      "Trees/LavaTree3.png",
+      "Trees/LavaTree4.png"
+    ],
+    "rocks": [
+      "Rocks/VolcanicRock1.png",
+      "Rocks/VolcanicRock2.png",
+      "Rocks/VolcanicRock3.png",
+      "Rocks/VolcanicRock4.png"
+    ],
+    "plants": [
+      "Plants/LavaPlant1.png",
+      "Plants/LavaPlant2.png",
+      "Plants/LavaPlant3.png",
+      "Plants/LavaPlant4.png"
+    ],
+    "volcanoes": [
+      "Volcano/Volcano1.png",
+      "Volcano/Volcano2.png",
+      "Volcano/Volcano3.png",
+      "Volcano/Volcano4.png"
+    ],
+    "mounds": [
+      "MiniVolcans/VolcanicMound1.png",
+      "MiniVolcans/VolcanicMound2.png",
+      "MiniVolcans/VolcanicMound3.png",
+      "MiniVolcans/VolcanicMound4.png"
+    ],
+    "constructions": [
+      "Constructions/LavaAnvile.png",
+      "Constructions/LavaFence.png",
+      "Constructions/LavaForge.png",
+      "Constructions/LavaObelsik.png",
+      "Constructions/LavaPortal.png",
+      "Constructions/LavaTotem.png"
+    ],
+    "bubbles": [
+      "Bubble/LavaBubble1.png",
+      "Bubble/LavaBubble2.png",
+      "Bubble/LavaBubble3.png",
+      "Bubble/LavaBubble4.png"
+    ],
+    "tiles": [
+      "Tiles/Lava1_ISO_Cube.png",
+      "Tiles/Lava_ISO_HalfSlab.png",
+      "Tiles/Lava_ISO_Stairs.png",
+      "Tiles/Lava_SIDES_Texture.png",
+      "Tiles/Lava_TOP_Texture.png"
+    ]
+  }
+}

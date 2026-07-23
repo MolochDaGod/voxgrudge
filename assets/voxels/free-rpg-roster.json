@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-23T08:08:44.352Z",
+  "count": 12,
+  "units": [
+    {
+      "unitId": "free-rpg-00-tpose-character",
+      "label": "TPose Character",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-01-tpose-character01",
+      "label": "TPose Character01",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character01.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character01.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-02-tpose-character02",
+      "label": "TPose Character02",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character02.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character02.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-03-tpose-character03",
+      "label": "TPose Character03",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character03.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character03.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-04-tpose-character04",
+      "label": "TPose Character04",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character04.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character04.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-05-tpose-character05",
+      "label": "TPose Character05",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character05.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character05.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-06-tpose-character06",
+      "label": "TPose Character06",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character06.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character06.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-07-tpose-character07",
+      "label": "TPose Character07",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character07.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character07.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-08-tpose-character08",
+      "label": "TPose Character08",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character08.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character08.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-09-tpose-character09",
+      "label": "TPose Character09",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character09.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character09.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-10-tpose-character10",
+      "label": "TPose Character10",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character10.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character10.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    },
+    {
+      "unitId": "free-rpg-11-tpose-character11",
+      "label": "TPose Character11",
+      "modelUrl": "models/voxels/free-rpg/TPose_Character11.fbx",
+      "glbUrl": "models/voxels/free-rpg/TPose_Character11.glb",
+      "textureUrl": "models/voxels/free-rpg/DungeonCrawler_Character.png",
+      "heightM": 2,
+      "pack": "free-rpg",
+      "source": "rpgvoxelassetsweapons FreeContent / the-voxel-store free"
+    }
+  ]
+}

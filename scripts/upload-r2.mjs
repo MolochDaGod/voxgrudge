@@ -113,6 +113,10 @@ function collectFiles() {
     'models/fantasy',
     'models/buildings',
     'models/city',
+    'models/weapons',
+    'models/voxels/free-rpg',
+    'assets/lava-biome',
+    'ui/hud/party-frames',
   ];
   for (const dir of critical) {
     for (const f of walk(path.join(ROOT, dir))) {

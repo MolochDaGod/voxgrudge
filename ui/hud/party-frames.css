@@ -1,0 +1,157 @@
+/* Party + character unit frames — CraftPix Unit Frames + BuildYourself status-bar style */
+
+:root {
+  --pf-player-bg: url("/ui/hud/party-frames/player-frame.png");
+  --pf-player-border: url("/ui/hud/party-frames/player-border.png");
+  --pf-hp-fill: url("/ui/hud/party-frames/hp-fill.png");
+  --pf-mp-fill: url("/ui/hud/party-frames/mp-fill.png");
+  --pf-party-hp: url("/ui/hud/party-frames/party-hp-bg.png");
+  --pf-party-mp: url("/ui/hud/party-frames/party-mp-bg.png");
+  --pf-level: url("/ui/hud/party-frames/level-frame.png");
+  --pf-buff: url("/ui/hud/party-frames/buff-frame.png");
+  --pf-buildyourself: url("/ui/hud/party-frames/buildyourself-status-bar-sheet.png");
+}
+
+/* Player unit frame (top-left character info) */
+.unit-frame--player,
+#uf-player {
+  background: var(--pf-player-bg) center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-image: none !important;
+  image-rendering: pixelated;
+  min-width: 220px;
+  min-height: 72px;
+  padding: 10px 14px 10px 78px !important;
+  position: relative;
+}
+
+.unit-frame--player::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  background: var(--pf-player-border) center / contain no-repeat;
+  pointer-events: none;
+}
+
+.unit-frame--player .uf-hp,
+.unit-frame--player .uf-bar-hp,
+#uf-player .bar-hp,
+#uf-player .hp-track {
+  background: rgba(40, 10, 10, 0.85) !important;
+  border-radius: 2px !important;
+  height: 12px !important;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #3a2010;
+}
+
+.unit-frame--player .uf-hp > i,
+.unit-frame--player .uf-bar-hp > i,
+#uf-player .bar-hp > i,
+#uf-player .hp-fill {
+  background: linear-gradient(180deg, #ff6a4a 0%, #c41e1e 55%, #8B0000 100%) !important;
+  background-image: var(--pf-hp-fill) !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+}
+
+.unit-frame--player .uf-mp,
+#uf-player .bar-mp {
+  background: rgba(8, 16, 40, 0.85) !important;
+  height: 10px !important;
+}
+
+.unit-frame--player .uf-mp > i,
+#uf-player .mp-fill {
+  background-image: var(--pf-mp-fill) !important;
+  background-size: 100% 100% !important;
+}
+
+/* Target / party frames */
+.unit-frame--target,
+.unit-frame--party,
+#uf-target,
+.party-frame {
+  background: var(--pf-party-hp) left center / auto 100% no-repeat,
+    rgba(10, 8, 14, 0.82) !important;
+  border: none !important;
+  image-rendering: pixelated;
+  min-height: 48px;
+  padding: 8px 12px 8px 56px !important;
+}
+
+.party-frame-list {
+  position: fixed;
+  top: 96px;
+  left: 12px;
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.party-frame {
+  width: 200px;
+  color: #f0e6d0;
+  font-family: Cinzel, "Segoe UI", serif;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.party-frame .pf-name {
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+  margin-bottom: 3px;
+}
+
+.party-frame .pf-hp {
+  height: 10px;
+  background: rgba(30, 8, 8, 0.9);
+  border: 1px solid #4a3020;
+  overflow: hidden;
+}
+
+.party-frame .pf-hp > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #e85a4a, #8B0000);
+  width: 100%;
+}
+
+.party-frame .pf-level {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: 28px;
+  height: 28px;
+  background: var(--pf-level) center / contain no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff8e0;
+}
+
+/* BuildYourself-inspired segmented resource pips */
+.buildyourself-pips {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+.buildyourself-pips span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffcc66, #aa4400);
+  box-shadow: 0 0 0 1px #3a2010;
+  opacity: 0.35;
+}
+.buildyourself-pips span.on {
+  opacity: 1;
+  box-shadow: 0 0 6px #ff8822;
+}

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert",
+  "colliders": [
+    {
+      "mesh": "Untitled",
+      "type": "capsule",
+      "center": [
+        -7.700002670288086,
+        -9.350003242492676,
+        -47.30001640319824
+      ],
+      "size": [
+        4.400001525878906,
+        1.1000003814697266,
+        17.60000228881836
+      ],
+      "min": [
+        -9.900003433227539,
+        -9.900003433227539,
+        -56.10001754760742
+      ],
+      "max": [
+        -5.500001907348633,
+        -8.800003051757812,
+        -38.50001525878906
+      ],
+      "capsule": {
+        "align": "Y",
+        "radius": 8.82,
+        "height": 0.01,
+        "offsetY": -1.4025
+      },
+      "box": {
+        "halfExtents": [
+          2.22,
+          0.57,
+          8.82
+        ]
+      }
+    }
+  ],
+  "rootCollider": {
+    "type": "capsule",
+    "role": "character_root",
+    "center": [
+      0,
+      0.55,
+      0
+    ],
+    "size": [
+      0.7,
+      1.1,
+      0.7
+    ],
+    "capsule": {
+      "align": "Y",
+      "radius": 0.35,
+      "height": 0.4
+    },
+    "practice": "Attach Cannon/Rapier body to hips/Y root; do not per-mesh armor RB on grudge6."
+  }
+}
