@@ -104,12 +104,46 @@
     return bundleUrl(localPath);
   }
 
-  /** GLB/OBJ/FBX under models/ */
+  /** GLB/OBJ/FBX under models/ (or absolute /models/... paths). */
   function modelUrl(localPath) {
     if (!localPath) return '';
     var p = String(localPath).replace(/^\//, '').replace(/^assets\//, '');
     if (useR2()) return cdnUrl(R2_APP + '/' + p);
     return bundleUrl(p);
+  }
+
+  /**
+   * Prefer R2 when live; fall back to same-origin if CDN key is missing.
+   * Use for critical runtime loads (anims, creatures) during CDN backfill.
+   */
+  function modelUrlWithFallback(localPath) {
+    var primary = modelUrl(localPath);
+    var local = bundleUrl(String(localPath || '').replace(/^\//, ''));
+    if (!useR2() || primary === local) return primary;
+    return primary;
+  }
+
+  /** Same-origin mirror of a path (for fetch HEAD fallback). */
+  function sameOriginUrl(localPath) {
+    return bundleUrl(String(localPath || '').replace(/^\//, ''));
+  }
+
+  /**
+   * Resolve asset URL with optional HEAD probe → same-origin if R2 404.
+   * Returns a Promise<string>.
+   */
+  function resolveUrl(localPath, preferFn) {
+    preferFn = preferFn || modelUrl;
+    var primary = preferFn(localPath);
+    var fallback = sameOriginUrl(localPath);
+    if (!useR2() || primary === fallback) return Promise.resolve(primary);
+    return fetch(primary, { method: 'HEAD', mode: 'cors' })
+      .then(function (r) {
+        return r.ok ? primary : fallback;
+      })
+      .catch(function () {
+        return fallback;
+      });
   }
 
   /** TVS shared pack — always R2 when online (canonical fleet path). */
@@ -227,17 +261,42 @@
     if (!root) return;
     root.style.setProperty('--gg-r2-ui', uiFrame(''));
     root.style.setProperty('--gg-cdn', useR2() ? R2_ORIGIN : '');
+    // CraftPix action bar / frames via R2 or same-origin
     root.style.setProperty('--gg-slot-action', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Slot_Background.png') + '")');
+    root.style.setProperty('--gg-slot-skill', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Slot_Background.png') + '")');
+    root.style.setProperty('--gg-slot-skill-hover', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Slot_Hover.png') + '")');
+    root.style.setProperty('--gg-slot-skill-press', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Slot_Press.png') + '")');
     root.style.setProperty('--gg-slot-extra', 'url("' + uiFrame('Action_Bar/Slots/ActionBar_Extra_Slot_Background.png') + '")');
     root.style.setProperty('--gg-slot-inv', 'url("' + uiFrame('Inventory/Inventory_Slot_Background.png') + '")');
+    root.style.setProperty('--gg-unitframe', 'url("' + uiFrame('Unit_Frames/Main/UnitFrame_Background.png') + '")');
     root.style.setProperty('--gg-hp-frame', 'url("' + uiFrame('Unit_Frames/Party/UnitFrame_Party_Background.png') + '")');
-    root.style.setProperty('--gg-hp-fill', 'url("' + uiFrame('Unit_Frames/Party/Bars/UnitFrame_Party_HP_Fill_Red.png') + '")');
+    root.style.setProperty('--gg-hp-fill', 'url("' + uiFrame('Unit_Frames/Main/Bars/UnitFrame_HP_Fill_Red.png') + '")');
+    root.style.setProperty('--gg-mp-fill', 'url("' + uiFrame('Unit_Frames/Main/Bars/UnitFrame_MP_Fill_Green.png') + '")');
+    root.style.setProperty('--gg-xp-track', 'url("' + uiFrame('Action_Bar/XP_Bar/ActionBar_XP_Background.png') + '")');
+    root.style.setProperty('--gg-xp-fill', 'url("' + uiFrame('Action_Bar/XP_Bar/ActionBar_XP_Fill.png') + '")');
+    root.style.setProperty('--gg-cast-track', 'url("' + uiFrame('Cast_Bars/CastBar_Bar_Background.png') + '")');
+    root.style.setProperty('--gg-cast-fill', 'url("' + uiFrame('Cast_Bars/CastBar_Bar_Fill.png') + '")');
     root.style.setProperty('--gg-panel-bg', 'url("' + hudFrame('panel-bg.png') + '")');
     root.style.setProperty('--gg-panel-fg', 'url("' + hudFrame('panel-fg.png') + '")');
     root.style.setProperty('--gg-slot-gothic', 'url("' + hudFrame('slot-gothic.png') + '")');
     root.style.setProperty('--gg-window-bg', 'url("' + uiFrame('Window/Window_Background.png') + '")');
+    root.style.setProperty('--gg-window', 'url("' + uiFrame('Window/Window_Background.png') + '")');
     root.style.setProperty('--gg-window-header', 'url("' + uiFrame('Window/Window_Header_Background.png') + '")');
     root.style.setProperty('--gg-chat-tab-active', 'url("' + uiFrame('Chat/Tabs/Chat_Tab_Active.png') + '")');
+    root.style.setProperty('--gg-btn-lg', 'url("' + uiFrame('Buttons/Rectangular/Large/Button_RL_Background.png') + '")');
+    root.style.setProperty('--gg-btn-lg-yellow', 'url("' + uiFrame('Buttons/Rectangular/Large/Button_RL_Background_Yellow.png') + '")');
+    root.style.setProperty('--gg-btn-md', 'url("' + uiFrame('Buttons/Rectangular/Medium/Button_RM_Background.png') + '")');
+    root.style.setProperty('--gg-btn-sm', 'url("' + uiFrame('Buttons/Rectangular/Small/Buttom_RS_Background.png') + '")');
+    root.style.setProperty('--gg-notif', 'url("' + uiFrame('Notifications/Notification_Background.png') + '")');
+    // CraftPix RPG pack (pixel HUD)
+    var cpx = function (rel) {
+      return localOrR2('ui/craftpix-rpg/' + rel, R2_APP + '/ui/craftpix-rpg/' + rel);
+    };
+    root.style.setProperty('--cpx-base', cpx('').replace(/\/?$/, '/'));
+    root.style.setProperty('--cpx-pb-frame', 'url("' + cpx('bars/pb_frame.png') + '")');
+    root.style.setProperty('--cpx-pb-fill', 'url("' + cpx('bars/pb_fill_1.png') + '")');
+    root.style.setProperty('--cpx-uf-frame', 'url("' + cpx('frames/uf_frame.png') + '")');
+    root.style.setProperty('--cpx-ab-frame', 'url("' + cpx('bars/ab1_main_frame.png') + '")');
   }
 
   global.GrudgeAssets = {
@@ -253,6 +312,9 @@
     r2: r2,
     localOrR2: localOrR2,
     modelUrl: modelUrl,
+    modelUrlWithFallback: modelUrlWithFallback,
+    sameOriginUrl: sameOriginUrl,
+    resolveUrl: resolveUrl,
     tvsUrl: tvsUrl,
     vfxFrame: vfxFrame,
     uiFrame: uiFrame,

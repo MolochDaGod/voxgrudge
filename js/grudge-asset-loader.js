@@ -13,6 +13,21 @@
     return String(localPath || '').replace(/^\//, '');
   }
 
+  function sameOriginAsset(localPath) {
+    if (global.GrudgeAssets && GrudgeAssets.sameOriginUrl) return GrudgeAssets.sameOriginUrl(localPath);
+    return String(localPath || '').replace(/^\//, '');
+  }
+
+  /** Load FBX with R2 primary + same-origin fallback (anims often lag CDN backfill). */
+  function loadFbxResilient(fbxLoader, localPath) {
+    var primary = assetUrl(localPath);
+    var fallback = sameOriginAsset(localPath);
+    return loadFbx(fbxLoader, primary).catch(function () {
+      if (fallback && fallback !== primary) return loadFbx(fbxLoader, fallback);
+      return Promise.reject(new Error('FBX failed: ' + localPath));
+    });
+  }
+
   function fmtEta(sec) {
     if (!isFinite(sec) || sec < 0) return '—';
     if (sec < 1) return '<1s';
@@ -305,7 +320,7 @@
       if (typeof THREE.FBXLoader === 'undefined') return Promise.resolve();
       var fbxLoader = new THREE.FBXLoader();
       ctx.fbxLoader = fbxLoader;
-      return loadFbx(fbxLoader, assetUrl('models/anims/idle.fbx')).then(function (fbx) {
+      return loadFbxResilient(fbxLoader, 'models/anims/idle.fbx').then(function (fbx) {
         var sc = 0.028;
         fbx.scale.set(sc, sc, sc);
         fbx.traverse(function (c) { if (c.isMesh) c.visible = false; });

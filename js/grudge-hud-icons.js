@@ -31,7 +31,12 @@
       var num = (Math.abs(hash(id)) % 8) + 1;
       return GrudgeCodex.skillIconUrl(pack, num);
     }
-    return '/assets/mine-loader/ui-icons/skill-slot.png';
+    return resolveLocal('assets/mine-loader/ui-icons/skill-slot.png');
+  }
+
+  function resolveLocal(path) {
+    if (global.GrudgeAssets && GrudgeAssets.localOrR2) return GrudgeAssets.localOrR2(path);
+    return '/' + String(path || '').replace(/^\//, '');
   }
 
   function hash(s) {
@@ -47,7 +52,7 @@
       if (u) return u;
     }
     if (global.GrudgeCodex) return GrudgeCodex.weaponIconUrl(id);
-    return '/assets/grudge-game/ui/Icons_128x128/Icon_Sword_128.png';
+    return resolveLocal('assets/grudge-game/ui/Icons_128x128/Icon_Sword_128.png');
   }
 
   function classIconUrl(id) {
@@ -57,7 +62,7 @@
       if (u) return u;
     }
     if (global.GrudgeCodex) return GrudgeCodex.classIconUrl(id);
-    return '/assets/grudge-game/class-emblems/warrior.webp';
+    return resolveLocal('assets/grudge-game/class-emblems/warrior.webp');
   }
 
   function itemIconUrl(id, def) {
@@ -67,7 +72,7 @@
       if (u) return u;
     }
     if (global.GrudgeCodex) return GrudgeCodex.itemIconUrl(id, def);
-    return '/assets/mine-loader/ui-icons/inventory.png';
+    return resolveLocal('assets/mine-loader/ui-icons/inventory.png');
   }
 
   function resourceIconUrl(res) {

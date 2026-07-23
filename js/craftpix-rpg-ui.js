@@ -7,6 +7,10 @@
 
   var BASE = 'ui/craftpix-rpg/';
   function resolveBase() {
+    if (global.GrudgeAssets && GrudgeAssets.localOrR2) {
+      var u = GrudgeAssets.localOrR2(BASE, 'voxgrudge/' + BASE);
+      return u.replace(/\/?$/, '/');
+    }
     var path = (global.location && global.location.pathname) || '';
     if (path.indexOf('/voxgrudge') >= 0) return '/voxgrudge/' + BASE;
     return BASE;

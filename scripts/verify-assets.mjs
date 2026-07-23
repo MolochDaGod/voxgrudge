@@ -28,6 +28,23 @@ const UI = [
   'Spell_Book/Tabs/SpellBook_Tab_Background_Active.png',
 ];
 
+const RUNTIME = [
+  // Anim pack (Mixamo FBX → skinned locomotion/combat)
+  'models/anims/idle.fbx',
+  'models/anims/run-forward.fbx',
+  'models/anims/sword-shield-attack.fbx',
+  // Creatures / maps props
+  'models/creatures/skeleton-warrior.glb',
+  'models/kenney/character-a.glb',
+  'models/kenney/textures/texture-a.png',
+  // VFX + HUD chrome
+  'vfx/muzzle/flash_front_01.png',
+  'ui/hud/grudge-hud.css',
+  'ui/hud/frames/panel-bg.png',
+  'ui/craftpix-rpg/bars/pb_frame.png',
+  'assets/mine-loader/ui-icons/skill-slot.png',
+];
+
 const EXTRA = [
   `${CDN}/models/voxels/tvs/catalog.json`,
   `${CDN}/models/voxels/tvs/unit-roster.json`,
@@ -45,6 +62,8 @@ const EXTRA = [
   `${LOCAL}/js/vox-ui-deps.js`,
   `${LOCAL}/js/tvs-unit-loader.js`,
   `${LOCAL}/js/tvs-hero-preview.js`,
+  `${LOCAL}/js/player-controller.js`,
+  `${LOCAL}/ui/hud/grudge-hud.css`,
 ];
 
 function urls() {
@@ -52,6 +71,10 @@ function urls() {
   for (const rel of UI) {
     list.push(`${CDN}/${APP}/assets/grudge-game/ui/${rel}`);
     if (!cdnOnly) list.push(`${LOCAL}/assets/grudge-game/ui/${rel}`);
+  }
+  for (const rel of RUNTIME) {
+    list.push(`${CDN}/${APP}/${rel}`);
+    if (!cdnOnly) list.push(`${LOCAL}/${rel}`);
   }
   list.push(...EXTRA);
   return [...new Set(list)];

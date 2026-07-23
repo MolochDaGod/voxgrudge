@@ -95,13 +95,32 @@
       if (camera && camera.fov != null && opts.baseFov == null) baseFov = camera.fov;
     }
 
-    function setTarget(mesh) {
+    /**
+     * Attach follow target. Only re-aligns yaw / snaps when the mesh *changes*
+     * or opts.realign === true. Safe to call every frame with the same mesh
+     * (host update loops used to reset free-look every tick).
+     */
+    function setTarget(mesh, optsSet) {
+      optsSet = optsSet || {};
+      var prev = target;
+      var changed = prev !== mesh;
       target = mesh || null;
-      if (target && camera) {
-        yaw = target.rotation.y + Math.PI;
+      if (!target || !camera) return;
+      if (changed || optsSet.realign === true) {
         if (mode === 'fps') yaw = target.rotation.y;
+        else yaw = target.rotation.y + Math.PI;
         forceSnap();
       }
+    }
+
+    /** Runtime adjust follow/look heights (settings cameraHeight mult). */
+    function setHeights(follow, look) {
+      if (follow != null && Number.isFinite(follow)) followHeight = follow;
+      if (look != null && Number.isFinite(look)) lookHeight = look;
+    }
+
+    function getHeights() {
+      return { followHeight: followHeight, lookHeight: lookHeight };
     }
 
     /** Provide terrain / world meshes for camera collision. */
@@ -627,6 +646,8 @@
       setCollisionMeshes: setCollisionMeshes,
       setCombatZoom: setCombatZoom,
       setMoveSpeedHint: setMoveSpeedHint,
+      setHeights: setHeights,
+      getHeights: getHeights,
       CURSOR_STYLES: CURSOR_STYLES,
       MODE_HINTS: MODE_HINTS,
     };

@@ -23,11 +23,12 @@
 <meta property="og:image" content="https://voxgrudge.vercel.app/branding/og-image.png">
 <meta property="og:type" content="website">
 <link rel="stylesheet" href="ui/grudge-studio-shell.css">
-    <link rel="stylesheet" href="ui/hud/grudge-hud.css">
+<link rel="stylesheet" href="ui/hud/grudge-hud.css">
 <link rel="stylesheet" href="ui/hud/combat-hud.css">
 <link rel="stylesheet" href="ui/load-screen.css">
 <link rel="stylesheet" href="ui/vox-game-shell.css">
 <link rel="stylesheet" href="ui/vox-ui-kit.css">
+<link rel="stylesheet" href="ui/craftpix-rpg/craftpix-rpg-ui.css">
 <style>
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-serif;color:#fff;user-select:none}
@@ -703,6 +704,7 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/grudge-game-hud.js"></script>
 <script src="js/vox-combat-hud.js"></script>
 <script src="js/grudge-hud-icons.js"></script>
+<script src="js/craftpix-rpg-ui.js"></script>
 <script src="js/grudge-items-loader.js"></script>
 <script src="js/grudge-asset-loader.js"></script>
 <script src="js/grudge-instanced-core.js"></script>
@@ -714,6 +716,16 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/player-controller.js"></script>
 <!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
 <script src="js/grudge-vox-cloud.js"></script>
+<script>
+// Apply real HUD frame URLs (CraftPix / gothic panels) before first paint of chrome
+try {
+  if (window.GrudgeAssets && GrudgeAssets.applyHudCssVars) GrudgeAssets.applyHudCssVars();
+  if (window.CraftpixRpgUI && CraftpixRpgUI.boot) {
+    CraftpixRpgUI.boot({ compositions: ['hudVitals', 'hudDock', 'weaponSlots'] }).catch(function () {});
+  }
+  if (window.GrudgeGameHud && GrudgeGameHud.loadFeeds) GrudgeGameHud.loadFeeds();
+} catch (e) { console.warn('[VoxGrudge] HUD boot', e); }
+</script>
 <script>
 'use strict';
 
@@ -2085,13 +2097,21 @@ function startGame(){
       updateSkillUI();updateItemUI();buildCraftUI();
     },
     preloadCoreAnims:function(fbxLdr){
-      ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death'].forEach(function(name){
+      ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death',
+       'atk-sword-shield','block-ss','atk-greatsword','hit-react'].forEach(function(name){
         const file=ANIM_FILES[name];
         if(!file) return;
-        const url=(window.GrudgeAssets&&GrudgeAssets.modelUrl)?GrudgeAssets.modelUrl('models/anims/'+file):'models/anims/'+file;
-        fbxLdr.load(url,function(a){
+        const primary=(window.GrudgeAssets&&GrudgeAssets.modelUrl)?GrudgeAssets.modelUrl('models/anims/'+file):'models/anims/'+file;
+        const fallback=(window.GrudgeAssets&&GrudgeAssets.sameOriginUrl)?GrudgeAssets.sameOriginUrl('models/anims/'+file):'models/anims/'+file;
+        fbxLdr.load(primary,function(a){
           if(a.animations&&a.animations.length) animClipCache[name]=a.animations[0];
-        },undefined,function(){});
+        },undefined,function(){
+          if(fallback!==primary){
+            fbxLdr.load(fallback,function(a){
+              if(a.animations&&a.animations.length) animClipCache[name]=a.animations[0];
+            },undefined,function(){});
+          }
+        });
       });
     },
     onProgress:function(s){GrudgeAssetLoader.updateLoadScreenUI(s);},
@@ -2144,10 +2164,14 @@ function init(){
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x0a0e14, 55, 220);
 
-  // Camera: top-down isometric
-  camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 450);
-  camera.position.set(0, 28, 22);
-  camera.lookAt(0, 0, 0);
+  // Camera: TPS defaults from VoxStandards (PlayerController owns orbit/follow)
+  const camBoot = (window.VoxStandards && VoxStandards.CAMERA && VoxStandards.CAMERA.tps) || {};
+  const camFov = camBoot.fov || 58;
+  camera = new THREE.PerspectiveCamera(camFov, innerWidth/innerHeight, 0.1, 450);
+  // Seed a sensible third-person offset (controller forceSnap replaces this on spawn)
+  const seedDist = camBoot.distance || 12;
+  camera.position.set(0, 1.45 + seedDist * 0.55, seedDist);
+  camera.lookAt(0, 1.35, 0);
 
   // Renderer — canvas best practices (DPR cap, resize, visibility, context loss, dt clamp)
   if(window.VoxGameCanvas){
@@ -2291,7 +2315,8 @@ function init(){
       try { playerMesh.add(weaponMeshObj); } catch(e) {}
     }
     if(playerController){
-      playerController.setTarget(playerMesh);
+      // realign only when mesh identity changes (TVS async swap, skin change)
+      playerController.setTarget(playerMesh, { realign: true });
       playerController.alignBehindCharacter();
       playerController.forceSnap();
     }
@@ -2386,16 +2411,17 @@ function init(){
   // Controller + camera locked to the selected character (VoxStandards defaults)
   if(window.PlayerController){
     const camStd=(window.VoxStandards&&VoxStandards.CAMERA&&VoxStandards.CAMERA.tps)||{};
+    const scaleStd=(window.VoxStandards&&VoxStandards.SCALE)||{};
     playerController = PlayerController.create({
       THREE:THREE,
       camera:camera,
       mode:'tps',
       distance: camStd.distance||12,
       baseFov: camStd.fov||camera.fov||58,
-      followHeight:(window.VoxStandards&&VoxStandards.SCALE.PLAYER_FOLLOW_HEIGHT)||1.45,
-      lookHeight:(window.VoxStandards&&VoxStandards.SCALE.PLAYER_LOOK_HEIGHT)||1.35,
+      followHeight: scaleStd.PLAYER_FOLLOW_HEIGHT||1.45,
+      lookHeight: scaleStd.PLAYER_LOOK_HEIGHT||1.35,
     });
-    playerController.setTarget(playerMesh);
+    playerController.setTarget(playerMesh, { realign: true });
     playerController.bindDom(window, renderer && renderer.domElement);
     playerController.alignBehindCharacter();
     playerController.forceSnap();
@@ -2406,6 +2432,11 @@ function init(){
       if(worldPlane) collMeshes.push(worldPlane);
       playerController.setCollisionMeshes(collMeshes);
     }
+  }
+  // Paint HUD chrome with real CraftPix / frame assets (R2 or same-origin)
+  if(window.GrudgeAssets && GrudgeAssets.applyHudCssVars) GrudgeAssets.applyHudCssVars();
+  if(window.CraftpixRpgUI && CraftpixRpgUI.boot){
+    CraftpixRpgUI.boot().catch(function(){});
   }
   refreshCamModeUi('tps');
   enableGameCursor(true);
@@ -2472,6 +2503,17 @@ function init(){
       onEquipRefresh:function(){updateEquipUI();},
       onSkillUnlock:function(){applySkillPassives();},
       onBindsChanged:function(){},
+      onSettings:function(s){
+        if(!s||!playerController) return;
+        if(playerController.setHeights){
+          const baseF=(window.VoxStandards&&VoxStandards.SCALE.PLAYER_FOLLOW_HEIGHT)||1.45;
+          const baseL=(window.VoxStandards&&VoxStandards.SCALE.PLAYER_LOOK_HEIGHT)||1.35;
+          const mult=s.cameraHeight!=null?s.cameraHeight:1;
+          playerController.setHeights(baseF*mult, baseL*mult);
+        }
+        const mm=document.getElementById('minimap');
+        if(mm) mm.style.display=s.showMinimap===false?'none':'';
+      },
       onOpen:function(){closeStudioPanels('gcc');},
       renderCraftPreview:renderCraftTablePreview,
       applyWeaponIcons:function(el){
@@ -5550,17 +5592,19 @@ function updateStatusEffects(dt){
 // ═══════════════════════════════════════════════════════════════
 function updatePlayer(dt){
   if(isGameOver) return;
-  // Keep controller attached to current mesh
+  // Keep controller attached to current mesh (setTarget is no-op when mesh unchanged)
   if(playerController && playerMesh) playerController.setTarget(playerMesh);
 
   // Skip normal movement during traversal actions — still update camera
   if(playerState==='dodging'||playerState==='rolling'||playerState==='dashing'||playerState==='climbing'){
     if(playerController) playerController.update(dt);
-    else {
+    else if(playerMesh && camera) {
+      // Soft TPS fallback if controller missing
+      const gY=getGroundY(playerMesh.position.x,playerMesh.position.z);
       camera.position.x=playerMesh.position.x;
-      camera.position.z=playerMesh.position.z+28;
-      camera.position.y=34;
-      camera.lookAt(playerMesh.position);
+      camera.position.z=playerMesh.position.z+12;
+      camera.position.y=gY+1.45+6.5;
+      camera.lookAt(playerMesh.position.x,gY+1.35,playerMesh.position.z);
     }
     dirLight.position.set(playerMesh.position.x+30,50,playerMesh.position.z+20);
     attackCd=Math.max(0,attackCd-dt);
@@ -5631,15 +5675,15 @@ function updatePlayer(dt){
     if(aimDir && aimDir.length()>0.01) playerMesh.rotation.y=Math.atan2(aimDir.x,aimDir.z);
   }
 
-  // Camera locked to selected character
+  // Camera locked to selected character (TPS/ISO/FPS via PlayerController)
   if(playerController){
     playerController.update(dt);
-  } else {
+  } else if(playerMesh && camera) {
     const camGround=getGroundY(playerMesh.position.x,playerMesh.position.z);
     camera.position.x=playerMesh.position.x;
-    camera.position.z=playerMesh.position.z+28;
-    camera.position.y=34+camGround*0.25;
-    camera.lookAt(playerMesh.position.x,camGround+1.2,playerMesh.position.z);
+    camera.position.z=playerMesh.position.z+12;
+    camera.position.y=camGround+1.45+6.5;
+    camera.lookAt(playerMesh.position.x,camGround+1.35,playerMesh.position.z);
   }
   const zonePill=document.getElementById('zone-pill');
   if(zonePill){
@@ -7179,11 +7223,27 @@ function updateVFXSprites(dt){
 // ═══════════════════════════════════════════════════════════════
 // FBX SKELETON ANIMATION SYSTEM
 // ═══════════════════════════════════════════════════════════════
+function animModelUrl(rel){
+  const p='models/anims/'+String(rel||'').replace(/^models\/anims\//,'');
+  if(window.GrudgeAssets&&GrudgeAssets.modelUrl) return GrudgeAssets.modelUrl(p);
+  return p;
+}
+function loadFbxAnim(url, onOk, onFail){
+  if(!fbxLoader){ if(onFail) onFail(); return; }
+  const primary=url;
+  const fallback=(window.GrudgeAssets&&GrudgeAssets.sameOriginUrl)
+    ? GrudgeAssets.sameOriginUrl(url.replace(/^https?:\/\/[^/]+\//,'').replace(/^voxgrudge\//,''))
+    : url;
+  fbxLoader.load(primary, onOk, undefined, function(){
+    if(fallback && fallback!==primary) fbxLoader.load(fallback, onOk, undefined, onFail||function(){});
+    else if(onFail) onFail();
+  });
+}
 function initFBXSkeleton(callback){
   if(typeof THREE.FBXLoader==='undefined'){callback();return;}
   fbxLoader=new THREE.FBXLoader();
-  // Load base idle animation to establish skeleton
-  fbxLoader.load('models/anims/idle.fbx',function(fbx){
+  // Load base idle animation to establish skeleton (R2 with same-origin fallback)
+  loadFbxAnim(animModelUrl('idle.fbx'),function(fbx){
     // Scale Mixamo skeleton to match vox characters (~2.8 units)
     const sc=0.028;
     fbx.scale.set(sc,sc,sc);
@@ -7196,17 +7256,17 @@ function initFBXSkeleton(callback){
       animClipCache['idle']=fbx.animations[0];
     }
     fbxSkeletonReady=true;
-    // Preload core locomotion clips in background
+    // Preload core locomotion + combat clips in background
     ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death',
      'atk-ss-1','atk-ss-2','atk-ss-3','atk-ss-4','atk-ss-5','atk-ss-6','unarmed-punch','unarmed-kick','hurricane-kick'].forEach(name=>{
       const file=ANIM_FILES[name];
       if(!file)return;
-      fbxLoader.load('models/anims/'+file,function(a){
+      loadFbxAnim(animModelUrl(file),function(a){
         if(a.animations&&a.animations.length>0)animClipCache[name]=a.animations[0];
-      },undefined,function(){});
+      });
     });
     callback();
-  },undefined,function(){
+  },function(){
     // FBX load failed — fall back to procedural
     fbxSkeletonReady=false;
     callback();

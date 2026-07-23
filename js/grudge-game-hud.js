@@ -6,66 +6,91 @@
   'use strict';
 
   var GRUDGE_API_BASE = 'https://molochdagod.github.io/ObjectStore';
-  // Always absolute so icons work regardless of base URL / deep routes
-  var ASSET_BASE = '/assets/grudge-game/';
+
+  /** Resolve via GrudgeAssets (R2 on live, same-origin local) when available. */
+  function gaUrl(localPath) {
+    if (global.GrudgeAssets) {
+      if (localPath.indexOf('branding/') === 0 && GrudgeAssets.brandingUrl) {
+        return GrudgeAssets.brandingUrl(localPath.replace(/^branding\//, ''));
+      }
+      if (localPath.indexOf('assets/mine-loader/ui-icons/') === 0 && GrudgeAssets.mineIcon) {
+        return GrudgeAssets.mineIcon(localPath.replace(/^assets\/mine-loader\/ui-icons\//, ''));
+      }
+      if (localPath.indexOf('assets/grudge-game/class-emblems/') === 0 && GrudgeAssets.emblemUrl) {
+        return GrudgeAssets.emblemUrl(localPath.replace(/^assets\/grudge-game\/class-emblems\//, '').replace(/\.webp$/i, ''));
+      }
+      if (localPath.indexOf('assets/grudge-game/ui/') === 0 && GrudgeAssets.uiFrame) {
+        return GrudgeAssets.uiFrame(localPath.replace(/^assets\/grudge-game\/ui\//, ''));
+      }
+      if (GrudgeAssets.localOrR2) return GrudgeAssets.localOrR2(localPath);
+      if (GrudgeAssets.r2) return GrudgeAssets.r2(localPath);
+    }
+    return '/' + String(localPath || '').replace(/^\//, '');
+  }
+
+  var ASSET_BASE = 'assets/grudge-game/';
   var UI_BASE = ASSET_BASE + 'ui/';
   var CLASS_EMBLEM_BASE = ASSET_BASE + 'class-emblems/';
-  var MINE_UI = '/assets/mine-loader/ui-icons/';
-  var LOCAL_FALLBACK = '/branding/logo-256.png';
+  var MINE_UI = 'assets/mine-loader/ui-icons/';
+  var LOCAL_FALLBACK = gaUrl('branding/logo-256.png');
   /** Canonical feed (weaponSkills.json is archived → master-weaponSkills.json). */
   var WEAPON_SKILLS_URL = GRUDGE_API_BASE + '/api/v1/master-weaponSkills.json';
   var WEAPON_SKILLS_FALLBACK = GRUDGE_API_BASE + '/api/v1/archive/weaponSkills.v1.json';
   var MASTER_ITEMS_URL = GRUDGE_API_BASE + '/api/v1/master-items.json';
 
   /** Local mine-loader / CraftPix when ObjectStore skill row is missing. */
+  function mu(name) { return gaUrl(MINE_UI + name); }
+  function uu(rel) { return gaUrl(UI_BASE + rel); }
+  function eu(name) { return gaUrl(CLASS_EMBLEM_BASE + name); }
+
   var LOCAL_SKILL_ICONS = {
-    heroic_cleave: MINE_UI + 'attack.png',
-    shadow_edge: MINE_UI + 'ambush.png',
-    blood_rush: MINE_UI + 'charge.png',
-    execute: MINE_UI + 'boss-fight.png',
-    whirl_pain: MINE_UI + 'aoe-blast.png',
-    carnage_spin: MINE_UI + 'combat-pad.png',
-    bloodletting: MINE_UI + 'damage-log.png',
-    apocalypse_cleave: MINE_UI + 'explosive-charge.png',
-    aimed_shot: MINE_UI + 'scout.png',
-    multi_shot: MINE_UI + 'projectile-launcher.png',
-    piercing_arrow: MINE_UI + 'attack.png',
-    rain_of_arrows: MINE_UI + 'aoe-blast.png',
-    fireball: MINE_UI + 'aoe-blast.png',
-    chain_lightning: MINE_UI + 'skill-vfx-lab.png',
-    blink: MINE_UI + 'parkour.png',
-    emberwrath_nova: MINE_UI + 'boss-core.png',
-    burst_fire: MINE_UI + 'projectile-launcher.png',
-    sniper_shot: MINE_UI + 'scout.png',
-    explosive_round: MINE_UI + 'explosive-barrel.png',
-    ironstorm_minigun: MINE_UI + 'combat-pad.png',
+    heroic_cleave: mu('attack.png'),
+    shadow_edge: mu('ambush.png'),
+    blood_rush: mu('charge.png'),
+    execute: mu('boss-fight.png'),
+    whirl_pain: mu('aoe-blast.png'),
+    carnage_spin: mu('combat-pad.png'),
+    bloodletting: mu('damage-log.png'),
+    apocalypse_cleave: mu('explosive-charge.png'),
+    aimed_shot: mu('scout.png'),
+    multi_shot: mu('projectile-launcher.png'),
+    piercing_arrow: mu('attack.png'),
+    rain_of_arrows: mu('aoe-blast.png'),
+    fireball: mu('aoe-blast.png'),
+    chain_lightning: mu('skill-vfx-lab.png'),
+    blink: mu('parkour.png'),
+    emberwrath_nova: mu('boss-core.png'),
+    burst_fire: mu('projectile-launcher.png'),
+    sniper_shot: mu('scout.png'),
+    explosive_round: mu('explosive-barrel.png'),
+    ironstorm_minigun: mu('combat-pad.png'),
   };
   var LOCAL_WEAPON_ICONS = {
-    sword: UI_BASE + 'Icons_128x128/Icon_Sword_128.png',
-    axe: MINE_UI + 'attack.png',
-    bow: MINE_UI + 'scout.png',
-    staff: UI_BASE + 'Icons_128x128/Icon_Fireball_128.png',
-    gun: MINE_UI + 'projectile-launcher.png',
-    greatsword: UI_BASE + 'Icons_128x128/Icon_Sword_128.png',
-    sword_shield: UI_BASE + 'Icons_128x128/Icon_Shield_128.png',
-    hammer: MINE_UI + 'build.png',
-    mace: UI_BASE + 'Icons_128x128/Icon_Shield_128.png',
-    dagger: MINE_UI + 'ambush.png',
-    crossbow: MINE_UI + 'projectile-launcher.png',
-    spear: MINE_UI + 'attack.png',
-    wand: UI_BASE + 'Icons_128x128/Icon_Fireball_128.png',
-    tome: UI_BASE + 'Icons_128x128/Icon_Leafs_128.png',
+    sword: uu('Icons_128x128/Icon_Sword_128.png'),
+    axe: mu('attack.png'),
+    bow: mu('scout.png'),
+    staff: uu('Icons_128x128/Icon_Fireball_128.png'),
+    gun: mu('projectile-launcher.png'),
+    greatsword: uu('Icons_128x128/Icon_Sword_128.png'),
+    sword_shield: uu('Icons_128x128/Icon_Shield_128.png'),
+    hammer: mu('build.png'),
+    mace: uu('Icons_128x128/Icon_Shield_128.png'),
+    dagger: mu('ambush.png'),
+    crossbow: mu('projectile-launcher.png'),
+    spear: mu('attack.png'),
+    wand: uu('Icons_128x128/Icon_Fireball_128.png'),
+    tome: uu('Icons_128x128/Icon_Leafs_128.png'),
   };
   var LOCAL_RESOURCE_ICONS = {
-    wood: MINE_UI + 'support-beam.png',
-    stone: MINE_UI + 'stone-block.png',
-    ore: MINE_UI + 'iron-ore.png',
+    wood: mu('support-beam.png'),
+    stone: mu('stone-block.png'),
+    ore: mu('iron-ore.png'),
   };
   var LOCAL_BUILD_ICONS = {
-    wood: MINE_UI + 'support-beam.png',
-    stone: MINE_UI + 'stone-block.png',
-    floor: MINE_UI + 'dirt-block.png',
-    heal: MINE_UI + 'health-pack.png',
+    wood: mu('support-beam.png'),
+    stone: mu('stone-block.png'),
+    floor: mu('dirt-block.png'),
+    heal: mu('health-pack.png'),
   };
 
   var GAME_TO_API_WEAPON = {
@@ -256,7 +281,7 @@
       if (flat[idx] && flat[idx].icon) return grudgeAssetUrl(flat[idx].icon);
       if (wt.icon) return grudgeAssetUrl(wt.icon);
     }
-    return MINE_UI + 'skill-slot.png';
+    return mu('skill-slot.png');
   }
 
   function weaponIconUrl(wid) {
@@ -268,12 +293,12 @@
       if (flat[0] && flat[0].icon) return grudgeAssetUrl(flat[0].icon);
     }
     if (global.GrudgeCodex) return GrudgeCodex.weaponIconUrl(wid);
-    return UI_BASE + 'Icons_128x128/Icon_Sword_128.png';
+    return uu('Icons_128x128/Icon_Sword_128.png');
   }
 
   function classIconUrl(cid) {
     var emblem = VOX_CLASS_TO_EMBLEM[cid];
-    return emblem ? CLASS_EMBLEM_BASE + emblem + '.webp' : null;
+    return emblem ? eu(emblem + '.webp') : null;
   }
 
   function lookupItemIcon(id, def) {
