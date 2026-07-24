@@ -48,20 +48,52 @@
     };
   }
 
-  function envUrl(pack, slug) {
-    return BASE + "/" + pack + "/environment/" + slug + ".fbx";
+  function envUrl(pack, slug, preferGlb) {
+    var base = BASE + "/" + pack + "/environment/" + slug;
+    return preferGlb === false ? base + ".fbx" : base + ".glb";
   }
 
-  function propUrl(pack, slug) {
-    return BASE + "/" + pack + "/props/" + slug + ".fbx";
+  function propUrl(pack, slug, preferGlb) {
+    var base = BASE + "/" + pack + "/props/" + slug;
+    return preferGlb === false ? base + ".fbx" : base + ".glb";
   }
 
-  function animalUrl(pack, slug) {
-    return BASE + "/" + pack + "/animals/" + slug + ".fbx";
+  function animalUrl(pack, slug, preferGlb) {
+    var base = BASE + "/" + pack + "/animals/" + slug;
+    return preferGlb === false ? base + ".fbx" : base + ".glb";
   }
 
   function textureUrlForSlug(pack, slug) {
     return BASE + "/" + pack + "/textures/" + slug + "-texture.png";
+  }
+
+  /** Resolve asset URLs with GLB-first fallback chain (production bake). */
+  function resolveAssetUrls(entry) {
+    if (!entry) return null;
+    var r2 = entry.r2Key || entry.r2_key || "";
+    var cdn = entry.cdnUrl || entry.cdn_url || (r2 ? CDN + "/" + r2 : null);
+    var glbR2 = entry.glbR2Key || entry.glb_r2_key || (r2 ? r2.replace(/\.fbx$/i, ".glb") : null);
+    var glbUrl = entry.glbUrl || entry.glb_url || (glbR2 ? CDN + "/" + glbR2 : null);
+    var tex =
+      entry.textureUrl ||
+      entry.texture_url ||
+      (entry.pack && entry.slug ? textureUrlForSlug(entry.pack, entry.slug) : null);
+    return {
+      fbxUrl: cdn,
+      glbUrl: glbUrl,
+      textureUrl: tex,
+      preferGlb: true,
+      grudgeUuid: entry.grudgeUuid || entry.grudge_uuid || null,
+      r2Key: r2,
+      role: entry.role || entry.kind || null,
+      // Runtime load order: production GLB → FBX
+      modelCandidates: [glbUrl, cdn].filter(Boolean),
+      scale: {
+        mode: (entry.role === "characters" || entry.kind === "characters") ? "height" : "native_voxel",
+        heightM: 2.0,
+      },
+      material: { nearest: true, flatShading: true, metalness: 0, roughness: 0.88 },
+    };
   }
 
   async function loadSettlements(force) {
@@ -192,39 +224,63 @@
     var rest = buildings.filter(function (b) {
       return b.role !== "landmark";
     });
-    landmark.forEach(function (b, i) {
-      instances.push({
-        kind: "environment",
-        slug: b.slug,
+    function placeModel(kind, slug, height, x, z, rot, role, solid) {
+      var glb = kind === "prop" ? propUrl(pack, slug, true) : kind === "animal" ? animalUrl(pack, slug, true) : envUrl(pack, slug, true);
+      var fbx = kind === "prop" ? propUrl(pack, slug, false) : kind === "animal" ? animalUrl(pack, slug, false) : envUrl(pack, slug, false);
+      return {
+        kind: kind,
+        slug: slug,
         pack: pack,
-        modelUrl: envUrl(pack, b.slug),
-        textureUrl: textureUrlForSlug(pack, b.slug),
-        height: b.height || 6,
-        x: cx + (i - (landmark.length - 1) / 2) * 4,
-        z: cz,
-        rot: rot0,
-        role: b.role,
-        solid: true,
-      });
+        // Production GLB first (grudge-convert); FBX fallback
+        glbUrl: glb,
+        modelUrl: glb,
+        fbxUrl: fbx,
+        modelCandidates: [glb, fbx],
+        textureUrl: textureUrlForSlug(pack, slug),
+        preferGlb: true,
+        height: height,
+        x: x,
+        z: z,
+        rot: rot,
+        role: role,
+        solid: solid,
+        scale: { mode: kind === "animal" ? "height" : "native_voxel", heightM: height },
+        material: { nearest: true, flatShading: true },
+        assetSource: "tvs-voxel",
+      };
+    }
+
+    landmark.forEach(function (b, i) {
+      instances.push(
+        placeModel(
+          "environment",
+          b.slug,
+          b.height || 6,
+          cx + (i - (landmark.length - 1) / 2) * 4,
+          cz,
+          rot0,
+          b.role,
+          true
+        )
+      );
     });
 
     rest.forEach(function (b) {
       var count = b.count || 1;
       for (var i = 0; i < count; i++) {
         var p = ringPos(i + rng() * 3, count + 2, radius * (b.role === "defense" ? 0.85 : 0.7));
-        instances.push({
-          kind: "environment",
-          slug: b.slug,
-          pack: pack,
-          modelUrl: envUrl(pack, b.slug),
-          textureUrl: textureUrlForSlug(pack, b.slug),
-          height: b.height || 4,
-          x: p.x,
-          z: p.z,
-          rot: p.rot,
-          role: b.role || "building",
-          solid: b.role !== "crop" && b.role !== "nature",
-        });
+        instances.push(
+          placeModel(
+            "environment",
+            b.slug,
+            b.height || 4,
+            p.x,
+            p.z,
+            p.rot,
+            b.role || "building",
+            b.role !== "crop" && b.role !== "nature"
+          )
+        );
       }
     });
 
@@ -232,19 +288,9 @@
       var count = p.count || 1;
       for (var i = 0; i < count; i++) {
         var pos = ringPos(i, count, radius * 0.4);
-        instances.push({
-          kind: "prop",
-          slug: p.slug,
-          pack: pack,
-          modelUrl: propUrl(pack, p.slug),
-          textureUrl: textureUrlForSlug(pack, p.slug),
-          height: p.height || 1,
-          x: pos.x,
-          z: pos.z,
-          rot: rng() * Math.PI * 2,
-          role: "prop",
-          solid: false,
-        });
+        instances.push(
+          placeModel("prop", p.slug, p.height || 1, pos.x, pos.z, rng() * Math.PI * 2, "prop", false)
+        );
       }
     });
 
@@ -252,19 +298,9 @@
       var count = a.count || 1;
       for (var i = 0; i < count; i++) {
         var pos = ringPos(i, count, radius * 0.5);
-        instances.push({
-          kind: "animal",
-          slug: a.slug,
-          pack: pack,
-          modelUrl: animalUrl(pack, a.slug),
-          textureUrl: textureUrlForSlug(pack, a.slug),
-          height: a.height || 1.2,
-          x: pos.x,
-          z: pos.z,
-          rot: rng() * Math.PI * 2,
-          role: "animal",
-          solid: false,
-        });
+        instances.push(
+          placeModel("animal", a.slug, a.height || 1.2, pos.x, pos.z, rng() * Math.PI * 2, "animal", false)
+        );
       }
     });
 
@@ -335,11 +371,18 @@
     return plans;
   }
 
-  /** Catalog helpers for RTS / editors */
-  function listAssetsByRole(catalog, role) {
+  /** Catalog helpers for RTS / editors — assets may be array or id→entry map */
+  function catalogAssetList(catalog) {
     if (!catalog || !catalog.assets) return [];
-    return catalog.assets.filter(function (a) {
-      return a.role === role && a.format === "fbx";
+    return Array.isArray(catalog.assets) ? catalog.assets : Object.values(catalog.assets);
+  }
+
+  function listAssetsByRole(catalog, role) {
+    return catalogAssetList(catalog).filter(function (a) {
+      var r = a.role || a.kind || "";
+      return r === role || (a.tags || []).indexOf(role) >= 0;
+    }).map(function (a) {
+      return Object.assign({}, a, resolveAssetUrls(a));
     });
   }
 
@@ -363,6 +406,8 @@
     planSettlement: planSettlement,
     planStarterRing: planStarterRing,
     resolveUnit: resolveUnit,
+    resolveAssetUrls: resolveAssetUrls,
+    catalogAssetList: catalogAssetList,
     listAssetsByRole: listAssetsByRole,
     listBuildings: listBuildings,
     listCharacters: listCharacters,

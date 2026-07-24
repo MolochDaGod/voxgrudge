@@ -1,9 +1,10 @@
 {
   "version": "3.0.0-production",
-  "generatedAt": "2026-07-15T23:37:14.473Z",
-  "description": "TVS voxel units with colliders, animations, and AI brains",
+  "generatedAt": "2026-07-24T08:05:09.774Z",
+  "description": "TVS heroes with production GLB (height 2.0m, compressed, atlas baked)",
   "cdnBase": "https://assets.grudge-studio.com",
   "r2Prefix": "models/voxels/tvs",
+  "playerHeightM": 2,
   "units": [
     {
       "unitId": "voxel-cathedral-crusader",
@@ -28,8 +29,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 66764,
-        "bakedAt": "2026-07-15T23:36:52.904Z"
+        "glbBytes": 67272,
+        "bakedAt": "2026-07-24T08:04:46.977Z"
       }
     },
     {
@@ -55,8 +56,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 45532,
-        "bakedAt": "2026-07-15T23:36:53.469Z"
+        "glbBytes": 46040,
+        "bakedAt": "2026-07-24T08:04:48.273Z"
       }
     },
     {
@@ -82,8 +83,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 47908,
-        "bakedAt": "2026-07-15T23:36:54.149Z"
+        "glbBytes": 48420,
+        "bakedAt": "2026-07-24T08:04:49.177Z"
       }
     },
     {
@@ -109,8 +110,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 68752,
-        "bakedAt": "2026-07-15T23:36:54.720Z"
+        "glbBytes": 69260,
+        "bakedAt": "2026-07-24T08:04:49.765Z"
       }
     },
     {
@@ -136,8 +137,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 66072,
-        "bakedAt": "2026-07-15T23:36:55.297Z"
+        "glbBytes": 66512,
+        "bakedAt": "2026-07-24T08:04:50.383Z"
       }
     },
     {
@@ -163,8 +164,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 59912,
-        "bakedAt": "2026-07-15T23:36:55.861Z"
+        "glbBytes": 60424,
+        "bakedAt": "2026-07-24T08:04:51.229Z"
       }
     },
     {
@@ -190,8 +191,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 51312,
-        "bakedAt": "2026-07-15T23:36:56.440Z"
+        "glbBytes": 51752,
+        "bakedAt": "2026-07-24T08:04:51.843Z"
       }
     },
     {
@@ -217,8 +218,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 67056,
-        "bakedAt": "2026-07-15T23:36:57.011Z"
+        "glbBytes": 67524,
+        "bakedAt": "2026-07-24T08:04:52.500Z"
       }
     },
     {
@@ -244,8 +245,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 78156,
-        "bakedAt": "2026-07-15T23:36:57.573Z"
+        "glbBytes": 78664,
+        "bakedAt": "2026-07-24T08:04:53.106Z"
       }
     },
     {
@@ -271,8 +272,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 78800,
-        "bakedAt": "2026-07-15T23:36:58.136Z"
+        "glbBytes": 79304,
+        "bakedAt": "2026-07-24T08:04:53.713Z"
       }
     },
     {
@@ -298,8 +299,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 79080,
-        "bakedAt": "2026-07-15T23:36:58.689Z"
+        "glbBytes": 79592,
+        "bakedAt": "2026-07-24T08:04:54.324Z"
       }
     },
     {
@@ -325,8 +326,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 64520,
-        "bakedAt": "2026-07-15T23:36:59.254Z"
+        "glbBytes": 65028,
+        "bakedAt": "2026-07-24T08:04:54.928Z"
       }
     },
     {
@@ -352,8 +353,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 62984,
-        "bakedAt": "2026-07-15T23:36:59.802Z"
+        "glbBytes": 63496,
+        "bakedAt": "2026-07-24T08:04:55.497Z"
       }
     },
     {
@@ -379,8 +380,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 81064,
-        "bakedAt": "2026-07-15T23:37:00.371Z"
+        "glbBytes": 81572,
+        "bakedAt": "2026-07-24T08:04:56.078Z"
       }
     },
     {
@@ -406,8 +407,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 95544,
-        "bakedAt": "2026-07-15T23:37:00.977Z"
+        "glbBytes": 95876,
+        "bakedAt": "2026-07-24T08:04:56.723Z"
       }
     },
     {
@@ -433,8 +434,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 81220,
-        "bakedAt": "2026-07-15T23:37:01.570Z"
+        "glbBytes": 81656,
+        "bakedAt": "2026-07-24T08:04:57.284Z"
       }
     },
     {
@@ -460,8 +461,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 72696,
-        "bakedAt": "2026-07-15T23:37:02.386Z"
+        "glbBytes": 73204,
+        "bakedAt": "2026-07-24T08:04:57.819Z"
       }
     },
     {
@@ -487,8 +488,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 72692,
-        "bakedAt": "2026-07-15T23:37:02.956Z"
+        "glbBytes": 73196,
+        "bakedAt": "2026-07-24T08:04:58.349Z"
       }
     },
     {
@@ -514,8 +515,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 70676,
-        "bakedAt": "2026-07-15T23:37:03.529Z"
+        "glbBytes": 71188,
+        "bakedAt": "2026-07-24T08:04:58.972Z"
       }
     },
     {
@@ -541,8 +542,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 67256,
-        "bakedAt": "2026-07-15T23:37:04.068Z"
+        "glbBytes": 67764,
+        "bakedAt": "2026-07-24T08:04:59.577Z"
       }
     },
     {
@@ -568,8 +569,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 68344,
-        "bakedAt": "2026-07-15T23:37:04.630Z"
+        "glbBytes": 68852,
+        "bakedAt": "2026-07-24T08:05:00.116Z"
       }
     },
     {
@@ -595,8 +596,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 68816,
-        "bakedAt": "2026-07-15T23:37:05.180Z"
+        "glbBytes": 69324,
+        "bakedAt": "2026-07-24T08:05:00.675Z"
       }
     },
     {
@@ -622,8 +623,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 75580,
-        "bakedAt": "2026-07-15T23:37:05.775Z"
+        "glbBytes": 76020,
+        "bakedAt": "2026-07-24T08:05:01.243Z"
       }
     },
     {
@@ -649,8 +650,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 67876,
-        "bakedAt": "2026-07-15T23:37:06.463Z"
+        "glbBytes": 68316,
+        "bakedAt": "2026-07-24T08:05:01.782Z"
       }
     },
     {
@@ -676,8 +677,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 43140,
-        "bakedAt": "2026-07-15T23:37:06.984Z"
+        "glbBytes": 43636,
+        "bakedAt": "2026-07-24T08:05:02.325Z"
       }
     },
     {
@@ -703,8 +704,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 57764,
-        "bakedAt": "2026-07-15T23:37:07.542Z"
+        "glbBytes": 58276,
+        "bakedAt": "2026-07-24T08:05:02.879Z"
       }
     },
     {
@@ -730,8 +731,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 57648,
-        "bakedAt": "2026-07-15T23:37:08.234Z"
+        "glbBytes": 58152,
+        "bakedAt": "2026-07-24T08:05:03.436Z"
       }
     },
     {
@@ -757,8 +758,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 69124,
-        "bakedAt": "2026-07-15T23:37:08.815Z"
+        "glbBytes": 69632,
+        "bakedAt": "2026-07-24T08:05:03.980Z"
       }
     },
     {
@@ -784,8 +785,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 53396,
-        "bakedAt": "2026-07-15T23:37:09.371Z"
+        "glbBytes": 53908,
+        "bakedAt": "2026-07-24T08:05:04.481Z"
       }
     },
     {
@@ -811,8 +812,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 51864,
-        "bakedAt": "2026-07-15T23:37:09.918Z"
+        "glbBytes": 52376,
+        "bakedAt": "2026-07-24T08:05:05.037Z"
       }
     },
     {
@@ -838,8 +839,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 54688,
-        "bakedAt": "2026-07-15T23:37:10.496Z"
+        "glbBytes": 55196,
+        "bakedAt": "2026-07-24T08:05:05.613Z"
       }
     },
     {
@@ -865,8 +866,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 46992,
-        "bakedAt": "2026-07-15T23:37:11.099Z"
+        "glbBytes": 47504,
+        "bakedAt": "2026-07-24T08:05:06.225Z"
       }
     },
     {
@@ -892,8 +893,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 52632,
-        "bakedAt": "2026-07-15T23:37:11.644Z"
+        "glbBytes": 53144,
+        "bakedAt": "2026-07-24T08:05:06.813Z"
       }
     },
     {
@@ -919,8 +920,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 72584,
-        "bakedAt": "2026-07-15T23:37:12.226Z"
+        "glbBytes": 73088,
+        "bakedAt": "2026-07-24T08:05:07.408Z"
       }
     },
     {
@@ -946,8 +947,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 88188,
-        "bakedAt": "2026-07-15T23:37:12.824Z"
+        "glbBytes": 88696,
+        "bakedAt": "2026-07-24T08:05:07.980Z"
       }
     },
     {
@@ -973,8 +974,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 60568,
-        "bakedAt": "2026-07-15T23:37:13.369Z"
+        "glbBytes": 61072,
+        "bakedAt": "2026-07-24T08:05:08.524Z"
       }
     },
     {
@@ -1000,8 +1001,8 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 68212,
-        "bakedAt": "2026-07-15T23:37:13.921Z"
+        "glbBytes": 68724,
+        "bakedAt": "2026-07-24T08:05:09.064Z"
       }
     },
     {
@@ -1027,18 +1028,9 @@
         "height": 2,
         "compressed": true,
         "textureFormat": "png-in-glb",
-        "glbBytes": 70460,
-        "bakedAt": "2026-07-15T23:37:14.473Z"
+        "glbBytes": 70968,
+        "bakedAt": "2026-07-24T08:05:09.774Z"
       }
     }
-  ],
-  "counts": {
-    "units": 38,
-    "melee": 8,
-    "ranged": 6,
-    "magic": 8,
-    "civilian": 16
-  },
-  "textureNotes": "7 missing unit PNGs aliased to pack sibling atlases (R2 gaps)",
-  "playerHeightM": 2
+  ]
 }
