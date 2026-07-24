@@ -50,15 +50,28 @@
   --cpx-slot-cd: url('./slots/spell_cooldown.png');
   --cpx-action-slot: url('./slots/m_action_frame.png');
   --cpx-action-slot-2: url('./slots/m_action_frame_2.png');
-  --cpx-btn: url('./login/login_big_btn.png');
-  --cpx-btn-hover: url('./login/login_big_btn_hover.png');
-  --cpx-btn-push: url('./login/login_big_btn_push.png');
+  /*
+   * HARD RULE — never put HTML text on art that already has baked words.
+   * login_big_btn* = "LOGIN" baked in → only for real login (use --cpx-btn-login).
+   * tgb_button_play* = "PLAY" baked in → only for icon/play with no child text.
+   * menu_button* / button_small* = blank chrome → safe for HTML labels.
+   */
+  --cpx-btn: url('./buttons/menu_button.png');
+  --cpx-btn-hover: url('./buttons/menu_button_hover.png');
+  --cpx-btn-push: url('./buttons/menu_button_push.png');
   --cpx-btn-menu: url('./buttons/menu_button.png');
   --cpx-btn-menu-hover: url('./buttons/menu_button_hover.png');
   --cpx-btn-menu-push: url('./buttons/menu_button_push.png');
   --cpx-btn-sm: url('./buttons/button_small.png');
   --cpx-btn-sm-hover: url('./buttons/button_small_hover.png');
   --cpx-btn-sm-push: url('./buttons/button_small_push.png');
+  /* Labeled art — use as image-only; do NOT stack CSS/HTML words on top */
+  --cpx-btn-login: url('./login/login_big_btn.png');
+  --cpx-btn-login-hover: url('./login/login_big_btn_hover.png');
+  --cpx-btn-login-push: url('./login/login_big_btn_push.png');
+  --cpx-btn-play: url('./buttons/tgb_button_play.png');
+  --cpx-btn-play-hover: url('./buttons/tgb_button_play_hover.png');
+  --cpx-btn-play-push: url('./buttons/tgb_button_play_push.png');
   --cpx-pb-frame: url('./bars/pb_frame.png');
   --cpx-pb-fill: url('./bars/pb_fill_1.png');
   --cpx-pb-fill-2: url('./bars/pb_fill_2.png');
@@ -565,9 +578,48 @@
 }
 .kpx-btn:hover { background-image: var(--cpx-btn-menu-hover) !important; }
 .kpx-btn:active { background-image: var(--cpx-btn-menu-push) !important; transform: translateY(2px); }
-.kpx-btn--red, .kpx-btn--cyan { background-image: var(--cpx-btn) !important; color: #fff8e8 !important; }
-.kpx-btn--red:hover, .kpx-btn--cyan:hover { background-image: var(--cpx-btn-hover) !important; }
+/* Colored variants use blank chrome only — labels are HTML, art has no words */
+.kpx-btn--red, .kpx-btn--cyan {
+  background-image: var(--cpx-btn-menu) !important;
+  color: #fff8e8 !important;
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,0.45)) saturate(1.15) brightness(1.05);
+}
+.kpx-btn--red:hover, .kpx-btn--cyan:hover {
+  background-image: var(--cpx-btn-menu-hover) !important;
+}
+.kpx-btn--red { filter: drop-shadow(0 3px 0 rgba(0,0,0,0.45)) hue-rotate(-12deg) saturate(1.35); }
+.kpx-btn--cyan { filter: drop-shadow(0 3px 0 rgba(0,0,0,0.45)) hue-rotate(160deg) saturate(1.2); }
 .kpx-btn--brown { background-image: var(--cpx-btn-menu) !important; }
+
+/* Image-only labeled chrome (LOGIN / PLAY baked into PNG) — no child text */
+.cpx-btn--login-art,
+.kpx-btn--login-art {
+  background: var(--cpx-btn-login) center / 100% 100% no-repeat !important;
+  color: transparent !important;
+  text-indent: -9999px;
+  overflow: hidden;
+  font-size: 0 !important;
+}
+.cpx-btn--login-art:hover, .kpx-btn--login-art:hover {
+  background-image: var(--cpx-btn-login-hover) !important;
+}
+.cpx-btn--login-art:active, .kpx-btn--login-art:active {
+  background-image: var(--cpx-btn-login-push) !important;
+}
+.cpx-btn--play-art,
+.kpx-btn--play-art {
+  background: var(--cpx-btn-play) center / 100% 100% no-repeat !important;
+  color: transparent !important;
+  text-indent: -9999px;
+  overflow: hidden;
+  font-size: 0 !important;
+}
+.cpx-btn--play-art:hover, .kpx-btn--play-art:hover {
+  background-image: var(--cpx-btn-play-hover) !important;
+}
+.cpx-btn--play-art:active, .kpx-btn--play-art:active {
+  background-image: var(--cpx-btn-play-push) !important;
+}
 .kpx-slot {
   position: relative;
   flex: 0 0 var(--cpx-slot);
