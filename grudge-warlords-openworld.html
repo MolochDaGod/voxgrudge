@@ -689,6 +689,7 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/vox-ui-kit.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
+<script src="js/fleet-character-handoff.js"></script>
 <script src="js/tvs-hero-preview.js"></script>
 <script src="js/tvs-world-content.js"></script>
 <script src="js/tvs-settlement-builder.js"></script>
@@ -717,6 +718,7 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/grudge-explorer-combat.js"></script>
 <script src="js/enemy-combat.js"></script>
 <script src="js/enemy-brain.js"></script>
+<script src="js/vox-rpgbase-combat.js"></script>
 <script src="js/player-controller.js"></script>
 <!-- Cloud save: GrudgeAuth + puter.kv (see js/grudge-vox-cloud.js) -->
 <script src="js/grudge-vox-cloud.js"></script>
@@ -1799,6 +1801,28 @@ function initGameShell(){
         }
       }
       ensureSurvivorsUI();
+      // Open handoff: auto-enter world when ?open=1&characterId= (fleet hero)
+      try {
+        if(window.FleetCharacterHandoff){
+          var hand = FleetCharacterHandoff.parseHandoff();
+          if(hand.open && hand.characterId){
+            if(!playerClass){
+              playerClass = 'warrior';
+              try { if(typeof selectClass==='function') selectClass('warrior'); } catch(eSel) {}
+            }
+            var sb = document.getElementById('start-btn');
+            if(sb){ sb.classList.remove('hidden'); sb.disabled = false; }
+            setTimeout(function(){
+              if(!gameStarted && typeof startGame === 'function'){
+                console.info('[VoxGrudge] auto-start from Open handoff', hand.characterId);
+                startGame();
+              }
+            }, 700);
+          }
+        }
+      } catch(eAuto){
+        console.warn('[VoxGrudge] auto-start handoff', eAuto);
+      }
     });
   }).catch(function(err){
     console.error('[initGameShell] boot', err);
@@ -2355,27 +2379,34 @@ function init(){
     playerMesh.position.x = prevPos.x;
     playerMesh.position.z = prevPos.z;
     scene.add(playerMesh);
-    // Never compound parent scale on TVS kits (already height-normalized to ~2m)
-    if(playerMesh.userData && playerMesh.userData.assetSource === 'tvs-voxel'){
+    // Never compound parent scale on TVS / grudge6 kits (already SI-normalized ~1.8m)
+    if(playerMesh.userData && (playerMesh.userData.assetSource === 'tvs-voxel' || playerMesh.userData.assetSource === 'grudge6')){
       // Ensure world scale is uniform identity parent chain
       if(playerMesh.parent && playerMesh.parent !== scene){
         /* playerMesh is scene-child — OK */
       }
     }
     snapToGround(playerMesh, 0);
-    // Sanity: if measured height is insane after snap, re-normalize
-    if(window.TvsUnitLoader && playerMesh.userData && playerMesh.userData.assetSource === 'tvs-voxel'){
+    // Sanity: if measured height is insane after snap, re-normalize (tvs + grudge6)
+    // Classic bug: bind-pose / unitFix×100 left heroes ~100× tall after load-in.
+    if(window.TvsUnitLoader && playerMesh.userData &&
+       (playerMesh.userData.assetSource === 'tvs-voxel' || playerMesh.userData.assetSource === 'grudge6')){
       try {
         playerMesh.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(playerMesh);
         const h = box.max.y - box.min.y;
-        const target = (window.GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M) || 2.0;
-        if(h > target * 4 || h < target * 0.25){
-          console.warn('[VoxGrudge] player height out of band', h, '→ renormalize');
-          TvsUnitLoader.normalizeHeight(playerMesh, target, THREE);
+        const target = (window.GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M) || 1.8;
+        if(h > target * 1.5 || h < target * 0.55 || h > 4 || h < 0.8){
+          console.warn('[VoxGrudge] player height out of band', h.toFixed(3), 'm → SI renormalize to', target);
+          TvsUnitLoader.normalizeHeight(playerMesh, target, THREE, {
+            forceFull: true,
+            asset: playerMesh.userData.assetSource || 'grudge6',
+          });
           snapToGround(playerMesh, 0);
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn('[VoxGrudge] player height check failed', e);
+      }
     }
     if(opts.mixer) playerMixer = opts.mixer;
     if(opts.skelParts !== undefined) playerSkelParts = opts.skelParts;
@@ -2427,7 +2458,7 @@ function init(){
       const root = await TvsUnitLoader.loadTvsUnit(TvsUnitLoader.normalizeUnit(unit), {
         THREE: THREE,
         FBXLoader: THREE.FBXLoader,
-        height: GrudgeScale.PLAYER_HEIGHT_M || 2.0,
+        height: GrudgeScale.PLAYER_HEIGHT_M || 1.8,
         withTexture: true,
         withAnims: true,
         loadSidecars: true,
@@ -2443,22 +2474,57 @@ function init(){
   };
 
   (async function spawnTvsPlayer(){
+    // 1) Open / fleet handoff: ?characterId=&grudge_token=&open=1 → grudge6 kit @ 1.8 m
+    try {
+      if(window.FleetCharacterHandoff){
+        const hand = FleetCharacterHandoff.parseHandoff();
+        if(hand.token) FleetCharacterHandoff.applyToken(hand.token);
+        if(hand.characterId || hand.open){
+          const res = await FleetCharacterHandoff.bootstrapFromUrl({
+            THREE: THREE,
+            height: (window.GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M) || 1.8,
+          });
+          FleetCharacterHandoff.scrubUrlTokens();
+          if(res && res.ok && res.root){
+            finalizePlayerMesh(res.root, {
+              mixer: res.root.userData.mixer || null,
+              skelParts: null,
+              skipWeapon: true,
+            });
+            console.info('[VoxGrudge] fleet handoff player', res.characterId, res.root.userData.importReport);
+            if(res.autoStart && typeof window.showFlash === 'function'){
+              showFlash('Fleet hero loaded · '+(res.character && (res.character.name||res.characterId)));
+            }
+            return;
+          }
+          if(res && !res.ok){
+            console.warn('[VoxGrudge] fleet handoff', res.reason, res.error || '');
+          }
+        }
+      }
+    } catch(handErr){
+      console.warn('[VoxGrudge] fleet handoff error', handErr);
+    }
+
+    // 2) TVS voxel hero (D1/R2)
     try {
       if(!window.TvsUnitLoader) throw new Error('TvsUnitLoader missing');
       if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
       else if(TvsUnitLoader.normalizeRoster) tvsRosterCache = TvsUnitLoader.normalizeRoster(tvsRosterCache);
       let unit = playerTvsUnit;
       if(!unit && playerTvsUnitId) unit = TvsUnitLoader.findUnit(tvsRosterCache, playerTvsUnitId);
-      if(!unit) unit = TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass);
+      if(!unit) unit = TvsUnitLoader.pickBestUnit
+        ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass)
+        : (TvsUnitLoader.pickUnit && TvsUnitLoader.pickUnit(tvsRosterCache, playerClass));
       if(!unit) throw new Error('no TVS unit');
       unit = TvsUnitLoader.normalizeUnit(unit);
-      if(!unit.modelUrl) throw new Error('unit missing modelUrl after normalize: '+(unit.unitId||'?'));
+      if(!unit.modelUrl && !unit.glbUrl) throw new Error('unit missing modelUrl after normalize: '+(unit.unitId||'?'));
       playerTvsUnit = unit;
       playerTvsUnitId = unit.unitId;
       const root = await TvsUnitLoader.loadTvsUnit(unit, {
         THREE: THREE,
         FBXLoader: THREE.FBXLoader,
-        height: GrudgeScale.PLAYER_HEIGHT_M || 2.0,
+        height: GrudgeScale.PLAYER_HEIGHT_M || 1.8,
         withTexture: true,
         withAnims: true,
         loadSidecars: true,
@@ -7011,12 +7077,22 @@ function animate(){
   } else if(voxRollAnim && playerMesh && playerMesh.userData._voxRollMixer) {
     voxRollAnim.update(playerMesh.userData._voxRollMixer, dt);
   }
-  // Drive TVS locomotion when moving
-  if(playerMesh && playerMesh.userData && playerMesh.userData._tvsPlayer && playerMesh.userData.playClip){
-    const moving = !!(keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']);
-    const want = (typeof playerAttackPhase==='number' && playerAttackPhase>0) ? 'attack' : (moving ? 'locomotion' : 'idle');
-    if(playerMesh.userData.currentAnim !== want && playerMesh.userData.animActions && playerMesh.userData.animActions[want]){
-      playerMesh.userData.playClip(want, 0.12);
+  // Drive TVS / grudge6 locomotion when moving
+  if(playerMesh && playerMesh.userData && playerMesh.userData.playClip){
+    const isHero =
+      playerMesh.userData._tvsPlayer ||
+      playerMesh.userData.assetSource === 'grudge6' ||
+      playerMesh.userData.assetSource === 'tvs-voxel';
+    if(isHero){
+      const moving = !!(keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']);
+      const acts = playerMesh.userData.animActions || {};
+      let want = 'idle';
+      if(typeof playerAttackPhase==='number' && playerAttackPhase>0) want = acts.attack ? 'attack' : 'idle';
+      else if(moving) want = acts.locomotion ? 'locomotion' : (acts.run ? 'run' : (acts.walk ? 'walk' : 'idle'));
+      if(playerMesh.userData.currentAnim !== want && acts[want]){
+        playerMesh.userData.playClip(want, 0.12);
+        playerMesh.userData.currentAnim = want;
+      }
     }
   }
 

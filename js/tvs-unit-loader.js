@@ -24,7 +24,7 @@
     CDN + "/" + TVS_PREFIX + "/unit-roster.json";
   var CDN_CATALOG = CDN + "/" + TVS_PREFIX + "/catalog.json";
 
-  var DEFAULT_HEIGHT = 2.0;
+  var DEFAULT_HEIGHT = 1.8; // fleet SI yardstick (was 2.0)
   var HUMAN_CLIP_RE = /human[-_]/i;
   var ANIMAL_CLIP_RE = /^(horse|cow|pig|sheep|chicken|duck|bull|owl|corgi|goat)[-_]/i;
 
@@ -440,58 +440,99 @@
   // ── scale ──────────────────────────────────────────────────────────────────
 
   /**
-   * Body-only bbox: prefer SkinnedMesh; skip obvious weapon-only meshes so
-   * long spears don't inflate height and shrink the character.
+   * Body-only bbox: prefer SkinnedMesh after skeleton.pose().
+   * Skip weapon-only meshes so spears don't inflate height.
+   * IMPORTANT: pose skeleton first — bind-pose AABBs can be near-zero and
+   * trigger a false unitFix×100 → 100× giant characters.
    */
+  function poseSkeletons(object3d) {
+    object3d.traverse(function (ch) {
+      if (ch.isSkinnedMesh && ch.skeleton) {
+        try {
+          ch.skeleton.pose();
+          ch.skeleton.update();
+        } catch (e) {
+          /* */
+        }
+      }
+    });
+  }
+
   function measureBodyBox(object3d, THREE) {
     var box = new THREE.Box3();
     var found = false;
+    poseSkeletons(object3d);
     object3d.updateMatrixWorld(true);
     object3d.traverse(function (ch) {
       if (!ch.isMesh && !ch.isSkinnedMesh) return;
+      if (ch.visible === false) return;
       var n = (ch.name || "").toLowerCase();
-      if (/weapon|sword|axe|bow|staff|shield|spear|arrow|tool|prop/i.test(n) && !ch.isSkinnedMesh) {
+      if (
+        /weapon|sword|axe|bow|staff|shield|spear|arrow|tool|prop|quiver|bag/i.test(n) &&
+        !/body|torso|legs|arms|head|units_/i.test(n)
+      ) {
         return;
       }
-      // Expand by geometry if skinned (world AABB can be empty at bind pose on some packs)
-      if (ch.isSkinnedMesh && ch.geometry) {
-        if (!ch.geometry.boundingBox) ch.geometry.computeBoundingBox();
-        if (ch.geometry.boundingBox) {
-          var b = ch.geometry.boundingBox.clone();
-          b.applyMatrix4(ch.matrixWorld);
-          box.union(b);
-          found = true;
-          return;
-        }
+      // World AABB after pose (more reliable than raw geometry BB × matrix)
+      try {
+        box.expandByObject(ch);
+        found = true;
+      } catch (e) {
+        /* */
       }
-      box.expandByObject(ch);
-      found = true;
     });
-    if (!found) box.setFromObject(object3d);
+    if (!found) {
+      try {
+        box.setFromObject(object3d);
+      } catch (e) {
+        /* empty */
+      }
+    }
     return box;
   }
 
+  /** Humanoid player band (m) — reject 100× giants / dust motes. */
+  var HEIGHT_BAND_MIN = 0.9;
+  var HEIGHT_BAND_MAX = 2.6;
+
   /**
-   * Normalize character height in meters.
-   * Production GLBs from grudge-convert are already ~2.0m with feet at y=0 —
-   * use lightGroundOnly to avoid double-scale.
+   * Normalize character height in meters (fleet SI · 1.8 m human).
+   * Production TVS GLBs may already be ~1.8–2.0 m — light pass if in band.
+   * grudge6 CDN kits are often 12–22 m raw OR cm — always full fit + post-check.
    */
   function normalizeHeight(object3d, targetHeight, THREE, opts) {
     opts = opts || {};
     if (!object3d || !targetHeight || !THREE) return object3d;
 
-    if (opts.alreadyBaked || object3d.userData.productionBaked) {
-      // Light pass: only ground feet; keep baked mesh scale
+    // Always clear pitch/roll so heroes never lie parallel to ground
+    object3d.rotation.x = 0;
+    object3d.rotation.z = 0;
+
+    // grudge6 / forceFull: never trust "alreadyBaked" — CDN kits are modular raw
+    var forceFull =
+      opts.forceFull === true ||
+      opts.asset === "grudge6" ||
+      (object3d.userData && object3d.userData.assetSource === "grudge6");
+
+    if (!forceFull && (opts.alreadyBaked || object3d.userData.productionBaked)) {
+      // Light pass: only ground feet; keep baked mesh scale if within band
       object3d.updateMatrixWorld(true);
       var boxB = measureBodyBox(object3d, THREE);
       var sizeB = new THREE.Vector3();
       boxB.getSize(sizeB);
-      if (sizeB.y > 0.1) {
+      if (sizeB.y > HEIGHT_BAND_MIN && sizeB.y < HEIGHT_BAND_MAX) {
         var err = Math.abs(sizeB.y - targetHeight) / targetHeight;
-        if (err > 0.2) {
-          // Baked height drifted — full renormalize
+        if (err > 0.15) {
+          // Baked height drifted — full renormalize (TVS 2.0 → fleet 1.8)
           object3d.userData.productionBaked = false;
         } else {
+          // Soft residual fit into target when close
+          if (err > 0.04) {
+            object3d.scale.multiplyScalar(targetHeight / sizeB.y);
+            object3d.updateMatrixWorld(true);
+            boxB = measureBodyBox(object3d, THREE);
+            boxB.getSize(sizeB);
+          }
           object3d.position.y -= boxB.min.y;
           object3d.userData.nativeHeight = sizeB.y;
           object3d.userData.targetHeight = targetHeight;
@@ -501,12 +542,16 @@
           object3d.userData.productionBaked = true;
           return object3d;
         }
+      } else {
+        // Out of band despite "baked" flag — full fit (prevents 100× / dust)
+        object3d.userData.productionBaked = false;
       }
     }
 
     object3d.scale.set(1, 1, 1);
     object3d.position.set(0, 0, 0);
-    object3d.rotation.set(0, 0, 0);
+    // keep yaw if already set for art-forward; zero pitch/roll already done
+    poseSkeletons(object3d);
     object3d.updateMatrixWorld(true);
 
     var box = measureBodyBox(object3d, THREE);
@@ -517,11 +562,17 @@
       return object3d;
     }
 
-    // Decade unit fix: cm-authored FBX often ~100–300 units tall
+    var beforeH = size.y;
+
+    // Decade unit fix:
+    //  - cm FBX/GLB often ~100–300 units tall
+    //  - grudge6 CDN kits often ~12–22 m raw → residual fit only (no ×0.01)
+    //  - NEVER ×100 on a near-zero bbox without post-height guard (100× giant bug)
     var unitFix = 1;
     if (size.y > 40) {
       unitFix = 0.01;
     } else if (size.y < 0.05) {
+      // Only decade-up if post-fix lands in human band; else residual only
       unitFix = 100;
     }
     if (unitFix !== 1) {
@@ -529,25 +580,88 @@
       object3d.updateMatrixWorld(true);
       box = measureBodyBox(object3d, THREE);
       box.getSize(size);
+      // Guard: unitFix×100 on a bad tiny measure makes 100× giants
+      if (unitFix === 100 && (size.y > HEIGHT_BAND_MAX || size.y < HEIGHT_BAND_MIN * 0.5)) {
+        console.warn(
+          "[TvsUnitLoader] reject unitFix×100 (would leave h=" +
+            size.y.toFixed(3) +
+            ") — residual fit from identity",
+        );
+        object3d.scale.set(1, 1, 1);
+        object3d.updateMatrixWorld(true);
+        box = measureBodyBox(object3d, THREE);
+        box.getSize(size);
+        unitFix = 1;
+      }
     }
 
-    var s = targetHeight / size.y;
-    if (s > 50) s = 50;
+    var s = targetHeight / Math.max(size.y, 1e-4);
+    // Hard caps — never 100× a humanoid
+    if (s > 12) s = 12;
     if (s < 0.02) s = 0.02;
-    if (s > 20 || s < 0.05) {
-      console.warn("[TvsUnitLoader] extreme scale factor", s, "nativeH", size.y, "unitFix", unitFix);
+    if (s > 4 || s < 0.08) {
+      console.warn("[TvsUnitLoader] scale factor", s.toFixed(4), "nativeH", beforeH.toFixed(3), "afterUnit", size.y.toFixed(3), "unitFix", unitFix);
     }
 
     object3d.scale.multiplyScalar(s);
     object3d.updateMatrixWorld(true);
     var box2 = measureBodyBox(object3d, THREE);
+    var size2 = new THREE.Vector3();
+    box2.getSize(size2);
+
+    // Final band clamp: if still outside [0.9, 2.6], force exact target height
+    if (size2.y > HEIGHT_BAND_MAX || size2.y < HEIGHT_BAND_MIN) {
+      var s2 = targetHeight / Math.max(size2.y, 1e-4);
+      s2 = Math.min(Math.max(s2, 0.02), 12);
+      object3d.scale.multiplyScalar(s2);
+      object3d.updateMatrixWorld(true);
+      box2 = measureBodyBox(object3d, THREE);
+      box2.getSize(size2);
+      console.warn(
+        "[TvsUnitLoader] post-band re-fit → h=" +
+          size2.y.toFixed(3) +
+          "m (was out of " +
+          HEIGHT_BAND_MIN +
+          "–" +
+          HEIGHT_BAND_MAX +
+          ")",
+      );
+    }
+
     object3d.position.y -= box2.min.y;
-    object3d.userData.nativeHeight = size.y / (unitFix || 1);
+    // Sanity re-plant
+    object3d.updateMatrixWorld(true);
+    box2 = measureBodyBox(object3d, THREE);
+    if (Math.abs(box2.min.y) > 0.02) {
+      object3d.position.y -= box2.min.y;
+    }
+    box2.getSize(size2);
+    object3d.userData.nativeHeight = beforeH;
     object3d.userData.measuredAfterUnitFix = size.y;
+    object3d.userData.measuredFinal = size2.y;
     object3d.userData.targetHeight = targetHeight;
     object3d.userData.scaleFactor = object3d.scale.x;
     object3d.userData.unitFix = unitFix;
     object3d.userData.feetGrounded = true;
+    if (size2.y > HEIGHT_BAND_MAX || size2.y < HEIGHT_BAND_MIN) {
+      console.error(
+        "[TvsUnitLoader] STILL out of band after fit h=" +
+          size2.y.toFixed(3) +
+          " scale=" +
+          object3d.scale.x.toFixed(4),
+      );
+    } else {
+      console.info(
+        "[TvsUnitLoader] SI fit " +
+          beforeH.toFixed(2) +
+          "m → " +
+          size2.y.toFixed(2) +
+          "m (target " +
+          targetHeight +
+          ") scale×" +
+          object3d.scale.x.toFixed(4),
+      );
+    }
     return object3d;
   }
 
@@ -846,6 +960,21 @@
     return out;
   }
 
+  async function loadAnimClipsFromUrl(url, FBXLoader, THREE, opts) {
+    opts = opts || {};
+    var u = String(url || "");
+    if (/\.glb($|\?)/i.test(u) || /\.gltf($|\?)/i.test(u)) {
+      var gltf = await loadGlbFromUrl(THREE, u, {
+        verify: opts.verify !== false,
+        GLTFLoader: opts.GLTFLoader,
+      });
+      return gltf.animations || [];
+    }
+    if (!FBXLoader) throw new Error("FBXLoader required for anim " + u);
+    var animRoot = await loadFbxFromUrl(FBXLoader, u, { verify: opts.verify !== false });
+    return animRoot.animations || [];
+  }
+
   async function loadAndBindAnims(root, clipMap, FBXLoader, THREE, opts) {
     opts = opts || {};
     var mixer = new THREE.AnimationMixer(root);
@@ -861,19 +990,51 @@
       loadKeys.map(async function (sem) {
         var entry = clipMap[sem];
         if (!entry || !entry.url) return;
-        try {
-          var animRoot = await loadFbxFromUrl(FBXLoader, entry.url, { verify: opts.verify !== false });
-          var list = animRoot.animations || [];
-          if (!list.length) return;
-          var clip = list[0].clone();
-          clip.name = sem;
-          clips[sem] = clip;
-          var action = mixer.clipAction(clip);
-          action.enabled = true;
-          actions[sem] = action;
-        } catch (err) {
-          console.warn("[TvsUnitLoader] anim fail", sem, entry.url, err && err.message);
+        // Prefer production GLB when anims.json still points at FBX
+        var urls = [];
+        if (entry.glbUrl) urls.push(entry.glbUrl);
+        if (entry.url) {
+          urls.push(entry.url);
+          if (/\.fbx($|\?)/i.test(entry.url)) {
+            urls.push(String(entry.url).replace(/\.fbx($|\?)/i, ".glb$1"));
+          }
         }
+        var seen = {};
+        var list = [];
+        for (var ui = 0; ui < urls.length && !list.length; ui++) {
+          var tryUrl = absCdnUrl(urls[ui]) || urls[ui];
+          if (!tryUrl || seen[tryUrl]) continue;
+          seen[tryUrl] = true;
+          try {
+            list = await loadAnimClipsFromUrl(tryUrl, FBXLoader, THREE, opts);
+            if (list && list.length) entry._resolvedUrl = tryUrl;
+          } catch (err) {
+            list = [];
+            if (ui === urls.length - 1) {
+              console.warn("[TvsUnitLoader] anim fail", sem, tryUrl, err && err.message);
+            }
+          }
+        }
+        if (!list.length) return;
+        var clip = list[0].clone();
+        clip.name = sem;
+        clips[sem] = clip;
+        // Grounded kits: drop hip/root .position tracks (DRC SSOT — kills float)
+        if (clip && clip.tracks) {
+          var kept = clip.tracks.filter(function (t) {
+            return (t.name || "").indexOf(".position") === -1;
+          });
+          if (kept.length && kept.length < clip.tracks.length) {
+            try {
+              clip = new THREE.AnimationClip(clip.name, clip.duration, kept);
+            } catch (eStrip) {
+              /* keep original */
+            }
+          }
+        }
+        var action = mixer.clipAction(clip);
+        action.enabled = true;
+        actions[sem] = action;
       })
     );
 

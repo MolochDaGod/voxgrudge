@@ -1,9 +1,9 @@
 /**
  * Grudge Scale — meters-based sizing for voxgrudge open world.
- * Player = 2m tall. Largest bosses cap at 4m.
+ * Player = 1.8 m (fleet SI yardstick · Multiverse/DRC/Open). Largest bosses cap at 4m.
  */
 (function (global) {
-  const PLAYER_HEIGHT_M = 2.0;
+  const PLAYER_HEIGHT_M = 1.8;
   const BOSS_MAX_HEIGHT_M = 4.0;
   const KENNEY_NATIVE_H = 1.9;
   const VOX_NATIVE_H = 2.8;
@@ -22,13 +22,13 @@
   };
 
   const TIER_HEIGHT_M = {
-    1: { min: 0.7, max: 1.4, humanoid: 2.0 },
-    2: { min: 1.2, max: 2.0, humanoid: 2.0 },
-    3: { min: 1.6, max: 2.4, humanoid: 2.0 },
-    4: { min: 2.0, max: 2.8, humanoid: 2.0 },
-    5: { min: 2.4, max: 3.2, humanoid: 2.0 },
-    6: { min: 3.0, max: 3.6, humanoid: 2.0 },
-    7: { min: 3.5, max: BOSS_MAX_HEIGHT_M, humanoid: 2.0 },
+    1: { min: 0.7, max: 1.4, humanoid: 1.8 },
+    2: { min: 1.2, max: 2.0, humanoid: 1.8 },
+    3: { min: 1.6, max: 2.4, humanoid: 1.8 },
+    4: { min: 2.0, max: 2.8, humanoid: 1.8 },
+    5: { min: 2.4, max: 3.2, humanoid: 1.8 },
+    6: { min: 3.0, max: 3.6, humanoid: 1.8 },
+    7: { min: 3.5, max: BOSS_MAX_HEIGHT_M, humanoid: 1.8 },
   };
 
   const ENEMY_HEIGHT_OVERRIDES = {
@@ -94,7 +94,16 @@
     h *= uf;
     let s = (t / h) * uf;
     if (!Number.isFinite(s) || s <= 0) s = 1;
+    // Never allow ~100× humanoid scales from bad measures
     return clamp(s, 0.02, 12);
+  }
+
+  /**
+   * After any player load: if world height is outside band, return true so caller re-fits.
+   */
+  function playerHeightOutOfBand(measuredH) {
+    const h = measuredH || 0;
+    return h > 2.6 || h < 0.9 || h > PLAYER_HEIGHT_M * 1.5 || h < PLAYER_HEIGHT_M * 0.55;
   }
 
   function fantasyScale(fantasyKey, heightM) {
@@ -118,6 +127,7 @@
     playerScale,
     kenneyScale,
     voxScale,
+    playerHeightOutOfBand,
     creatureScale,
     fantasyScale,
     scaleForHeight,
