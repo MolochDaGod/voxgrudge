@@ -76,6 +76,9 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .char-card:hover{border-color:#666;transform:translateY(-2px)}
 .char-card.sel{border-color:#e63d3d;box-shadow:0 0 16px rgba(230,61,61,.35)}
 .char-card .char-swatch{width:48px;height:48px;margin:0 auto 6px;border-radius:6px;border:1px solid #334;background-size:cover;background-position:center;image-rendering:pixelated}
+.char-card.voxel-race-card{width:100px}
+.char-card.voxel-race-card .char-swatch{width:56px;height:56px;border-radius:8px;overflow:hidden;padding:0}
+.char-card.voxel-race-card .char-swatch canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
 .char-card .char-name{font-size:11px;font-weight:800;color:#cde;letter-spacing:.04em}
 .char-card .char-tag{font-size:8px;color:#667;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
 #cam-mode-pill{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:25;pointer-events:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8ab;background:rgba(6,10,18,.75);border:1px solid #334;padding:4px 12px;border-radius:999px}
@@ -296,8 +299,12 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
   <div id="vox-panel-class" class="vox-section-panel active">
     <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 12px">
-      <div class="vox-container__header"><h2 class="vox-container__title">Survivor class</h2></div>
+      <div class="vox-container__header"><h2 class="vox-container__title">Choose survivor</h2></div>
       <div class="vox-container__body">
+        <!-- Avatar Edit 6-race voxel defaults — primary survivor body pick (not grudge6 / not free-rpg TPose). -->
+        <div class="skin-picker-label">Survivor race · 6 voxel avatars (Avatar Edit production defaults)</div>
+        <div id="voxel-race-row" class="char-select-row" aria-label="Survivor voxel race avatars"></div>
+        <div class="skin-picker-label" style="margin-top:10px">Survivor class</div>
         <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
         <!-- Grid visible by default so Choose Survivor never ships empty if carousel/boot stalls.
              ensureSurvivorsUI() hides grid when carousel cards are ready. -->
@@ -311,7 +318,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
         <h3 id="preview-name">Choose Survivor</h3>
         <div class="cp-val" id="preview-cp">—</div>
         <div id="preview-stats"></div>
-        <p class="preview-hint" id="preview-hint">PNG frames + smart tabs · pick class then hero.</p>
+        <p class="preview-hint" id="preview-hint">Pick a race avatar + class, then enter the surface.</p>
         <span class="perk-tag hidden" id="preview-perk"></span>
       </div>
     </aside>
@@ -319,12 +326,12 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
   <div id="vox-panel-hero" class="vox-section-panel">
     <div class="vox-container" style="width:min(96vw,980px);margin:0 auto">
-      <div class="vox-container__header"><h2 class="vox-container__title">Voxel race · avatar · production GLB</h2></div>
+      <div class="vox-container__header"><h2 class="vox-container__title">Hero mesh · TVS · tint</h2></div>
       <div class="vox-container__body">
         <div id="tvs-hero-preview" aria-label="Hero 3D preview (2m stick)"></div>
         <div id="skin-picker">
-          <div class="skin-picker-label">Voxel race avatar (Avatar Edit · 6 modular cube races · production defaults)</div>
-          <div id="voxel-race-row" class="char-select-row" aria-label="Voxel race selection"></div>
+          <div class="skin-picker-label">Race locked from survivor pick · override mesh below if needed</div>
+          <div id="voxel-race-row-echo" class="char-select-row" aria-label="Selected survivor race echo" style="opacity:0.9"></div>
           <div class="skin-picker-label">TVS Hero (carousel · D1/R2 · compressed GLB when available)</div>
           <div id="tvs-hero-carousel" aria-label="TVS hero carousel"></div>
           <div id="tvs-unit-row" class="char-select-row" style="display:none"></div>
@@ -1123,6 +1130,91 @@ function voxelRaceToUnit(race) {
   };
 }
 
+/** Tiny pixel face for survivor race cards (Avatar Edit look/config → canvas). */
+function paintVoxelRaceAvatar(canvas, race) {
+  if (!canvas || !race) return;
+  const S = 16;
+  canvas.width = S;
+  canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingEnabled = false;
+  const look = race.look || {};
+  const cfg = race.config || {};
+  const skin = look.skin || '#d9a066';
+  const shirt = look.shirt || '#c0392b';
+  const hair = (typeof cfg.hairColor === 'number')
+    ? ('#' + (cfg.hairColor >>> 0).toString(16).padStart(6, '0'))
+    : '#5b3a21';
+  const eye = (typeof cfg.eyeColor === 'number')
+    ? ('#' + (cfg.eyeColor >>> 0).toString(16).padStart(6, '0'))
+    : '#2f5d8a';
+  // body / neck
+  ctx.fillStyle = shirt;
+  ctx.fillRect(3, 12, 10, 4);
+  // head cube
+  ctx.fillStyle = skin;
+  ctx.fillRect(3, 3, 10, 10);
+  // hair top
+  if (cfg.hair && cfg.hair !== 'bald') {
+    ctx.fillStyle = hair;
+    if (cfg.hair === 'mohawk') {
+      ctx.fillRect(7, 1, 2, 4);
+    } else if (cfg.hair === 'long' || cfg.hair === 'wild') {
+      ctx.fillRect(2, 2, 12, 3);
+      ctx.fillRect(2, 5, 2, 6);
+      ctx.fillRect(12, 5, 2, 6);
+    } else {
+      ctx.fillRect(3, 2, 10, 3);
+    }
+  }
+  // eyes
+  ctx.fillStyle = eye;
+  ctx.fillRect(5, 7, 2, 2);
+  ctx.fillRect(9, 7, 2, 2);
+  // brows
+  if (cfg.brows && cfg.brows !== 'none') {
+    ctx.fillStyle = hair;
+    ctx.fillRect(5, 6, 2, 1);
+    ctx.fillRect(9, 6, 2, 1);
+  }
+  // mouth
+  ctx.fillStyle = '#4a2a20';
+  if (cfg.mouth === 'frown' || cfg.mouth === 'grim') ctx.fillRect(6, 11, 4, 1);
+  else ctx.fillRect(7, 11, 2, 1);
+  // facial hair
+  if (cfg.facialHair && cfg.facialHair !== 'none') {
+    ctx.fillStyle = hair;
+    ctx.fillRect(5, 10, 6, 2);
+    if (cfg.facialHair === 'braided' || cfg.facialHair === 'full') ctx.fillRect(6, 12, 4, 2);
+  }
+  // ears / tusks (race reads)
+  if (cfg.ears === 'pointed' || cfg.ears === 'long') {
+    ctx.fillStyle = skin;
+    ctx.fillRect(2, 6, 1, 3);
+    ctx.fillRect(13, 6, 1, 3);
+  }
+  if (cfg.tusks && cfg.tusks !== 'none') {
+    ctx.fillStyle = '#f0e8d8';
+    ctx.fillRect(5, 10, 1, 3);
+    ctx.fillRect(10, 10, 1, 3);
+  }
+  // undead hollow glow
+  if (race.id === 'undead') {
+    ctx.fillStyle = '#d6f56a';
+    ctx.fillRect(5, 7, 2, 2);
+    ctx.fillRect(9, 7, 2, 2);
+  }
+  // headgear stripe
+  if (cfg.headgear === 'headband') {
+    ctx.fillStyle = look.hatColor || shirt;
+    ctx.fillRect(3, 4, 10, 2);
+  } else if (cfg.headgear === 'circlet') {
+    ctx.fillStyle = '#c2a23b';
+    ctx.fillRect(3, 3, 10, 1);
+  }
+}
+
 function selectVoxelRace(raceId) {
   const race = VOXEL_RACE_DEFAULTS.find(function (r) { return r.id === raceId; });
   if (!race) return;
@@ -1141,9 +1233,14 @@ function selectVoxelRace(raceId) {
   if (typeof refreshHeroPreview === 'function') {
     try { refreshHeroPreview(unit); } catch (e) { /* preview optional */ }
   }
-  document.querySelectorAll('#voxel-race-row .char-card').forEach(function (c) {
+  document.querySelectorAll('#voxel-race-row .char-card, #voxel-race-row-echo .char-card').forEach(function (c) {
     c.classList.toggle('sel', c.dataset.raceId === raceId);
   });
+  // Surface selection in class preview
+  const pn = document.getElementById('preview-name');
+  if (pn && !playerClass) {
+    pn.textContent = (race.label || race.id) + ' survivor';
+  }
   const sb = document.getElementById('start-btn');
   if (sb && playerClass) {
     sb.classList.remove('hidden');
@@ -1152,28 +1249,47 @@ function selectVoxelRace(raceId) {
   console.info('[VoxGrudge] avatar race', race.id, race.avatarId, race.config && race.config.hair);
 }
 
+function buildVoxelRaceCard(race) {
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'char-card voxel-race-card' + (playerVoxelRaceId === race.id ? ' sel' : '');
+  card.dataset.raceId = race.id;
+  card.dataset.unitId = race.avatarId || ('avatar-' + race.id);
+  const swatch = document.createElement('div');
+  swatch.className = 'char-swatch';
+  const canvas = document.createElement('canvas');
+  canvas.setAttribute('aria-hidden', 'true');
+  paintVoxelRaceAvatar(canvas, race);
+  swatch.appendChild(canvas);
+  const name = document.createElement('div');
+  name.className = 'char-name';
+  name.textContent = race.label || race.id;
+  const tag = document.createElement('div');
+  tag.className = 'char-tag';
+  tag.textContent = race.classHint || 'avatar';
+  card.appendChild(swatch);
+  card.appendChild(name);
+  card.appendChild(tag);
+  card.title = (race.label || race.id) + ' · Avatar Edit voxel race · ' + (race.avatarId || race.id);
+  card.onclick = function () { selectVoxelRace(race.id); };
+  return card;
+}
+
 function renderVoxelRacePicker() {
   const row = document.getElementById('voxel-race-row');
   if (!row) return;
   row.innerHTML = '';
   VOXEL_RACE_DEFAULTS.forEach(function (race) {
-    const card = document.createElement('button');
-    card.type = 'button';
-    card.className = 'char-card voxel-race-card' + (playerVoxelRaceId === race.id ? ' sel' : '');
-    card.dataset.raceId = race.id;
-    card.dataset.unitId = race.avatarId || ('avatar-' + race.id);
-    const skin = (race.look && race.look.skin) || '#d9a066';
-    const emoji = AVATAR_RACE_EMOJI[race.id] || '🧑';
-    card.innerHTML =
-      '<div class="char-swatch" style="background:' + skin + ';display:flex;align-items:center;justify-content:center;font-size:22px">' +
-      emoji +
-      '</div>' +
-      '<div class="char-name">' + (race.label || race.id) + '</div>' +
-      '<div class="char-tag">avatar</div>';
-    card.title = (race.label || race.id) + ' · Avatar Edit voxel race · ' + (race.avatarId || race.id);
-    card.onclick = function () { selectVoxelRace(race.id); };
-    row.appendChild(card);
+    row.appendChild(buildVoxelRaceCard(race));
   });
+  // Echo selected race on Hero tab (read-only mirror for mesh overrides)
+  const echo = document.getElementById('voxel-race-row-echo');
+  if (echo) {
+    echo.innerHTML = '';
+    VOXEL_RACE_DEFAULTS.forEach(function (race) {
+      echo.appendChild(buildVoxelRaceCard(race));
+    });
+  }
   if (!playerVoxelRaceId && VOXEL_RACE_DEFAULTS[0]) {
     selectVoxelRace(VOXEL_RACE_DEFAULTS[0].id);
   }
