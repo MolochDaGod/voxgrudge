@@ -7,8 +7,8 @@
     <!-- client.* matches CSP script-src *.grudge-studio.com; id.* also allow-listed -->
     <script src="https://client.grudge-studio.com/grudge-game-bootstrap.js"></script>
     <script>window.GRUDGE_AUTH_GATEWAY='https://id.grudge-studio.com';window.GRUDGE_AUTH_MODE='popup';</script>
-    <!-- Puter via same-origin proxy so embed CSP (script-src 'self') allows it -->
-    <script src="vendor/puter.js"></script>
+    <!-- Puter optional (cloud saves). CDN first; missing vendor stub must not block UI. -->
+    <script src="https://js.puter.com/v2/" async></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Grudge Warlords — Open World Voxel Edition</title>
 <meta name="description" content="Nexus Era open world voxel survival — classes, crafting, combat, and GRUDOX co-op.">
@@ -286,7 +286,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
 <div id="class-screen">
   <header class="gw-brand">
-    <img class="gw-logo" src="/branding/logo-256.png" alt="" width="96" height="96" decoding="async">
+    <img class="gw-logo" src="branding/logo-256.png" alt="" width="96" height="96" decoding="async" onerror="this.src='/voxgrudge/branding/logo-256.png'">
     <h1>GRUDGE WARLORDS</h1>
   </header>
   <div class="sub">Nexus Era · Open World Survival</div>
@@ -626,13 +626,13 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
 <div id="world-loading" class="gw-load-screen screen-overlay" style="display:none">
   <!-- Video assets optional — poster/CSS gradient is enough when webm/mp4 are not shipped -->
-  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="/branding/load-screen-poster.jpg" preload="metadata">
-    <source src="/branding/load-screen.webm" type="video/webm">
-    <source src="/branding/load-screen.mp4" type="video/mp4">
+  <video id="load-screen-video" class="gw-load-video" autoplay muted loop playsinline poster="branding/load-screen-poster.jpg" preload="metadata">
+    <source src="branding/load-screen.webm" type="video/webm">
+    <source src="branding/load-screen.mp4" type="video/mp4">
   </video>
   <div class="gw-load-scrim"></div>
   <div class="gw-load-panel">
-    <img src="/branding/logo-256.png" alt="" class="gw-load-logo" width="72" height="72" decoding="async">
+    <img src="branding/logo-256.png" alt="" class="gw-load-logo" width="72" height="72" decoding="async" onerror="this.src='/voxgrudge/branding/logo-256.png'">
     <h1>Entering the Surface</h1>
     <div id="world-loading-msg" class="gw-load-stage">Connecting to asset registry…</div>
     <div class="gw-load-bar-track"><div id="world-loading-bar" class="gw-load-bar-fill"></div></div>
@@ -751,8 +751,12 @@ try {
   (function applyPartyFrameVars(){
     var root = document.documentElement;
     function u(rel){
-      if (window.GrudgeAssets && GrudgeAssets.localOrR2) return GrudgeAssets.localOrR2('ui/hud/party-frames/' + rel);
-      return '/ui/hud/party-frames/' + rel;
+      var local = 'ui/hud/party-frames/' + rel;
+      if (window.GrudgeAssets && GrudgeAssets.localOrR2) return GrudgeAssets.localOrR2(local);
+      // Under /voxgrudge/* host — never use root-absolute /ui (404s on fleet)
+      var path = (location && location.pathname) || '';
+      if (path.indexOf('/voxgrudge') >= 0) return '/voxgrudge/' + local;
+      return local;
     }
     [
       ['--pf-player-bg','player-frame.png'],

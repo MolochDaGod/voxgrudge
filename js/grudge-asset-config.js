@@ -93,6 +93,15 @@
   }
 
   function localOrR2(localPath, r2Path) {
+    var p = String(localPath || '').replace(/^\//, '');
+    // Fleet shell UI/JS/CSS under /voxgrudge must resolve same-origin.
+    // Edge static + Vercel dist own these; R2 may lag or miss kit CSS (vox-ui-kit, etc.).
+    if (
+      pathname().indexOf('/voxgrudge') >= 0 &&
+      /^(ui\/|js\/|branding\/|avatar\/)/.test(p)
+    ) {
+      return bundleUrl(p);
+    }
     if (useR2()) {
       var key = r2Path || localPath;
       key = String(key || '').replace(/^\//, '');
