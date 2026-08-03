@@ -290,7 +290,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
     <h1>GRUDGE WARLORDS</h1>
   </header>
   <div class="sub">Nexus Era · Open World Survival</div>
-  <div class="version">CraftPix PNG UI · TVS D1/R2 · 8-step combat · GRUDOX</div>
+  <div class="version">Player · Explorer avatar+mixer · World cast · TVS · GRUDOX</div>
   <div id="vox-flow-rail" aria-label="Game flow">
     <span class="step on" data-step="select">1 · Character</span>
     <span class="step" data-step="world">2 · World</span>
@@ -315,7 +315,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
       <div class="vox-container create-main">
         <div class="vox-container__header"><h2 class="vox-container__title">Create survivor</h2></div>
         <div class="vox-container__body">
-          <p class="create-step-hint">One body · Avatar Edit 6 races. Class only sets combat loadout.</p>
+          <p class="create-step-hint">Player body is Avatar Explorer (race + AnimationMixer). TVS units are for world cast — enemies, villagers, allies, camps — not the player mesh.</p>
           <div class="skin-picker-label">1 · Race avatar</div>
           <div id="voxel-race-row" class="char-select-row" aria-label="Survivor race avatars"></div>
           <div class="skin-picker-label" style="margin-top:12px">2 · Class loadout</div>
@@ -2698,7 +2698,8 @@ function init(){
   ghostMesh.visible = false;
   scene.add(ghostMesh);
 
-  // Player — prefer TVS voxel hero (D1/R2), else Kenney / voxroll / procedural
+  // Player body SSOT: Avatar Explorer (race look + AnimationMixer + weapon skills).
+  // TVS is reserved for world cast (enemies, NPC villagers, allies, camps, buildings).
   playerMesh = new THREE.Group();
   playerMesh.position.set(0, 0, 0);
   scene.add(playerMesh);
@@ -2796,149 +2797,175 @@ function init(){
     }
   }
 
+  /**
+   * TVS is world-cast only — never replace the player Explorer body with a TVS hero.
+   * Kept for camp/NPC tooling that still calls this name.
+   */
   window.swapPlayerTvsUnit = async function(unit){
-    if(!window.TvsUnitLoader || !unit) return;
-    try {
-      const root = await TvsUnitLoader.loadTvsUnit(TvsUnitLoader.normalizeUnit(unit), {
-        THREE: THREE,
-        FBXLoader: THREE.FBXLoader,
-        height: GrudgeScale.PLAYER_HEIGHT_M || 1.8,
-        withTexture: true,
-        withAnims: true,
-        loadSidecars: true,
-        verify: true,
-        maxClips: 6,
-        colorTint: playerColorTint !== 0xffffff ? playerColorTint : null,
-      });
-      root.userData._tvsPlayer = true;
-      finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null, skipWeapon: true });
-    } catch(err){
-      console.warn('[VoxGrudge] swap TVS failed', err);
-    }
+    console.warn('[VoxGrudge] swapPlayerTvsUnit ignored — player body is Explorer avatar only. Use loadTvsWorldActor for cast.');
+    return null;
   };
 
-  (async function spawnTvsPlayer(){
-    // 1) Open / fleet handoff: ?characterId=&grudge_token=&open=1 → grudge6 kit @ 1.8 m
+  /** Ensure TVS roster cached for enemies / villagers / allies / camps. */
+  async function ensureTvsWorldRoster(){
+    if(!window.TvsUnitLoader) return null;
+    try{
+      if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
+      else if(TvsUnitLoader.normalizeRoster) tvsRosterCache = TvsUnitLoader.normalizeRoster(tvsRosterCache);
+      return tvsRosterCache;
+    }catch(e){
+      console.warn('[VoxGrudge] TVS world roster', e && e.message || e);
+      return null;
+    }
+  }
+
+  /**
+   * Pick a TVS unit for a world role (not player).
+   * role: 'enemy' | 'npc' | 'ally' | 'vendor' | 'villager' | 'camp'
+   */
+  function pickTvsWorldUnit(role, classHint){
+    if(!tvsRosterCache || !window.TvsUnitLoader) return null;
+    var units = (tvsRosterCache.units || []).slice();
+    if(!units.length) return null;
+    var packPref = {
+      enemy: ['voxel-knights', 'voxel-rangers', 'voxel-wizards', 'voxel-palace', 'voxel-cathedral'],
+      camp: ['voxel-knights', 'voxel-rangers', 'voxel-palace'],
+      npc: ['voxel-village', 'voxel-farm'],
+      villager: ['voxel-village', 'voxel-farm'],
+      vendor: ['voxel-village', 'voxel-farm', 'voxel-palace'],
+      ally: ['voxel-knights', 'voxel-rangers', 'voxel-village'],
+    };
+    var packs = packPref[role] || packPref.npc;
+    var scored = units.map(function(u){
+      var score = 0;
+      var pack = u.pack || '';
+      var tags = (u.tags || []).join(' ').toLowerCase();
+      var name = String(u.displayName || u.unitId || '').toLowerCase();
+      if(packs.indexOf(pack) >= 0) score += 10 + (packs.length - packs.indexOf(pack));
+      if(classHint && u.classHint === classHint) score += 5;
+      if(role === 'enemy' && /knight|guard|raider|warrior|bandit|orc|undead/.test(name+tags)) score += 3;
+      if(role === 'villager' && /farmer|villager|barmaid|child|civilian|peasant/.test(name+tags)) score += 4;
+      if(role === 'vendor' && /vendor|merchant|barmaid|jeweller|trader/.test(name+tags)) score += 4;
+      if(role === 'ally' && /knight|ranger|captain|guard|ally/.test(name+tags)) score += 3;
+      return { u: u, score: score };
+    }).sort(function(a,b){ return b.score - a.score; });
+    var best = scored[0] && scored[0].score > 0 ? scored[0].u : units[Math.floor(Math.random()*units.length)];
+    return TvsUnitLoader.normalizeUnit ? TvsUnitLoader.normalizeUnit(best) : best;
+  }
+
+  /**
+   * Load a TVS mesh for world cast. Returns Group root or null.
+   * Never use for the local player body.
+   */
+  async function loadTvsWorldActor(role, opts){
+    opts = opts || {};
+    if(!window.TvsUnitLoader) return null;
+    await ensureTvsWorldRoster();
+    var unit = opts.unit || pickTvsWorldUnit(role, opts.classHint);
+    if(!unit) return null;
+    unit = TvsUnitLoader.normalizeUnit ? TvsUnitLoader.normalizeUnit(unit) : unit;
+    if(!unit.modelUrl && !unit.glbUrl) return null;
+    try{
+      var root = await TvsUnitLoader.loadTvsUnit(unit, {
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        height: opts.heightM || GrudgeScale.PLAYER_HEIGHT_M || 1.8,
+        withTexture: true,
+        withAnims: !!opts.withAnims,
+        loadSidecars: true,
+        verify: true,
+        maxClips: opts.maxClips != null ? opts.maxClips : 4,
+        colorTint: opts.colorTint || null,
+      });
+      if(!root) return null;
+      root.userData._tvsWorld = true;
+      root.userData.tvsRole = role;
+      root.userData.tvsUnitId = unit.unitId;
+      root.userData.assetSource = 'tvs-voxel';
+      if(opts.colorTint && root.userData.setColorTint){
+        try{ root.userData.setColorTint(opts.colorTint); }catch(e){}
+      }
+      return root;
+    }catch(err){
+      console.warn('[VoxGrudge] TVS world actor', role, err && err.message || err);
+      return null;
+    }
+  }
+
+  /** Spawn local player as Avatar Explorer only (race + mixer + skills). */
+  (async function spawnExplorerPlayer(){
+    // Fleet handoff may carry account/character meta, but body stays Explorer avatar.
     try {
       if(window.FleetCharacterHandoff){
         const hand = FleetCharacterHandoff.parseHandoff();
         if(hand.token) FleetCharacterHandoff.applyToken(hand.token);
         if(hand.characterId || hand.open){
-          const res = await FleetCharacterHandoff.bootstrapFromUrl({
-            THREE: THREE,
-            height: (window.GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M) || 1.8,
-          });
-          FleetCharacterHandoff.scrubUrlTokens();
-          if(res && res.ok && res.root){
-            finalizePlayerMesh(res.root, {
-              mixer: res.root.userData.mixer || null,
-              skelParts: null,
-              skipWeapon: true,
+          // Still resolve character for name/stats; do not adopt grudge6/TVS mesh as player body.
+          try{
+            await FleetCharacterHandoff.bootstrapFromUrl({
+              THREE: THREE,
+              height: (window.GrudgeScale && GrudgeScale.PLAYER_HEIGHT_M) || 1.8,
+              meshOnly: false,
             });
-            console.info('[VoxGrudge] fleet handoff player', res.characterId, res.root.userData.importReport);
-            if(res.autoStart && typeof window.showFlash === 'function'){
-              showFlash('Fleet hero loaded · '+(res.character && (res.character.name||res.characterId)));
-            }
-            return;
-          }
-          if(res && !res.ok){
-            console.warn('[VoxGrudge] fleet handoff', res.reason, res.error || '');
+          }catch(e){}
+          FleetCharacterHandoff.scrubUrlTokens();
+          if(typeof window.showFlash === 'function' && hand.characterId){
+            showFlash('Fleet hero · Explorer body · ' + hand.characterId);
           }
         }
       }
     } catch(handErr){
-      console.warn('[VoxGrudge] fleet handoff error', handErr);
+      console.warn('[VoxGrudge] fleet handoff meta', handErr);
     }
 
-    // 2) Avatar Edit race default (preferred) or TVS unit (D1/R2)
+    // Warm TVS roster for world cast (enemies/NPCs) — not for player mesh
+    ensureTvsWorldRoster().catch(function(){});
+
     try {
-      let unit = playerTvsUnit;
+      var race = playerAvatarRace;
       if(playerVoxelRaceId){
-        const race = VOXEL_RACE_DEFAULTS.find(function(r){ return r.id===playerVoxelRaceId; });
-        if(race){
-          unit = voxelRaceToUnit(race);
-          playerAvatarRace = race;
-          if(typeof race.skinTone === 'number') playerColorTint = race.skinTone;
-          persistPlayerAvatarHead(race.config);
+        race = VOXEL_RACE_DEFAULTS.find(function(r){ return r.id===playerVoxelRaceId; }) || race;
+      }
+      if(!race && VOXEL_RACE_DEFAULTS[0]) race = VOXEL_RACE_DEFAULTS[0];
+      if(race){
+        playerAvatarRace = race;
+        playerVoxelRaceId = race.id;
+        var unit = voxelRaceToUnit(race);
+        playerTvsUnit = unit; // synthetic race unit for preview/save only
+        playerTvsUnitId = unit.unitId;
+        if(typeof race.skinTone === 'number') playerColorTint = race.skinTone;
+        persistPlayerAvatarHead(race.config);
+        persistAvatarRacePackage();
+      }
+
+      function finishExplorerSpawn(){
+        var av = buildExplorerRaceAvatar(race || {
+          id: 'human',
+          look: { skin: '#d9a066', shirt: '#c0392b', pants: '#2e3440' },
+          config: { race: 'human' },
+          avatarId: 'avatar-human',
+          heightM: 1.8,
+        });
+        if(av){
+          finalizePlayerMesh(av, {
+            mixer: av.userData.mixer || av.userData._mixer || null,
+            skelParts: null,
+            skipWeapon: false,
+          });
+          if(av.userData.playClip) av.userData.playClip('idle', 0);
+          console.info('[VoxGrudge] player=explorer-avatar', race && race.id, 'mixer+loco+skills; TVS=world-cast');
+        } else {
+          console.warn('[VoxGrudge] explorer-avatar build failed — Kenney fallback (still not TVS player)');
+          spawnKenneyOrVoxFallback();
         }
       }
-      // Avatar Edit race → Explorer skinned avatar (AnimationMixer + ANIM_FILES loco/skills)
-      if(unit && (unit.kind === 'voxel-avatar-race' || unit.pack === 'avatar-edit') && !unit.modelUrl && !unit.glbUrl){
-        playerTvsUnit = unit;
-        playerTvsUnitId = unit.unitId;
-        const race = playerAvatarRace || VOXEL_RACE_DEFAULTS.find(function(r){ return r.id===unit.raceId||r.id===playerVoxelRaceId; });
-        // Ensure Mixamo skeleton template is ready for Explorer mixer
-        function finishExplorerSpawn(){
-          const av = buildExplorerRaceAvatar(race || {
-            id: unit.raceId || 'human',
-            look: unit.look || {},
-            config: unit.avatarConfig || null,
-            avatarId: unit.unitId,
-            heightM: unit.heightM || 1.8,
-            skinTone: unit.skinTone,
-          });
-          if(av){
-            finalizePlayerMesh(av, {
-              mixer: av.userData.mixer || av.userData._mixer || null,
-              skelParts: null,
-              skipWeapon: false,
-            });
-            if(av.userData.playClip) av.userData.playClip('idle', 0);
-            console.info('[VoxGrudge] explorer-avatar race', unit.unitId, unit.raceId, 'mixer+loco+skills');
-          } else {
-            console.warn('[VoxGrudge] explorer-avatar build failed — Kenney fallback');
-            spawnKenneyOrVoxFallback();
-            if(playerMesh){
-              playerMesh.userData.avatarRace = unit.raceId;
-              playerMesh.userData.avatarConfig = unit.avatarConfig || null;
-              playerMesh.userData.avatarLook = unit.look || null;
-              playerMesh.userData.avatarId = unit.unitId;
-            }
-          }
-        }
-        if(fbxSkeletonReady && window._fbxSkelTemplate){
-          finishExplorerSpawn();
-        } else {
-          initFBXSkeleton(function(){ finishExplorerSpawn(); });
-        }
+      if(fbxSkeletonReady && window._fbxSkelTemplate){
+        finishExplorerSpawn();
       } else {
-        if(!window.TvsUnitLoader) throw new Error('TvsUnitLoader missing');
-        if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
-        else if(TvsUnitLoader.normalizeRoster) tvsRosterCache = TvsUnitLoader.normalizeRoster(tvsRosterCache);
-        if(!unit && playerTvsUnitId) unit = TvsUnitLoader.findUnit(tvsRosterCache, playerTvsUnitId);
-        if(!unit) unit = TvsUnitLoader.pickBestUnit
-          ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass)
-          : (TvsUnitLoader.pickUnit && TvsUnitLoader.pickUnit(tvsRosterCache, playerClass));
-        if(!unit) throw new Error('no TVS unit');
-        unit = TvsUnitLoader.normalizeUnit ? TvsUnitLoader.normalizeUnit(unit) : unit;
-        if(!unit.modelUrl && !unit.glbUrl) throw new Error('unit missing modelUrl after normalize: '+(unit.unitId||'?'));
-        playerTvsUnit = unit;
-        playerTvsUnitId = unit.unitId;
-        const root = await TvsUnitLoader.loadTvsUnit(unit, {
-          THREE: THREE,
-          FBXLoader: THREE.FBXLoader,
-          height: (playerAvatarRace && playerAvatarRace.heightM) || GrudgeScale.PLAYER_HEIGHT_M || 1.8,
-          withTexture: true,
-          withAnims: true,
-          loadSidecars: true,
-          verify: true,
-          maxClips: 6,
-          colorTint: playerColorTint !== 0xffffff ? playerColorTint : null,
-        });
-        if(playerColorTint && playerColorTint !== 0xffffff && root.userData.setColorTint){
-          root.userData.setColorTint(playerColorTint);
-        }
-        root.userData._tvsPlayer = true;
-        if(playerAvatarRace){
-          root.userData.avatarRace = playerAvatarRace.id;
-          root.userData.avatarConfig = playerAvatarRace.config;
-          root.userData.avatarId = playerAvatarRace.avatarId;
-        }
-        finalizePlayerMesh(root, { mixer: root.userData.mixer || null, skelParts: null, skipWeapon: true });
-        console.info('[VoxGrudge] TVS player', unit.unitId, unit.grudgeUuid, root.userData.importReport);
+        initFBXSkeleton(function(){ finishExplorerSpawn(); });
       }
     } catch(err){
-      console.warn('[VoxGrudge] TVS player fallback', err && err.message || err);
+      console.warn('[VoxGrudge] explorer player spawn', err && err.message || err);
       spawnKenneyOrVoxFallback();
     }
   })();
@@ -3455,7 +3482,32 @@ function buildWorld(){
 }
 
 function buildSurvivorNPC(sv){
-  const g=cloneModel('e',1,'a')||buildVoxChar(0x8899aa,0x334455,GrudgeScale.voxScale(2));
+  // Placeholder group; TVS world-cast mesh attaches async (villager/vendor/npc)
+  const g = new THREE.Group();
+  g.userData.worldRole = (sv && sv.role) || 'npc';
+  const fallback = cloneModel('e',1,'a')||buildVoxChar(0x8899aa,0x334455,GrudgeScale.voxScale(2));
+  if(fallback){
+    fallback.name = 'npc-fallback';
+    g.add(fallback);
+  }
+  // Upgrade to TVS cast when roster ready
+  var role = (sv && sv.role === 'vendor') ? 'vendor' : (sv && sv.role === 'ally' ? 'ally' : 'villager');
+  if(typeof loadTvsWorldActor === 'function'){
+    loadTvsWorldActor(role, {
+      classHint: (sv && sv.classHint) || null,
+      heightM: 1.75,
+      withAnims: true,
+      colorTint: (sv && sv.body) || null,
+    }).then(function(root){
+      if(!root || !g.parent) return;
+      // Clear fallback children, keep group world transform
+      while(g.children.length) g.remove(g.children[0]);
+      g.add(root);
+      if(typeof snapToGround === 'function') snapToGround(g, 0);
+      g.userData.tvsUnitId = root.userData.tvsUnitId;
+      g.userData.assetSource = 'tvs-voxel';
+    }).catch(function(){});
+  }
   return g;
 }
 
@@ -4611,12 +4663,16 @@ function spawnEnemyAt(sx,sz,typeId,meta){
         fitEnemyMeshHeight(mesh, heightM);
         scaled=true;
       } else {
-        const isHumanoid=def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank';
+        const isHumanoid=def.beh==='chase'||def.beh==='heavy'||def.beh==='berserker'||def.beh==='tank'||def.beh==='melee';
         const eLetter=ENEMY_MODEL_POOL[Math.floor(Math.random()*ENEMY_MODEL_POOL.length)];
         const eTex=KENNEY_TEXTURE_LETTERS[Math.floor(Math.random()*KENNEY_TEXTURE_LETTERS.length)];
         const enemyGlb=isHumanoid?cloneModel(eLetter,heightM/GrudgeScale.PLAYER_HEIGHT_M,eTex):null;
         if(enemyGlb){ mesh=enemyGlb; scaled=true; }
         else{ mesh=buildVoxChar(def.body,(def.pants||0x222222),GrudgeScale.voxScale(heightM)); scaled=true; }
+        // Async upgrade humanoid enemies to TVS world-cast (not player Explorer)
+        if(isHumanoid && typeof loadTvsWorldActor === 'function'){
+          mesh.userData._pendingTvsUpgrade = true;
+        }
       }
     }
   }
@@ -4626,6 +4682,42 @@ function spawnEnemyAt(sx,sz,typeId,meta){
   // Spawn at intended world position (was missing — enemies stacked at origin)
   mesh.position.set(sx, 0, sz);
   snapToGround(mesh,0);
+
+  // TVS world-cast upgrade for humanoid hostiles (keeps combat entity, swaps visual)
+  if(mesh.userData && mesh.userData._pendingTvsUpgrade){
+    loadTvsWorldActor('enemy', {
+      classHint: def.classHint || 'melee',
+      heightM: heightM,
+      withAnims: true,
+      colorTint: def.body || null,
+    }).then(function(root){
+      if(!root || !mesh.parent) return;
+      var px = mesh.position.x, py = mesh.position.y, pz = mesh.position.z;
+      var ry = mesh.rotation.y;
+      // Reparent: clear old visual children into TVS root placement
+      var parent = mesh.parent;
+      parent.remove(mesh);
+      root.position.set(px, py, pz);
+      root.rotation.y = ry;
+      parent.add(root);
+      // Transfer nameplates if present
+      mesh.children.slice().forEach(function(ch){
+        if(ch.isSprite) root.add(ch);
+      });
+      // Point enemy record at new mesh
+      for(var i=0;i<enemies.length;i++){
+        if(enemies[i].mesh === mesh){
+          enemies[i].mesh = root;
+          if(enemies[i].colId && collisionWorld && collisionWorld.setMesh){
+            try{ collisionWorld.setMesh(enemies[i].colId, root); }catch(e){}
+          }
+          break;
+        }
+      }
+      if(typeof snapToGround === 'function') snapToGround(root, 0);
+      root.userData._tvsWorld = true;
+    }).catch(function(){});
+  }
 
   const collSpec=(window.EnemyCombat
     ? EnemyCombat.getColliderSpec(def, typeId, heightM)
@@ -5749,21 +5841,44 @@ function spawnAlly(kind, pos, overrides){
   if(!def) return null;
   const maxAllies = (CLASSES[playerClass].minionMax||0)+4;
   if(minions.length>=maxAllies){showFlash('Ally roster full');return null;}
-  let mesh;
+  // Host group — TVS ally cast preferred for humanoids; animals keep fantasy/cold packs
+  let mesh = new THREE.Group();
+  mesh.userData.worldRole = 'ally';
+  let hasVisual = false;
   if(def.coldUnit&&COLD_BIOM_CACHE[def.coldUnit]){
-    mesh=COLD_BIOM_CACHE[def.coldUnit].clone(true);
-    mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+    const cold=COLD_BIOM_CACHE[def.coldUnit].clone(true);
+    cold.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+    mesh.add(cold);
+    hasVisual = true;
   } else {
     const tmpl=def.model?FANTASY_CACHE[def.model]:null;
     if(tmpl){
-      mesh=tmpl.clone();
-      mesh.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
+      const m=tmpl.clone();
+      m.traverse(c=>{if(c.isMesh){c.material=c.material.clone();c.castShadow=true;c.receiveShadow=true;}});
       const sc=(FANTASY_SCALE[def.model]||1)*0.5;
-      mesh.scale.set(sc,sc,sc);
+      m.scale.set(sc,sc,sc);
+      mesh.add(m);
+      hasVisual = true;
     } else {
-      mesh=buildVoxChar(0x336655,0x112233,0.7);
+      mesh.add(buildVoxChar(0x336655,0x112233,0.7));
+      hasVisual = true;
+      // Humanoid-style allies (shield-brother etc.) → TVS cast
+      if(typeof loadTvsWorldActor === 'function' && (def.beh==='melee'||def.beh==='ranged'||!def.model)){
+        loadTvsWorldActor('ally', {
+          heightM: 1.8,
+          withAnims: true,
+          classHint: def.beh === 'ranged' ? 'ranged' : 'melee',
+        }).then(function(root){
+          if(!root || !mesh.parent) return;
+          while(mesh.children.length) mesh.remove(mesh.children[0]);
+          mesh.add(root);
+          if(typeof snapToGround === 'function') snapToGround(mesh, 0);
+          mesh.userData.assetSource = 'tvs-voxel';
+        }).catch(function(){});
+      }
     }
   }
+  if(!hasVisual) mesh.add(buildVoxChar(0x336655,0x112233,0.7));
   mesh.position.copy(pos||playerMesh.position);
   snapToGround(mesh,0);
   scene.add(mesh);
