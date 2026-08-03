@@ -81,6 +81,19 @@ body{margin:0;overflow:hidden;background:#0a0e14;font-family:'Segoe UI',sans-ser
 .char-card.voxel-race-card .char-swatch canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
 .char-card .char-name{font-size:11px;font-weight:800;color:#cde;letter-spacing:.04em}
 .char-card .char-tag{font-size:8px;color:#667;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+/* Create-survivor layout: race+class one column, preview aside, sticky nav */
+.create-layout{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:flex-start;width:min(96vw,1100px);margin:0 auto 8px}
+.create-main{flex:1 1 520px;max-width:min(96vw,640px);margin:0}
+.create-aside{flex:0 1 360px;width:min(96vw,360px);margin:0;position:sticky;top:12px}
+.create-step-hint{margin:0 0 12px;font-size:11px;color:#889;letter-spacing:.04em;text-align:center;line-height:1.4}
+.create-nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;width:min(96vw,980px);margin:14px auto 0;padding:10px 8px;position:relative;z-index:2}
+.create-nav-status{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#778;min-width:160px;text-align:center}
+.create-nav-status.ready{color:#8c8}
+#tvs-hero-preview{min-height:160px;margin:0 auto 10px;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.35);border:1px solid #2a2e3a}
+#create-next-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
+@media(max-width:820px){
+  .create-aside{position:static;width:min(96vw,420px)}
+}
 #cam-mode-pill{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:25;pointer-events:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8ab;background:rgba(6,10,18,.75);border:1px solid #334;padding:4px 12px;border-radius:999px}
 /* Custom game cursor / crosshair (per camera mode) */
 body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
@@ -279,7 +292,7 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
   <div class="sub">Nexus Era · Open World Survival</div>
   <div class="version">CraftPix PNG UI · TVS D1/R2 · 8-step combat · GRUDOX</div>
   <div id="vox-flow-rail" aria-label="Game flow">
-    <span class="step on" data-step="select">1 · Hero</span>
+    <span class="step on" data-step="select">1 · Character</span>
     <span class="step" data-step="world">2 · World</span>
     <span class="step" data-step="loading">3 · Load</span>
     <span class="step" data-step="playing">4 · Play</span>
@@ -291,65 +304,61 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
     <a href="https://grudox.grudge-studio.com/" target="_blank" rel="noopener">Grudox Fleet</a>
   </div>
 
-  <nav id="vox-section-tabs" class="vox-section-tabs" aria-label="Setup sections">
-    <button type="button" data-section="class" class="active">1 · Class</button>
-    <button type="button" data-section="hero">2 · Hero</button>
-    <button type="button" data-section="world">3 · World</button>
+  <!-- Two-step create: Character (race+class) → World. One body system only. -->
+  <nav id="vox-section-tabs" class="vox-section-tabs" aria-label="Create survivor">
+    <button type="button" data-section="class" class="active">1 · Character</button>
+    <button type="button" data-section="world">2 · World</button>
   </nav>
 
   <div id="vox-panel-class" class="vox-section-panel active">
-    <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 12px">
-      <div class="vox-container__header"><h2 class="vox-container__title">Choose survivor</h2></div>
-      <div class="vox-container__body">
-        <!-- Avatar Edit 6-race voxel defaults — primary survivor body pick (not grudge6 / not free-rpg TPose). -->
-        <div class="skin-picker-label">Survivor race · 6 voxel avatars (Avatar Edit production defaults)</div>
-        <div id="voxel-race-row" class="char-select-row" aria-label="Survivor voxel race avatars"></div>
-        <div class="skin-picker-label" style="margin-top:10px">Survivor class</div>
-        <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
-        <!-- Grid visible by default so Choose Survivor never ships empty if carousel/boot stalls.
-             ensureSurvivorsUI() hides grid when carousel cards are ready. -->
-        <div class="class-grid" id="class-grid" style="display:grid" aria-hidden="false"></div>
-      </div>
-    </div>
-    <aside class="vox-container class-preview" id="class-preview" style="width:min(96vw,420px);margin:0 auto">
-      <div class="vox-container__header"><h2 class="vox-container__title">Loadout preview</h2></div>
-      <div class="vox-container__body">
-        <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
-        <h3 id="preview-name">Choose Survivor</h3>
-        <div class="cp-val" id="preview-cp">—</div>
-        <div id="preview-stats"></div>
-        <p class="preview-hint" id="preview-hint">Pick a race avatar + class, then enter the surface.</p>
-        <span class="perk-tag hidden" id="preview-perk"></span>
-      </div>
-    </aside>
-  </div>
-
-  <div id="vox-panel-hero" class="vox-section-panel">
-    <div class="vox-container" style="width:min(96vw,980px);margin:0 auto">
-      <div class="vox-container__header"><h2 class="vox-container__title">Hero mesh · TVS · tint</h2></div>
-      <div class="vox-container__body">
-        <div id="tvs-hero-preview" aria-label="Hero 3D preview (2m stick)"></div>
-        <div id="skin-picker">
-          <div class="skin-picker-label">Race locked from survivor pick · override mesh below if needed</div>
-          <div id="voxel-race-row-echo" class="char-select-row" aria-label="Selected survivor race echo" style="opacity:0.9"></div>
-          <div class="skin-picker-label">TVS Hero (carousel · D1/R2 · compressed GLB when available)</div>
-          <div id="tvs-hero-carousel" aria-label="TVS hero carousel"></div>
-          <div id="tvs-unit-row" class="char-select-row" style="display:none"></div>
-          <div class="skin-picker-label">Color Tint</div>
-          <div id="tvs-tint-row" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
-          <div class="skin-picker-label" style="opacity:0.55">Legacy Kenney (fallback)</div>
-          <div id="char-select-row" class="char-select-row"></div>
-          <div id="skin-body-row"></div>
-          <div id="skin-texture-row"></div>
+    <div class="create-layout">
+      <div class="vox-container create-main">
+        <div class="vox-container__header"><h2 class="vox-container__title">Create survivor</h2></div>
+        <div class="vox-container__body">
+          <p class="create-step-hint">One body · Avatar Edit 6 races. Class only sets combat loadout.</p>
+          <div class="skin-picker-label">1 · Race avatar</div>
+          <div id="voxel-race-row" class="char-select-row" aria-label="Survivor race avatars"></div>
+          <div class="skin-picker-label" style="margin-top:12px">2 · Class loadout</div>
+          <div id="class-carousel" class="vox-hero-stage" aria-label="Class carousel"></div>
+          <!-- Grid fallback if carousel/boot stalls -->
+          <div class="class-grid" id="class-grid" style="display:grid" aria-hidden="false"></div>
+          <div class="skin-picker-label" style="margin-top:12px">3 · Color tint <span style="opacity:0.55;font-weight:400">(optional)</span></div>
+          <div id="tvs-tint-row" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:8px"></div>
+          <!-- Hidden legacy mesh hosts — not shown (no second hero mesh picker) -->
+          <div id="skin-picker" class="hidden" aria-hidden="true" hidden>
+            <div id="tvs-hero-carousel"></div>
+            <div id="tvs-unit-row"></div>
+            <div id="char-select-row"></div>
+            <div id="skin-body-row"></div>
+            <div id="skin-texture-row"></div>
+            <div id="voxel-race-row-echo"></div>
+          </div>
         </div>
       </div>
+      <aside class="vox-container class-preview create-aside" id="class-preview">
+        <div class="vox-container__header"><h2 class="vox-container__title">Preview</h2></div>
+        <div class="vox-container__body">
+          <div id="tvs-hero-preview" aria-label="Survivor 3D preview"></div>
+          <p class="preview-era">Nexus Era · <a href="https://survival.grudge-studio.com/stats-guide.html" target="_blank" rel="noopener">Stats Guide</a></p>
+          <h3 id="preview-name">Choose Survivor</h3>
+          <div class="cp-val" id="preview-cp">—</div>
+          <div id="preview-stats"></div>
+          <p class="preview-hint" id="preview-hint">Pick race + class, then continue to world.</p>
+          <span class="perk-tag hidden" id="preview-perk"></span>
+        </div>
+      </aside>
+    </div>
+    <div class="create-nav" aria-label="Create navigation">
+      <span class="create-nav-status" id="create-ready-status">Select a race and class</span>
+      <button type="button" class="vox-btn vox-btn--lg vox-btn--primary" id="create-next-btn" disabled onclick="goCreateWorld()">Continue to world →</button>
     </div>
   </div>
 
   <div id="vox-panel-world" class="vox-section-panel">
     <div class="vox-container" style="width:min(96vw,980px);margin:0 auto 8px">
-      <div class="vox-container__header"><h2 class="vox-container__title">World content · settlements</h2></div>
+      <div class="vox-container__header"><h2 class="vox-container__title">World · settlements</h2></div>
       <div class="vox-container__body">
+        <p class="create-step-hint">Your survivor is locked from Character. Pick content, then enter.</p>
         <div id="settlement-carousel" aria-label="Settlement carousel"></div>
         <div id="settlement-strip" aria-label="Settlement content modes" style="margin-top:8px"></div>
         <div id="seed-row" style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center">
@@ -359,10 +368,13 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
         </div>
       </div>
     </div>
+    <div class="create-nav" aria-label="World navigation">
+      <button type="button" class="vox-btn vox-btn--lg" id="create-back-btn" onclick="goCreateCharacter()">← Character</button>
+      <button class="vox-btn vox-btn--lg vox-btn--primary hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
+    </div>
   </div>
 
-  <p style="color:#667;font-size:10px;letter-spacing:1px;margin:12px 0 8px;position:relative;text-align:center">In game: WASD · C camera · K main panel (smart tabs) · Esc pause · unit frames</p>
-  <button class="vox-btn vox-btn--lg vox-btn--primary hidden" id="start-btn" onclick="startGame()">ENTER THE SURFACE</button>
+  <p style="color:#667;font-size:10px;letter-spacing:1px;margin:12px 0 8px;position:relative;text-align:center">In game: WASD · C camera · K main panel · Esc pause</p>
 </div>
 
 <div id="vox-unit-frames" class="pre-game-hidden" aria-label="Player unit frame"></div>
@@ -1215,6 +1227,91 @@ function paintVoxelRaceAvatar(canvas, race) {
   }
 }
 
+/** Character create readiness — race + class only (no second mesh picker). */
+function isCreateReady() {
+  return !!(playerVoxelRaceId && playerClass);
+}
+
+function updateCreateNav() {
+  const ready = isCreateReady();
+  const next = document.getElementById('create-next-btn');
+  const status = document.getElementById('create-ready-status');
+  const start = document.getElementById('start-btn');
+  if (next) {
+    next.disabled = !ready;
+    next.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  }
+  if (status) {
+    const race = playerAvatarRace || (playerVoxelRaceId && VOXEL_RACE_DEFAULTS.find(function (r) { return r.id === playerVoxelRaceId; }));
+    const raceLabel = race ? (race.label || race.id) : null;
+    const classLabel = playerClass && CLASSES[playerClass] ? CLASSES[playerClass].name : null;
+    if (ready) {
+      status.textContent = (raceLabel || 'Race') + ' · ' + (classLabel || playerClass) + ' ready';
+      status.classList.add('ready');
+    } else if (raceLabel && !playerClass) {
+      status.textContent = raceLabel + ' · pick a class';
+      status.classList.remove('ready');
+    } else if (playerClass && !playerVoxelRaceId) {
+      status.textContent = (classLabel || playerClass) + ' · pick a race';
+      status.classList.remove('ready');
+    } else {
+      status.textContent = 'Select a race and class';
+      status.classList.remove('ready');
+    }
+  }
+  if (start) {
+    if (ready) {
+      start.classList.remove('hidden');
+      start.disabled = false;
+    } else {
+      start.classList.add('hidden');
+    }
+  }
+  // Preview title
+  const pn = document.getElementById('preview-name');
+  if (pn) {
+    const race = playerAvatarRace;
+    const raceLabel = race ? (race.label || race.id) : null;
+    const classLabel = playerClass && CLASSES[playerClass] ? CLASSES[playerClass].name : null;
+    if (raceLabel && classLabel) pn.textContent = raceLabel + ' ' + classLabel;
+    else if (classLabel) pn.textContent = classLabel;
+    else if (raceLabel) pn.textContent = raceLabel + ' survivor';
+  }
+}
+
+function goCreateWorld() {
+  if (!isCreateReady()) {
+    updateCreateNav();
+    return;
+  }
+  if (window.VoxUiKit && typeof VoxUiKit.showSection === 'function') {
+    VoxUiKit.showSection('world');
+  } else {
+    const tabs = document.querySelectorAll('#vox-section-tabs button');
+    tabs.forEach(function (b) { b.classList.toggle('active', b.dataset.section === 'world'); });
+    document.querySelectorAll('.vox-section-panel').forEach(function (p) {
+      p.classList.toggle('active', p.id === 'vox-panel-world');
+    });
+  }
+  const worldStep = document.querySelector('#vox-flow-rail .step[data-step="world"]');
+  if (worldStep) worldStep.classList.add('on');
+  updateCreateNav();
+}
+
+function goCreateCharacter() {
+  if (window.VoxUiKit && typeof VoxUiKit.showSection === 'function') {
+    VoxUiKit.showSection('class');
+  } else {
+    document.querySelectorAll('#vox-section-tabs button').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.section === 'class');
+    });
+    document.querySelectorAll('.vox-section-panel').forEach(function (p) {
+      p.classList.toggle('active', p.id === 'vox-panel-class');
+    });
+  }
+  updateCreateNav();
+}
+
 function selectVoxelRace(raceId) {
   const race = VOXEL_RACE_DEFAULTS.find(function (r) { return r.id === raceId; });
   if (!race) return;
@@ -1223,29 +1320,17 @@ function selectVoxelRace(raceId) {
   const unit = voxelRaceToUnit(race);
   playerTvsUnit = unit;
   playerTvsUnitId = unit.unitId;
-  // Tint matches race skin for Kenney / TVS fallback meshes
+  // Tint matches race skin for Kenney fallback body (spawn only — not a second mesh pick)
   if (typeof race.skinTone === 'number') playerColorTint = race.skinTone;
   persistPlayerAvatarHead(race.config);
   persistAvatarRacePackage();
-  if (typeof selectTvsUnit === 'function') {
-    try { selectTvsUnit(unit); } catch (e) { /* unit may lack GLB */ }
-  }
   if (typeof refreshHeroPreview === 'function') {
     try { refreshHeroPreview(unit); } catch (e) { /* preview optional */ }
   }
-  document.querySelectorAll('#voxel-race-row .char-card, #voxel-race-row-echo .char-card').forEach(function (c) {
+  document.querySelectorAll('#voxel-race-row .char-card').forEach(function (c) {
     c.classList.toggle('sel', c.dataset.raceId === raceId);
   });
-  // Surface selection in class preview
-  const pn = document.getElementById('preview-name');
-  if (pn && !playerClass) {
-    pn.textContent = (race.label || race.id) + ' survivor';
-  }
-  const sb = document.getElementById('start-btn');
-  if (sb && playerClass) {
-    sb.classList.remove('hidden');
-    sb.disabled = false;
-  }
+  updateCreateNav();
   console.info('[VoxGrudge] avatar race', race.id, race.avatarId, race.config && race.config.hair);
 }
 
@@ -1282,16 +1367,10 @@ function renderVoxelRacePicker() {
   VOXEL_RACE_DEFAULTS.forEach(function (race) {
     row.appendChild(buildVoxelRaceCard(race));
   });
-  // Echo selected race on Hero tab (read-only mirror for mesh overrides)
-  const echo = document.getElementById('voxel-race-row-echo');
-  if (echo) {
-    echo.innerHTML = '';
-    VOXEL_RACE_DEFAULTS.forEach(function (race) {
-      echo.appendChild(buildVoxelRaceCard(race));
-    });
-  }
   if (!playerVoxelRaceId && VOXEL_RACE_DEFAULTS[0]) {
     selectVoxelRace(VOXEL_RACE_DEFAULTS[0].id);
+  } else {
+    updateCreateNav();
   }
 }
 
@@ -1603,6 +1682,19 @@ function selectTvsUnit(unit){
 }
 
 function applyTvsHeroForClass(cid){
+  // Race avatar is the only body SSOT — do not swap to a second TVS mesh on class pick.
+  if(playerVoxelRaceId){
+    const race = VOXEL_RACE_DEFAULTS.find(function(r){ return r.id===playerVoxelRaceId; });
+    if(race){
+      const unit = voxelRaceToUnit(race);
+      playerTvsUnit = unit;
+      playerTvsUnitId = unit.unitId;
+      if(typeof refreshHeroPreview === 'function'){
+        try{ refreshHeroPreview(unit); }catch(e){}
+      }
+    }
+    return;
+  }
   if(!tvsRosterCache || !window.TvsUnitLoader) return;
   const best = TvsUnitLoader.pickBestUnit(tvsRosterCache, cid);
   if(best) selectTvsUnit(best);
@@ -1641,55 +1733,9 @@ function renderTvsUnitPicker(){
 }
 
 (function buildSkinUI(){
-  const bodyRow = document.getElementById('skin-body-row');
-  const texRow = document.getElementById('skin-texture-row');
-  const charRow = document.getElementById('char-select-row');
+  // Create UX: only optional color tint is exposed. Kenney/TVS mesh rows stay
+  // in the DOM for spawn fallbacks but are hidden (no second hero mesh picker).
   const tintRow = document.getElementById('tvs-tint-row');
-  const roster = (window.PlayerController && PlayerController.CHARACTER_ROSTER) ||
-    KENNEY_BODY_LETTERS.map(function(id){ return { id:id, name:'Body '+id.toUpperCase(), tag:'Mesh' }; });
-
-  if(charRow){
-    roster.forEach(function(ch){
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'char-card'+(ch.id===playerSkinBody?' sel':'');
-      card.dataset.letter = ch.id;
-      card.innerHTML =
-        '<div class="char-swatch" style="background-image:url(\'models/kenney/textures/texture-'+(ch.id)+'.png\')"></div>'+
-        '<div class="char-name">'+ch.name+'</div>'+
-        '<div class="char-tag">'+(ch.tag||'')+'</div>';
-      card.title = (ch.desc||ch.name)+' · mesh '+ch.id.toUpperCase();
-      card.onclick = function(){ selectCharacter(ch.id); };
-      charRow.appendChild(card);
-    });
-  }
-
-  KENNEY_BODY_LETTERS.forEach(letter=>{
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'skin-body-btn';
-    btn.dataset.letter = letter;
-    btn.textContent = letter.toUpperCase();
-    btn.title = 'Body '+letter.toUpperCase();
-    btn.onclick = function(){ selectCharacter(letter); };
-    bodyRow.appendChild(btn);
-  });
-  KENNEY_TEXTURE_LETTERS.forEach(letter=>{
-    const sw = document.createElement('button');
-    sw.type = 'button';
-    sw.className = 'skin-tex-btn';
-    sw.dataset.letter = letter;
-    sw.style.backgroundImage = "url('models/kenney/textures/texture-"+letter+".png')";
-    sw.title = 'Palette '+letter.toUpperCase();
-    sw.onclick = function(){
-      playerSkinTexture = letter;
-      updateSkinPickerUI();
-      if(gameStarted && playerMesh && typeof retexturePlayer==='function'){
-        try{ retexturePlayer(letter); }catch(e){}
-      }
-    };
-    texRow.appendChild(sw);
-  });
   if(tintRow){
     TVS_TINTS.forEach(function(hex){
       const sw = document.createElement('button');
@@ -1712,24 +1758,22 @@ function renderTvsUnitPicker(){
     });
   }
   updateSkinPickerUI();
-  // Voxel race avatars (Avatar Edit 6 races) — paint immediately so Hero tab is usable offline
+  // Voxel race avatars — primary body pick (Character step)
   try{ renderVoxelRacePicker(); }catch(eRace){ console.warn('[voxel-race]', eRace); }
+  try{ updateCreateNav(); }catch(eNav){}
   if(window.TvsUnitLoader){
     TvsUnitLoader.loadTvsRoster().then(function(r){
       tvsRosterCache = r;
       function afterRosterReady(){
         renderVoxelRacePicker();
-        renderTvsUnitPicker();
-        refreshTvsHeroCarousel();
-        // Prefer selected voxel race avatar over random TVS roster unit
+        // Do not paint TVS/Kenney mesh pickers — race is the only body UI
         if(playerVoxelRaceId && playerTvsUnit){
           refreshHeroPreview(playerTvsUnit);
-        } else if(playerTvsUnit){
-          refreshHeroPreview(playerTvsUnit);
-        } else if(tvsRosterCache.units && tvsRosterCache.units[0]){
-          const pref = playerClass ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass) : tvsRosterCache.units[0];
-          if(pref){ playerTvsUnit = pref; playerTvsUnitId = pref.unitId; refreshHeroPreview(pref); }
+        } else if(playerVoxelRaceId){
+          const race = VOXEL_RACE_DEFAULTS.find(function(x){ return x.id===playerVoxelRaceId; });
+          if(race) refreshHeroPreview(voxelRaceToUnit(race));
         }
+        updateCreateNav();
       }
       // Merge free TVS T-pose heroes (baked 2.0m + atlas) into picker roster
       const freeUrl = (window.GrudgeAssets&&GrudgeAssets.localOrR2)
@@ -1880,12 +1924,11 @@ function buildClassCarousel(){
       const cid = item.id;
       playerClass = cid;
       playerSkinBody = CLASS_MODEL_MAP[cid]||'a';
+      // Keep race body — class only changes loadout/stats
       applyTvsHeroForClass(cid);
-      renderTvsUnitPicker();
-      refreshTvsHeroCarousel();
       updateClassPreview(cid);
       updateSkinPickerUI();
-      document.getElementById('start-btn').classList.remove('hidden');
+      updateCreateNav();
       // sync legacy grid selection
       document.querySelectorAll('.class-card').forEach(function(c){
         c.classList.toggle('sel', c.dataset.cid===cid);
@@ -2259,19 +2302,12 @@ function buildClassUICards(){
       document.querySelectorAll('.class-card').forEach(function(c){c.classList.remove('sel');});
       card.classList.add('sel');
       playerClass = cid;
-      // Only auto-pick body mesh if user hasn't chosen a character card yet
-      if(!selectedCharacterId || selectedCharacterId===CLASS_MODEL_MAP[cid]){
-        selectCharacter(CLASS_MODEL_MAP[cid]||'a');
-      } else {
-        playerSkinBody = selectedCharacterId;
-        updateSkinPickerUI();
-      }
+      // Body stays on voxel race; class only maps a Kenney letter for spawn fallback
+      playerSkinBody = CLASS_MODEL_MAP[cid]||'a';
       applyTvsHeroForClass(cid);
-      renderTvsUnitPicker();
-      refreshTvsHeroCarousel();
       if(classCarouselApi) classCarouselApi.select(cid);
       updateClassPreview(cid);
-      document.getElementById('start-btn').classList.remove('hidden');
+      updateCreateNav();
     };
     grid.appendChild(card);
   });
@@ -2327,7 +2363,14 @@ function linkVfxAliases(){
 }
 
 function startGame(){
-  if(!playerClass) return;
+  if(!playerClass){
+    goCreateCharacter();
+    updateCreateNav();
+    return;
+  }
+  if(!playerVoxelRaceId && VOXEL_RACE_DEFAULTS[0]){
+    selectVoxelRace(VOXEL_RACE_DEFAULTS[0].id);
+  }
   // Macro gate: refuse enter when boot hard-failed (missing THREE/WebGL/etc.)
   if(window.VoxBoot && !VoxBoot.canStart()){
     const bootEl = document.getElementById('vox-boot-status');
@@ -2695,11 +2738,21 @@ function init(){
       }
     }
     if(opts.mixer) playerMixer = opts.mixer;
+    if(playerMesh.userData && playerMesh.userData._mixer) playerMixer = playerMesh.userData._mixer;
+    if(playerMesh.userData && playerMesh.userData.mixer) playerMixer = playerMesh.userData.mixer;
     if(opts.skelParts !== undefined) playerSkelParts = opts.skelParts;
+    // Explorer avatar: mixer owns pose — do not fight with procedural limb anims
+    if(playerMesh.userData && playerMesh.userData.assetSource === 'explorer-avatar'){
+      playerSkelParts = null;
+    }
     // TVS kits often include weapon meshes — skip arsenal attach unless asked
     const skipW = opts.skipWeapon || (playerMesh.userData && playerMesh.userData.assetSource === 'tvs-voxel' && opts.skipWeapon !== false && opts.forceWeapon !== true);
     if(weaponMeshObj && !skipW){
-      try { playerMesh.add(weaponMeshObj); } catch(e) {}
+      if(playerMesh.userData && typeof playerMesh.userData.mountWeapon === 'function'){
+        try { playerMesh.userData.mountWeapon(weaponMeshObj); } catch(e) {}
+      } else {
+        try { playerMesh.add(weaponMeshObj); } catch(e) {}
+      }
     }
     if(playerController){
       // realign only when mesh identity changes (TVS async swap, skin change)
@@ -2804,18 +2857,45 @@ function init(){
           persistPlayerAvatarHead(race.config);
         }
       }
-      // Avatar-edit races have no free-rpg GLB — Kenney body + race skin tint + head config saved for fleet.
+      // Avatar Edit race → Explorer skinned avatar (AnimationMixer + ANIM_FILES loco/skills)
       if(unit && (unit.kind === 'voxel-avatar-race' || unit.pack === 'avatar-edit') && !unit.modelUrl && !unit.glbUrl){
         playerTvsUnit = unit;
         playerTvsUnitId = unit.unitId;
-        spawnKenneyOrVoxFallback();
-        if(playerMesh){
-          playerMesh.userData.avatarRace = unit.raceId;
-          playerMesh.userData.avatarConfig = unit.avatarConfig || null;
-          playerMesh.userData.avatarLook = unit.look || null;
-          playerMesh.userData.avatarId = unit.unitId;
+        const race = playerAvatarRace || VOXEL_RACE_DEFAULTS.find(function(r){ return r.id===unit.raceId||r.id===playerVoxelRaceId; });
+        // Ensure Mixamo skeleton template is ready for Explorer mixer
+        function finishExplorerSpawn(){
+          const av = buildExplorerRaceAvatar(race || {
+            id: unit.raceId || 'human',
+            look: unit.look || {},
+            config: unit.avatarConfig || null,
+            avatarId: unit.unitId,
+            heightM: unit.heightM || 1.8,
+            skinTone: unit.skinTone,
+          });
+          if(av){
+            finalizePlayerMesh(av, {
+              mixer: av.userData.mixer || av.userData._mixer || null,
+              skelParts: null,
+              skipWeapon: false,
+            });
+            if(av.userData.playClip) av.userData.playClip('idle', 0);
+            console.info('[VoxGrudge] explorer-avatar race', unit.unitId, unit.raceId, 'mixer+loco+skills');
+          } else {
+            console.warn('[VoxGrudge] explorer-avatar build failed — Kenney fallback');
+            spawnKenneyOrVoxFallback();
+            if(playerMesh){
+              playerMesh.userData.avatarRace = unit.raceId;
+              playerMesh.userData.avatarConfig = unit.avatarConfig || null;
+              playerMesh.userData.avatarLook = unit.look || null;
+              playerMesh.userData.avatarId = unit.unitId;
+            }
+          }
         }
-        console.info('[VoxGrudge] avatar race player', unit.unitId, unit.raceId, 'kenney+tint');
+        if(fbxSkeletonReady && window._fbxSkelTemplate){
+          finishExplorerSpawn();
+        } else {
+          initFBXSkeleton(function(){ finishExplorerSpawn(); });
+        }
       } else {
         if(!window.TvsUnitLoader) throw new Error('TvsUnitLoader missing');
         if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
@@ -3921,7 +4001,13 @@ function tryExplorerMeleeAttack(){
       playerAttackPhase = 1.0;
       explorerAttackStage = info.stage;
       explorerAttackFinisher = info.finisher;
-      if(playerMixer && playerMesh) playAnimOnMesh(playerMesh, animName, info.moving ? 0.08 : 0.12);
+      // Explorer avatar playClip path first (weapon skills on same mixer as loco)
+      if(playerMesh && playerMesh.userData && typeof playerMesh.userData.playClip === 'function' &&
+         playerMesh.userData.assetSource === 'explorer-avatar'){
+        playerMesh.userData.playClip(animName, info.moving ? 0.08 : 0.12);
+      } else if(playerMixer && playerMesh) {
+        playAnimOnMesh(playerMesh, animName, info.moving ? 0.08 : 0.12);
+      }
     },
     onLunge: function(dir, dist, dur, impactAt, stage){
       explorerCombat.startLunge(
@@ -5939,10 +6025,19 @@ function switchWeapon(id){
   if(!WEAPONS[id].owned) return;
   currentWeapon=WEAPONS[id];
   if(weaponMeshObj && playerMesh){
-    try{ playerMesh.remove(weaponMeshObj); }catch(e){}
+    try{
+      if(weaponMeshObj.parent) weaponMeshObj.parent.remove(weaponMeshObj);
+      else playerMesh.remove(weaponMeshObj);
+    }catch(e){}
   }
   weaponMeshObj=buildWeaponMesh(id);
-  if(playerMesh) playerMesh.add(weaponMeshObj);
+  if(playerMesh){
+    if(playerMesh.userData && typeof playerMesh.userData.mountWeapon==='function'){
+      playerMesh.userData.mountWeapon(weaponMeshObj);
+    } else {
+      playerMesh.add(weaponMeshObj);
+    }
+  }
   resetSkillCDs();
   updateWeaponUI();
   updateSkillUI();
@@ -7026,6 +7121,10 @@ let explorerAttackFinisher = false;
 
 function updateSkeletonAnims(dt){
   playerAnimTime+=dt;
+  // Explorer-avatar mixer owns the pose (locomotion + weapon skills); skip procedural limbs
+  if(playerMesh && playerMesh.userData && playerMesh.userData.assetSource === 'explorer-avatar'){
+    return;
+  }
   if(playerSkelParts && playerSkelParts.legLeft){
     if(playerState==='dodging'){
       animateDodge(playerSkelParts, 1-dodgeTimer/DODGE_DUR);
@@ -7391,21 +7490,30 @@ function animate(){
   } else if(voxRollAnim && playerMesh && playerMesh.userData._voxRollMixer) {
     voxRollAnim.update(playerMesh.userData._voxRollMixer, dt);
   }
-  // Drive TVS / grudge6 locomotion when moving
-  if(playerMesh && playerMesh.userData && playerMesh.userData.playClip){
-    const isHero =
-      playerMesh.userData._tvsPlayer ||
-      playerMesh.userData.assetSource === 'grudge6' ||
-      playerMesh.userData.assetSource === 'tvs-voxel';
-    if(isHero){
-      const moving = !!(keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']);
-      const acts = playerMesh.userData.animActions || {};
-      let want = 'idle';
-      if(typeof playerAttackPhase==='number' && playerAttackPhase>0) want = acts.attack ? 'attack' : 'idle';
-      else if(moving) want = acts.locomotion ? 'locomotion' : (acts.run ? 'run' : (acts.walk ? 'walk' : 'idle'));
-      if(playerMesh.userData.currentAnim !== want && acts[want]){
-        playerMesh.userData.playClip(want, 0.12);
-        playerMesh.userData.currentAnim = want;
+  // Drive locomotion: Explorer avatar (mixer) OR TVS / grudge6 playClip map
+  if(playerMesh && playerMesh.userData){
+    const ud = playerMesh.userData;
+    const moving = !!(keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']);
+    const sprint = !!(keys['ShiftLeft']||keys['ShiftRight']);
+    // Explorer race avatar — same ANIM_FILES mixer as weapon skills
+    if(ud.assetSource === 'explorer-avatar' && typeof ud.setLocomotion === 'function'){
+      const attacking = (typeof playerAttackPhase==='number' && playerAttackPhase>0) ||
+        (explorerCombat && explorerCombat.isSwinging && explorerCombat.isSwinging());
+      if(!attacking) ud.setLocomotion(moving && playerState==='ground', sprint);
+    } else if(ud.playClip){
+      const isHero =
+        ud._tvsPlayer ||
+        ud.assetSource === 'grudge6' ||
+        ud.assetSource === 'tvs-voxel';
+      if(isHero){
+        const acts = ud.animActions || {};
+        let want = 'idle';
+        if(typeof playerAttackPhase==='number' && playerAttackPhase>0) want = acts.attack ? 'attack' : 'idle';
+        else if(moving) want = acts.locomotion ? 'locomotion' : (acts.run ? 'run' : (acts.walk ? 'walk' : 'idle'));
+        if(ud.currentAnim !== want && acts[want]){
+          ud.playClip(want, 0.12);
+          ud.currentAnim = want;
+        }
       }
     }
   }
@@ -7780,9 +7888,29 @@ function initFBXSkeleton(callback){
   });
 }
 
-function buildSkinnedVoxChar(bodyColor, pantsColor, scale){
+function parseLookColor(v, fallback){
+  if(typeof v==='number' && isFinite(v)) return v;
+  if(typeof v==='string'){
+    const s=v.replace('#','');
+    const n=parseInt(s,16);
+    if(!isNaN(n)) return n;
+  }
+  return fallback;
+}
+
+/**
+ * Explorer-style Mixamo skeleton + voxel boxes + AnimationMixer.
+ * SSOT for openworld race survivors: same mixer path as weapon skills (ANIM_FILES)
+ * and locomotion (walk-fwd/run-fwd/idle) — not a second character system.
+ */
+function buildSkinnedVoxChar(bodyColor, pantsColor, scale, opts){
   scale=scale||1;
+  opts=opts||{};
   if(!fbxSkeletonReady||!window._fbxSkelTemplate)return buildVoxChar(bodyColor,pantsColor,scale);
+  const look=opts.look||{};
+  const skinCol=parseLookColor(look.skin, 0xffcc88);
+  const shirtCol=parseLookColor(look.shirt, bodyColor);
+  const pantsCol=parseLookColor(look.pants, pantsColor);
   // Clone the FBX skeleton group
   const skel=window._fbxSkelTemplate.clone();
   skel.traverse(c=>{if(c.isMesh){c.visible=false;}});
@@ -7797,24 +7925,130 @@ function buildSkinnedVoxChar(bodyColor, pantsColor, scale){
     if(n.includes('rightupleg')&&!bones.legR)bones.legR=c;
     if(n.includes('leftarm')&&!n.includes('fore')&&!bones.armL)bones.armL=c;
     if(n.includes('rightarm')&&!n.includes('fore')&&!bones.armR)bones.armR=c;
+    if(n.includes('righthand')&&!n.includes('end')&&!bones.handR)bones.handR=c;
+    if(n.includes('lefthand')&&!n.includes('end')&&!bones.handL)bones.handL=c;
   });
-  function box(w,h,d,col){
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w*scale,h*scale,d*scale),new THREE.MeshStandardMaterial({color:col}));
+  function box(w,h,d,col,name){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w*scale,h*scale,d*scale),new THREE.MeshStandardMaterial({color:col,roughness:0.85,metalness:0.05}));
     m.castShadow=true;
+    if(name) m.name=name;
     return m;
   }
-  // Attach vox parts to bones
-  if(bones.torso)bones.torso.add(box(1.2,1.4,0.8,bodyColor));
-  if(bones.head)bones.head.add(box(0.9,0.9,0.9,0xffcc88));
-  if(bones.legL)bones.legL.add(box(0.5,1.2,0.5,pantsColor));
-  if(bones.legR)bones.legR.add(box(0.5,1.2,0.5,pantsColor));
-  if(bones.armL)bones.armL.add(box(0.4,1.1,0.4,bodyColor));
-  if(bones.armR)bones.armR.add(box(0.4,1.1,0.4,bodyColor));
-  // Create AnimationMixer for this skeleton
+  // Attach vox parts to bones (Explorer box-on-bone pattern)
+  if(bones.torso)bones.torso.add(box(1.2,1.4,0.8,shirtCol,'torso'));
+  if(bones.head)bones.head.add(box(0.9,0.9,0.9,skinCol,'head'));
+  if(bones.legL)bones.legL.add(box(0.5,1.2,0.5,pantsCol,'leg-left'));
+  if(bones.legR)bones.legR.add(box(0.5,1.2,0.5,pantsCol,'leg-right'));
+  if(bones.armL)bones.armL.add(box(0.4,1.1,0.4,skinCol,'arm-left'));
+  if(bones.armR)bones.armR.add(box(0.4,1.1,0.4,skinCol,'arm-right'));
+  // Create AnimationMixer for this skeleton (Explorer weapon + loco clips)
   const mixer=new THREE.AnimationMixer(skel);
   skel.userData._mixer=mixer;
   skel.userData._bones=bones;
+  skel.userData.assetSource='explorer-avatar';
+  skel.userData.mixer=mixer;
+  // Clip API shared with playAnimOnMesh / game-loop loco
+  const actions={};
+  function ensureAction(name){
+    if(actions[name]) return actions[name];
+    const clip=animClipCache[name];
+    if(!clip) return null;
+    const act=mixer.clipAction(clip);
+    act.clampWhenFinished=false;
+    actions[name]=act;
+    return act;
+  }
+  let currentName='';
+  let busyUntil=0;
+  skel.userData.playClip=function(name, fade){
+    fade=fade==null?0.15:fade;
+    const next=ensureAction(name);
+    if(!next){
+      // Lazy load then play
+      const file=ANIM_FILES[name];
+      if(file&&fbxLoader){
+        loadFbxAnim(animModelUrl(file),function(a){
+          if(a.animations&&a.animations.length){
+            animClipCache[name]=a.animations[0];
+            skel.userData.playClip(name, fade);
+          }
+        });
+      }
+      return false;
+    }
+    if(currentName===name && next.isRunning()) return true;
+    const prev=currentName&&actions[currentName]?actions[currentName]:null;
+    next.reset().setEffectiveWeight(1).play();
+    if(prev&&prev!==next) prev.crossFadeTo(next, fade, true);
+    currentName=name;
+    skel.userData.currentAnim=name;
+    // Mark one-shots busy so loco doesn't stomp weapon skills
+    const isLoco=/^(idle|walk|run|sprint)/i.test(name)||name==='walk-fwd'||name==='run-fwd'||name==='sprint';
+    if(!isLoco){
+      const dur=(next.getClip()&&next.getClip().duration)||0.5;
+      busyUntil=performance.now()/1000+Math.max(0.2, dur*0.85);
+    }
+    return true;
+  };
+  skel.userData.isAnimBusy=function(){
+    return performance.now()/1000 < busyUntil;
+  };
+  skel.userData.updateMixer=function(dt){ mixer.update(dt); };
+  skel.userData.setLocomotion=function(moving, sprint){
+    if(skel.userData.isAnimBusy()) return;
+    if(!moving) skel.userData.playClip('idle', 0.18);
+    else if(sprint) skel.userData.playClip(ensureAction('sprint')?'sprint':'run-fwd', 0.12);
+    else skel.userData.playClip(ensureAction('walk-fwd')?'walk-fwd':(ensureAction('run-fwd')?'run-fwd':'idle'), 0.12);
+  };
+  skel.userData.mountWeapon=function(weaponObj){
+    if(!weaponObj) return;
+    const hand=bones.handR||bones.armR||skel;
+    try{
+      if(weaponObj.parent) weaponObj.parent.remove(weaponObj);
+      weaponObj.position.set(0.05, 0.05, 0.08);
+      weaponObj.rotation.set(-0.4, 0.2, 0.1);
+      weaponObj.scale.setScalar(0.9);
+      hand.add(weaponObj);
+    }catch(e){}
+  };
+  // Start in idle when clip ready
+  if(animClipCache['idle']) skel.userData.playClip('idle', 0);
   return skel;
+}
+
+/**
+ * Spawn selected Avatar Edit race as Explorer avatar (mixer + loco + weapon skills).
+ */
+function buildExplorerRaceAvatar(race){
+  if(!race) return null;
+  const look=race.look||{};
+  const shirt=parseLookColor(look.shirt, race.skinTone!=null?race.skinTone:0xc0392b);
+  const pants=parseLookColor(look.pants, 0x2e3440);
+  const heightM=race.heightM||1.8;
+  // Box scale relative to ~1.8 m Explorer human
+  const boxScale=Math.max(0.75, Math.min(1.2, heightM/1.8));
+  const root=buildSkinnedVoxChar(shirt, pants, boxScale, { look: look, race: race });
+  if(!root) return null;
+  root.userData.avatarRace=race.id;
+  root.userData.avatarConfig=race.config||null;
+  root.userData.avatarLook=look;
+  root.userData.avatarId=race.avatarId||('avatar-'+race.id);
+  root.userData.assetSource='explorer-avatar';
+  root.userData.kind='voxel-avatar-race';
+  root.userData.heightM=heightM;
+  // Optional whole-body tint (preserves look if white)
+  if(typeof race.skinTone==='number' && playerColorTint && playerColorTint!==0xffffff){
+    // keep race look; tint only applied when user picked optional tint
+  }
+  if(playerColorTint && playerColorTint!==0xffffff){
+    root.traverse(function(c){
+      if(c.isMesh&&c.material&&c.material.color){
+        c.material=c.material.clone();
+        c.material.color.lerp(new THREE.Color(playerColorTint), 0.25);
+      }
+    });
+  }
+  return root;
 }
 
 function mapAnimToTvsSemantic(animName){

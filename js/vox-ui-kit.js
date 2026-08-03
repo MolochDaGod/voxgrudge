@@ -492,17 +492,17 @@
   }
 
   /**
-   * Class-screen section tabs: Class | Hero | World
-   * Keyboard 1/2/3, hash deep-link, flow-rail sync, PNG chat-tab chrome.
+   * Create-survivor section tabs: Character | World
+   * (No Hero mesh tab — race avatar is the only body pick.)
+   * Keyboard 1/2, hash deep-link, flow-rail sync, PNG chat-tab chrome.
    */
   function initSectionTabs() {
     var bar = document.getElementById("vox-section-tabs");
     if (!bar) return;
     bar.classList.add("vox-section-tabs--smart");
-    var order = ["class", "hero", "world"];
+    var order = ["class", "world"];
     var panels = {
       class: document.getElementById("vox-panel-class"),
-      hero: document.getElementById("vox-panel-hero"),
       world: document.getElementById("vox-panel-world"),
     };
     var current = "class";
@@ -510,15 +510,28 @@
     function syncFlow(id) {
       var rail = document.getElementById("vox-flow-rail");
       if (!rail) return;
-      var map = { class: "select", hero: "select", world: "world" };
+      var map = { class: "select", world: "world" };
       var step = map[id] || "select";
       rail.querySelectorAll(".step").forEach(function (s) {
-        s.classList.toggle("on", s.dataset.step === step);
+        s.classList.toggle("on", s.dataset.step === step || (id === "world" && s.dataset.step === "select" && s.classList.contains("done")));
+        if (id === "world" && s.dataset.step === "select") s.classList.add("done");
+        if (id === "class" && s.dataset.step === "world") s.classList.remove("on");
       });
     }
 
     function show(id) {
+      // Legacy #hero deep-links map to Character (mesh tab removed)
+      if (id === "hero") id = "class";
       if (!panels[id] && id !== "class") id = "class";
+      // Gate World until race + class ready (when create helpers exist)
+      if (
+        id === "world" &&
+        typeof global.isCreateReady === "function" &&
+        !global.isCreateReady()
+      ) {
+        id = "class";
+        if (typeof global.updateCreateNav === "function") global.updateCreateNav();
+      }
       current = id;
       bar.querySelectorAll("button").forEach(function (b) {
         var on = b.dataset.section === id;
@@ -556,7 +569,7 @@
     });
     bar.setAttribute("role", "tablist");
 
-    // Keyboard 1/2/3 on class screen
+    // Keyboard 1/2 on create screen
     if (!bar._voxKeyWired) {
       bar._voxKeyWired = true;
       document.addEventListener("keydown", function (e) {
@@ -568,8 +581,9 @@
           show("class");
         } else if (e.code === "Digit2") {
           e.preventDefault();
-          show("hero");
+          show("world");
         } else if (e.code === "Digit3") {
+          // Legacy: was World when 3 tabs existed
           e.preventDefault();
           show("world");
         } else if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
@@ -578,14 +592,20 @@
           idx = e.code === "ArrowLeft" ? (idx - 1 + order.length) % order.length : (idx + 1) % order.length;
           e.preventDefault();
           show(order[idx]);
+        } else if (e.code === "Enter" && current === "class" && typeof global.goCreateWorld === "function") {
+          if (typeof global.isCreateReady === "function" && global.isCreateReady()) {
+            e.preventDefault();
+            global.goCreateWorld();
+          }
         }
       });
     }
 
-    // Hash deep-link (#hero / #world / #class) + live hashchange
+    // Hash deep-link (#world / #class / legacy #hero) + live hashchange
     function applyHash() {
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-      if (hash === "hero" || hash === "world" || hash === "class") show(hash);
+      if (hash === "hero") hash = "class";
+      if (hash === "world" || hash === "class") show(hash);
       else if (!hash) show(current || "class");
     }
     applyHash();
