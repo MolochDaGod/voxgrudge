@@ -969,7 +969,13 @@ function weaponIconUrl(wid){
 }
 function itemIconUrl(id){
   const def=ITEM_DEFS[id];
+  // Prefer Item Database URL bound on the def (info.grudge-studio.com SSOT → assets CDN)
+  if(def&&def.iconUrl){
+    if(window.GrudgeItems&&GrudgeItems.normalizeIconUrl) return GrudgeItems.normalizeIconUrl(def.iconUrl);
+    return def.iconUrl;
+  }
   if(window.GrudgeHudIcons) return GrudgeHudIcons.itemIconUrl(id,def);
+  if(window.GrudgeCodex) return GrudgeCodex.itemIconUrl(id,def);
   return null;
 }
 function setHudIcon(el,url,fallback){
@@ -2450,8 +2456,12 @@ function startGame(){
     GrudgeItems.loadGrudgeItems(ITEM_DEFS).then(function(bundle){
       Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
       chestLootTable=bundle.chestLoot||{};
+      window.__grudgeItemCatalog={version:bundle.version,source:bundle.source,count:bundle.catalogCount||0};
+      if(typeof console!=='undefined'&&console.info){
+        console.info('[items] Item Database wired:',bundle.source,bundle.version,'keys',Object.keys(ITEM_DEFS).length);
+      }
       initWeaponIcons();initResourceIcons();initBuildIcons();
-      updateSkillUI();updateItemUI();buildCraftUI();
+      updateSkillUI();updateItemUI();buildCraftUI();updateInventoryUI();updateEquipUI();
       preloadVFXTextures();
       preloadKenneyTextures(function(){
         preloadModels(function(){
@@ -2496,8 +2506,11 @@ function startGame(){
     onItemsLoaded:function(bundle){
       Object.keys(bundle.items).forEach(function(k){ITEM_DEFS[k]=bundle.items[k];});
       chestLootTable=bundle.chestLoot||{};
+      window.__grudgeItemCatalog={version:bundle.version,source:bundle.source,count:bundle.catalogCount||0};
       initWeaponIcons();initResourceIcons();initBuildIcons();
       updateSkillUI();updateItemUI();buildCraftUI();
+      if(typeof updateInventoryUI==='function') updateInventoryUI();
+      if(typeof updateEquipUI==='function') updateEquipUI();
     },
     preloadCoreAnims:function(fbxLdr){
       ['walk-fwd','run-fwd','dodge-fwd','jump','fall-loop','swim','climb','death',

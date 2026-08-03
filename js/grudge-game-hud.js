@@ -5,7 +5,12 @@
 (function (global) {
   'use strict';
 
+  /** Legacy github ObjectStore (weaponSkills archive). Icons prefer ASSETS_CDN. */
   var GRUDGE_API_BASE = 'https://molochdagod.github.io/ObjectStore';
+  var ASSETS_CDN = 'https://assets.grudge-studio.com';
+  /** Item Database SSOT — same feed as info.grudge-studio.com/GRUDGE_Item_Database.html */
+  var INFO_ITEMS_URL = 'https://info.grudge-studio.com/api/v1/master-items.json';
+  var OBJECTSTORE_ITEMS_URL = 'https://objectstore.grudge-studio.com/api/v1/master-items.json';
 
   /** Resolve via GrudgeAssets (R2 on live, same-origin local) when available. */
   function gaUrl(localPath) {
@@ -36,7 +41,8 @@
   /** Canonical feed (weaponSkills.json is archived → master-weaponSkills.json). */
   var WEAPON_SKILLS_URL = GRUDGE_API_BASE + '/api/v1/master-weaponSkills.json';
   var WEAPON_SKILLS_FALLBACK = GRUDGE_API_BASE + '/api/v1/archive/weaponSkills.v1.json';
-  var MASTER_ITEMS_URL = GRUDGE_API_BASE + '/api/v1/master-items.json';
+  var MASTER_ITEMS_URL = INFO_ITEMS_URL;
+  var MASTER_ITEMS_FALLBACK = OBJECTSTORE_ITEMS_URL;
 
   /** Local mine-loader / CraftPix when ObjectStore skill row is missing. */
   function mu(name) { return gaUrl(MINE_UI + name); }
@@ -159,9 +165,27 @@
     loadPromise: null,
   };
 
-  function grudgeAssetUrl(path) {
+  /** Normalize icon path/URL → production assets CDN (never double-prefix absolutes). */
+  function normalizeIconUrl(path) {
     if (!path) return '';
-    return GRUDGE_API_BASE + '/' + String(path).replace(/^\//, '');
+    var u = String(path).trim();
+    if (!u || /management\.png/i.test(u)) return '';
+    // Already absolute
+    if (u.indexOf('http://') === 0 || u.indexOf('https://') === 0 || u.indexOf('data:') === 0) {
+      u = u.replace(/^https?:\/\/info\.grudge-studio\.com\//i, ASSETS_CDN + '/');
+      u = u.replace(/^https?:\/\/molochdagod\.github\.io\/ObjectStore\//i, ASSETS_CDN + '/');
+      u = u.replace(/^https?:\/\/objectstore\.grudge-studio\.com\/icons\//i, ASSETS_CDN + '/icons/');
+      return u;
+    }
+    // Relative icon paths live on assets CDN
+    if (u.indexOf('icons/') === 0 || u.indexOf('/icons/') === 0 || u.indexOf('game-assets/') === 0) {
+      return ASSETS_CDN + '/' + u.replace(/^\//, '');
+    }
+    return GRUDGE_API_BASE + '/' + u.replace(/^\//, '');
+  }
+
+  function grudgeAssetUrl(path) {
+    return normalizeIconUrl(path);
   }
 
   function tex(rel) {
@@ -209,12 +233,24 @@
     var map = new Map();
     if (!doc || !Array.isArray(doc.items)) return map;
     doc.items.forEach(function (it) {
+      var icon = normalizeIconUrl(it.iconUrl || it.icon || it.icon_path);
+      if (!icon) return;
       var name = (it.name || '').toLowerCase().trim();
-      if (name && it.iconUrl && !map.has(name)) map.set(name, it.iconUrl);
+      if (name && !map.has(name)) map.set(name, icon);
       var key = (it.id || it.key || '').toLowerCase().trim();
-      if (key && it.iconUrl && !map.has(key)) map.set(key, it.iconUrl);
+      if (key && !map.has(key)) map.set(key, icon);
+      var uuid = (it.uuid || '').toLowerCase().trim();
+      if (uuid && !map.has(uuid)) map.set(uuid, icon);
     });
     return map;
+  }
+
+  /** Allow GrudgeItems loader to inject the same master-items doc (single fetch path). */
+  function ingestMasterItems(doc) {
+    if (!doc || !Array.isArray(doc.items)) return;
+    state.items = doc;
+    state.itemByName = buildItemIndex(doc);
+    state.ready = true;
   }
 
   function normalizeWeaponDoc(doc) {
@@ -244,7 +280,9 @@
         .catch(function () {
           return fetchJson(WEAPON_SKILLS_FALLBACK).then(normalizeWeaponDoc).catch(function () { return null; });
         }),
-      fetchJson(MASTER_ITEMS_URL).catch(function () { return null; }),
+      fetchJson(MASTER_ITEMS_URL)
+        .catch(function () { return fetchJson(MASTER_ITEMS_FALLBACK); })
+        .catch(function () { return null; }),
     ])
       .then(function (pair) {
         state.weaponSkills = pair[0];
@@ -302,21 +340,32 @@
   }
 
   function lookupItemIcon(id, def) {
+    // Prefer explicit URLs already bound on the def (from GrudgeItems / Item Database)
+    if (def && def.iconUrl) {
+      var direct = normalizeIconUrl(def.iconUrl);
+      if (direct) return direct;
+    }
+    if (def && def.codexIcon) {
+      var fromCodex = normalizeIconUrl(def.codexIcon);
+      if (fromCodex) return fromCodex;
+    }
     if (!state.itemByName) return null;
-    if (id && state.itemByName.has(id)) return grudgeAssetUrl(state.itemByName.get(id));
+    var idKey = id ? String(id).toLowerCase() : '';
+    if (idKey && state.itemByName.has(idKey)) return state.itemByName.get(idKey);
     var keys = VOX_ITEM_KEYS[id];
     if (keys) {
       for (var i = 0; i < keys.length; i++) {
         var k = keys[i];
         for (var entry of state.itemByName.entries()) {
-          if (entry[0].indexOf(k) >= 0) return grudgeAssetUrl(entry[1]);
+          if (entry[0].indexOf(k) >= 0) return entry[1];
         }
       }
     }
     if (def && def.name) {
       var n = def.name.toLowerCase();
+      if (state.itemByName.has(n)) return state.itemByName.get(n);
       for (var e of state.itemByName.entries()) {
-        if (e[0].indexOf(n) >= 0 || n.indexOf(e[0]) >= 0) return grudgeAssetUrl(e[1]);
+        if (e[0].indexOf(n) >= 0 || n.indexOf(e[0]) >= 0) return e[1];
       }
     }
     return null;
@@ -404,10 +453,13 @@
 
   global.GrudgeGameHud = {
     GRUDGE_API_BASE: GRUDGE_API_BASE,
+    ASSETS_CDN: ASSETS_CDN,
     UI_BASE: UI_BASE,
     grudgeAssetUrl: grudgeAssetUrl,
+    normalizeIconUrl: normalizeIconUrl,
     tex: tex,
     loadFeeds: loadFeeds,
+    ingestMasterItems: ingestMasterItems,
     skillIconUrl: skillIconUrl,
     weaponIconUrl: weaponIconUrl,
     classIconUrl: classIconUrl,

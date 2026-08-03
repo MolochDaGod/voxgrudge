@@ -5,9 +5,9 @@
 (function (global) {
   'use strict';
 
-  // ObjectStore pack icons are reliable; assets.grudge-studio.com skills often 404
-  var CDN_PRIMARY = 'https://molochdagod.github.io/ObjectStore';
-  var CDN_FALLBACK = 'https://assets.grudge-studio.com';
+  // Item Database icons live on assets CDN; github ObjectStore is legacy fallback only
+  var CDN_PRIMARY = 'https://assets.grudge-studio.com';
+  var CDN_FALLBACK = 'https://molochdagod.github.io/ObjectStore';
 
   var SKILL_PACK_CODEX = {
     swordsman: 'swordsman',
@@ -58,40 +58,50 @@
   };
 
   var ITEM_CODEX = {
+    // Paths match info.grudge-studio.com Item Database → assets.grudge-studio.com
     health_potion: 'icons/consumables/health_potion.png',
-    medkit: 'icons/consumables/health_potion.png',
-    swiftness: 'icons/consumables/mana_potion.png',
-    rage_potion: 'icons/consumables/potion_3.png',
-    frag_grenade: 'icons/loot/loot_12.png',
-    berserker: 'icons/consumables/potion_15.png',
-    invuln_potion: 'icons/consumables/potion_1.png',
-    iron_helm: 'sprites/ui/icons/item_helm.png',
-    leather_vest: 'sprites/ui/icons/item_armor.png',
-    boots: 'sprites/ui/icons/item_armor.png',
-    power_charm: 'sprites/ui/icons/item_ring.png',
-    ally_crow: 'sprites/ui/icons/icon_skull.png',
-    ally_spider: 'sprites/ui/icons/icon_spider_eye.png',
-    ally_snake: 'sprites/ui/icons/icon_poison_gland.png',
+    medkit: 'icons/consumables/alchemy_1.png',
+    swiftness: 'icons/496_rpg_icons/P_Green03.png',
+    rage_potion: 'icons/potions/P_Red07.png',
+    frag_grenade: 'icons/consumables/alchemy_30.png',
+    berserker: 'icons/potions/P_Red07.png',
+    invuln_potion: 'icons/496_rpg_icons/P_Medicine06.png',
+    iron_helm: 'icons/armor_full/Helm_04.png',
+    leather_vest: 'icons/armor_full/Chest_15.png',
+    boots: 'icons/armor_full/Boots_01.png',
+    power_charm: 'icons/armor_full/Ring_08.png',
+    cannon: 'icons/pack/weapons/Hammer_01.png',
+    ally_crow: 'icons/entities/horse.png',
+    ally_spider: 'icons/loot/loot_1.png',
+    ally_snake: 'icons/loot/loot_1.png',
     t0_herb: 'icons/consumables/herb_herb_grass.png',
     t0_wood_log: 'icons/materials/driftwood-log.png',
-    t0_stone_chunk: 'sprites/ui/icons/icon_stone_orb.png',
+    t0_stone_chunk: 'icons/materials/iron-ore.png',
     t0_iron_ore: 'icons/materials/iron-ore.png',
     t0_health_potion: 'icons/consumables/health_potion.png',
     t0_mana_potion: 'icons/consumables/mana_potion.png',
-    t0_cooked_meat: 'sprites/ui/icons/icon_meat.png',
-    t0_rusty_dagger: 'icons/wcs/weapons/Dagger_01.png',
+    t0_cooked_meat: 'icons/consumables/food_steak_cooked.png',
+    t0_rusty_dagger: 'icons/daggers/dagger_01.png',
     t0_leather_scrap: 'icons/materials/rugged-leather.png',
     t0_moonflower: 'icons/consumables/herb_herb_lavender.png',
     t0_water_vial: 'icons/consumables/mana_potion.png',
     t0_salvage_gear: 'icons/materials/scrap-ingot.png',
-    t0_grudge_relic: 'sprites/ui/icons/item_gem.png',
-    t0_smoke_bomb: 'icons/loot/loot_12.png',
-    t0_field_bandage: 'icons/consumables/health_potion.png',
+    t0_grudge_relic: 'icons/items/artifacts/artifacts_01_framed.png',
+    t0_smoke_bomb: 'icons/consumables/alchemy_30.png',
+    t0_field_bandage: 'icons/consumables/alchemy_1.png',
   };
 
   function url(path, useFallback) {
+    if (!path) return null;
+    var p = String(path).trim();
+    // Already absolute — rewrite info shells → assets
+    if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
+      p = p.replace(/^https?:\/\/info\.grudge-studio\.com\//i, CDN_PRIMARY + '/');
+      p = p.replace(/^https?:\/\/molochdagod\.github\.io\/ObjectStore\//i, CDN_PRIMARY + '/');
+      return p;
+    }
     var base = useFallback ? CDN_FALLBACK : CDN_PRIMARY;
-    return base + '/' + String(path).replace(/^\//, '');
+    return base + '/' + p.replace(/^\//, '');
   }
 
   function skillIconUrl(pack, num) {
@@ -120,6 +130,11 @@
   }
 
   function itemIconUrl(id, def) {
+    // Prefer Item Database absolute / relative fields bound by GrudgeItems
+    if (def && def.iconUrl) {
+      var abs = url(def.iconUrl);
+      if (abs) return abs;
+    }
     if (def && def.codexIcon) return url(def.codexIcon);
     if (ITEM_CODEX[id]) return url(ITEM_CODEX[id]);
     if (def && def.hudPack && def.hudNum) return skillIconUrl(def.hudPack, def.hudNum);

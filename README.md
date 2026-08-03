@@ -41,6 +41,18 @@ Water uses the same module’s wave plane when available; collision layers regis
 - Class cards always paint via `ensureSurvivorsUI` grid fallback if the carousel fails  
 - Race cards render immediately from embedded defaults (offline-safe)
 
+## Item icons (Item Database SSOT)
+
+HUD / inventory icons load from the fleet **Item Database**, not local guess paths:
+
+| Source | Role |
+|--------|------|
+| `info.grudge-studio.com/api/v1/master-items.json` | Primary catalog |
+| `objectstore.grudge-studio.com/api/v1/master-items.json` | Fallback catalog |
+| `assets.grudge-studio.com/icons/...` | Icon binaries (never `info.*` HTML shells) |
+
+Wired by `js/grudge-items-loader.js` → merges into openworld `ITEM_DEFS`; icons normalized via `js/grudge-game-hud.js` + `js/grudge-codex-icons.js`.
+
 ## Key scripts
 
 | Script | Role |
@@ -51,6 +63,7 @@ Water uses the same module’s wave plane when available; collision layers regis
 | `js/tvs-unit-loader.js` | TVS world cast load |
 | `js/world-engine.js` | Chunked zones, camps, resource nodes |
 | `js/vox-ui-kit.js` | Create tabs Character \| World |
+| `js/grudge-items-loader.js` | Item Database → `ITEM_DEFS` + icon URLs |
 
 ## Deploy
 
