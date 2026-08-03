@@ -115,6 +115,8 @@ function collectFiles() {
     'models/city',
     'models/weapons',
     'models/voxels/free-rpg',
+    'avatar/races',
+    'assets/voxels/avatar-races',
     'assets/lava-biome',
     'ui/hud/party-frames',
   ];
