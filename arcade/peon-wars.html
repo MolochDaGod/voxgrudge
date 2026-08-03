@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>TVS Peon Wars · GRUDOX Arcade</title>
+    <meta name="description" content="Warcraft III Peon Wars–style RTS with The Voxel Store heroes on GRUDOX." />
+    <link rel="icon" type="image/png" href="/grudox-logo.png" />
+    <style>
+      :root {
+        --bg: #0a0c10;
+        --panel: rgba(12, 16, 20, 0.88);
+        --gold: #d4af37;
+        --text: #e8dec2;
+        --muted: #8a8478;
+        --blue: #3b82f6;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--text); font-family: Inter, system-ui, sans-serif; }
+      #game { position: fixed; inset: 0; }
+      #hud {
+        position: fixed; left: 0; right: 0; top: 0; z-index: 10;
+        display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+        padding: 0.55rem 0.75rem; background: linear-gradient(180deg, #0a0c10ee, transparent);
+        pointer-events: none;
+      }
+      #hud .chip {
+        pointer-events: none;
+        background: var(--panel); border: 1px solid #2a3228; border-radius: 6px;
+        padding: 0.35rem 0.6rem; font-size: 0.78rem; letter-spacing: 0.04em;
+      }
+      #hud .chip b { color: var(--gold); }
+      #msg {
+        position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%);
+        z-index: 10; max-width: min(640px, 92vw); text-align: center;
+        background: var(--panel); border: 1px solid #3a3420; border-radius: 8px;
+        padding: 0.45rem 0.85rem; font-size: 0.82rem; color: #f0e0b0;
+      }
+      #bar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+        display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+        padding: 0.55rem 0.75rem; background: var(--panel); border-top: 1px solid #2a3228;
+      }
+      #bar a, #bar button {
+        appearance: none; border: 1px solid #2a3228; background: #1a2218; color: var(--text);
+        padding: 0.4rem 0.65rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700;
+        letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer;
+      }
+      #bar button.primary { border-color: var(--gold); color: var(--gold); }
+      #bar button:hover, #bar a:hover { filter: brightness(1.12); }
+      #win {
+        display: none; position: fixed; inset: 0; z-index: 30; place-items: center;
+        background: rgba(0,0,0,0.55);
+      }
+      #win.show { display: grid; }
+      #win .card {
+        background: #121820; border: 1px solid var(--gold); border-radius: 12px;
+        padding: 1.5rem 1.75rem; text-align: center; max-width: 360px;
+      }
+      #win h2 { margin: 0 0 0.5rem; color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase; }
+      #loading {
+        position: fixed; inset: 0; z-index: 40; display: grid; place-items: center;
+        background: #0a0c10; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase;
+      }
+      #loading.hide { display: none; }
+      .help { color: var(--muted); font-size: 0.68rem; margin-left: auto; }
+    </style>
+  </head>
+  <body>
+    <div id="loading">Loading TVS Peon Wars…</div>
+    <div id="game"></div>
+    <div id="hud">
+      <div class="chip">Gold <b id="g">0</b></div>
+      <div class="chip">Lumber <b id="l">0</b></div>
+      <div class="chip">Food <b id="f">0/0</b></div>
+      <div class="chip">Selected <b id="s">0</b></div>
+      <div class="chip">Mode <b id="m">play</b></div>
+    </div>
+    <div id="msg">…</div>
+    <div id="bar">
+      <a href="/arcade/">← Arcade</a>
+      <a href="/">Hub</a>
+      <button type="button" class="primary" id="btnHall">Town Hall (H)</button>
+      <button type="button" id="btnRax">Barracks (R)</button>
+      <button type="button" id="btnFarm">Farm (F)</button>
+      <button type="button" id="btnPeon">Train Peon (1)</button>
+      <button type="button" id="btnFoot">Footman (2)</button>
+      <button type="button" id="btnArch">Archer (3)</button>
+      <span class="help">WASD pan · Q/E rotate · wheel zoom · LMB select · RMB command</span>
+    </div>
+    <div id="win"><div class="card"><h2 id="winTitle">Victory</h2><p id="winBody"></p><p><a class="primary" href="/arcade/play/peon-wars" style="color:var(--gold)">Play again</a></p></div></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="/arcade/js/peon-wars.js"></script>
+    <script>
+      (function () {
+        var game = new PeonWars(document.getElementById("game"), {
+          onHud: function (h) {
+            document.getElementById("g").textContent = h.gold;
+            document.getElementById("l").textContent = h.lumber;
+            document.getElementById("f").textContent = h.foodUsed + "/" + h.foodCap;
+            document.getElementById("s").textContent = h.selected;
+            document.getElementById("m").textContent = h.mode;
+            document.getElementById("msg").textContent = h.msg || "";
+            if (h.winner) {
+              var w = document.getElementById("win");
+              w.classList.add("show");
+              document.getElementById("winTitle").textContent = h.winner === "blue" ? "Victory" : "Defeat";
+              document.getElementById("winBody").textContent =
+                h.winner === "blue" ? "You razed the enemy Town Hall." : "Your Town Hall was destroyed.";
+            }
+          },
+        });
+        game.start().then(function () {
+          document.getElementById("loading").classList.add("hide");
+        });
+        document.getElementById("btnHall").onclick = function () {
+          game.mode = "place-hall";
+          game.setMsg("Place Town Hall (350g 200l)");
+          game.emitHud();
+        };
+        document.getElementById("btnRax").onclick = function () {
+          game.mode = "place-barracks";
+          game.setMsg("Place Barracks (180g 80l)");
+          game.emitHud();
+        };
+        document.getElementById("btnFarm").onclick = function () {
+          game.mode = "place-farm";
+          game.setMsg("Place Farm (80g 40l)");
+          game.emitHud();
+        };
+        document.getElementById("btnPeon").onclick = function () {
+          game.queueTrain("peon");
+        };
+        document.getElementById("btnFoot").onclick = function () {
+          game.queueTrain("footman");
+        };
+        document.getElementById("btnArch").onclick = function () {
+          game.queueTrain("archer");
+        };
+      })();
+    </script>
+  </body>
+</html>

@@ -14,6 +14,11 @@ _asset_unpack/
 _hud_unpack/
 server/node_modules/
 **/node_modules/
+# Pipeline / convert outputs (CDN hosts production GLBs)
+dist/
+Mine-Loader/
+vendor/
+docs/
 # Large root demos / unused GLBs
 bbmodel_fps_character*.glb
 skeleton_in_storm_pirates_of_the_caribbean.glb
@@ -21,3 +26,8 @@ sanji_fighting_style.glb
 bolt_action_pistol.glb
 grudge-guide.html
 grudge-warlords-vox.html
+# Offline FBX sources (runtime uses R2 GLB)
+models/anims/**/*.fbx
+models/voxels/**/*.fbx
+# Huge icon pack if not yet referenced (keep if needed — trim if deploy fails)
+# ui/voxel-icons/

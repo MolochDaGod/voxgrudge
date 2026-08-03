@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-keg.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-keg.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -1,
+      -0.8636432886123657,
+      -0.6818445324897766
+    ],
+    "max": [
+      1,
+      0.8636432886123657,
+      0.6818445324897766
+    ],
+    "size": [
+      2,
+      1.7272865772247314,
+      1.3636890649795532
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:26:20.522Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

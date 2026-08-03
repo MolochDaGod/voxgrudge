@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-farm__animations__sheep-idle-anim.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\sheep-idle-anim.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 24,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.012999999336898327,
+      0,
+      -0.009999999776482582
+    ],
+    "max": [
+      -0.0010000000474974513,
+      0.012999999336898327,
+      0.009999999776482582
+    ],
+    "size": [
+      0.011999999289400876,
+      0.012999999336898327,
+      0.019999999552965164
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:23:35.301Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

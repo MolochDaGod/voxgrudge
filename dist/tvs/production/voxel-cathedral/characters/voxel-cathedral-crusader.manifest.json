@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-cathedral\\voxel-cathedral-crusader\\voxel-cathedral-crusader.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\characters\\voxel-cathedral-crusader.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9495540261268616,
+      7.210871899587801e-8,
+      -0.22406651079654694
+    ],
+    "max": [
+      0.9393346905708313,
+      2,
+      0.3870445787906647
+    ],
+    "size": [
+      1.8888887166976929,
+      1.999999927891281,
+      0.6111110895872116
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\characters\\voxel-cathedral-crusader.collider.json",
+  "producedAt": "2026-07-24T08:22:00.671Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

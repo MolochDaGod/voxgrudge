@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-cathedral__props__voxel-cathedral-spear.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-spear.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.0005000000237487257,
+      -0.001505369902588427,
+      -0.01602143980562687
+    ],
+    "max": [
+      0.0005000000237487257,
+      0.0014946298906579614,
+      0.02397855930030346
+    ],
+    "size": [
+      0.0010000000474974513,
+      0.0029999997932463884,
+      0.03999999910593033
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:23:21.871Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

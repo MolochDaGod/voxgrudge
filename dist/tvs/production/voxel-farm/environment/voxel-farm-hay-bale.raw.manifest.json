@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-farm__environment__voxel-farm-hay-bale.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-hay-bale.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.00800000037997961,
+      0,
+      -0.00800000037997961
+    ],
+    "max": [
+      0.003000000026077032,
+      0.010999999940395355,
+      0.006000000052154064
+    ],
+    "size": [
+      0.011000000406056643,
+      0.010999999940395355,
+      0.014000000432133675
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:24:04.047Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

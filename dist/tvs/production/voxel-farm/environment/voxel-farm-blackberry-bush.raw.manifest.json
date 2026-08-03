@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-farm__environment__voxel-farm-blackberry-bush.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-blackberry-bush.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.00699999975040555,
+      -8.147100771793703e-10,
+      -0.005000654142349958
+    ],
+    "max": [
+      0.003000000026077032,
+      0.01099999900907278,
+      0.004999345634132624
+    ],
+    "size": [
+      0.009999999776482582,
+      0.010999999823782858,
+      0.009999999776482582
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:23:55.972Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\bull-idle-anim.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\bull-idle-anim.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 31,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.2707907345805231,
+      -0.520828882717368,
+      -1
+    ],
+    "max": [
+      0.2707907345805231,
+      0.520828882717368,
+      1
+    ],
+    "size": [
+      0.5415814691610462,
+      1.041657765434736,
+      2
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:23:25.657Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

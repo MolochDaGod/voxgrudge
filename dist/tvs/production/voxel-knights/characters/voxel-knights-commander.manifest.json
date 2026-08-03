@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-knights\\voxel-knights-commander\\voxel-knights-commander.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\characters\\voxel-knights-commander.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.8414304256439209,
+      2.772232576830902e-8,
+      -0.527205765247345
+    ],
+    "max": [
+      0.8585696220397949,
+      2,
+      0.12015840411186218
+    ],
+    "size": [
+      1.7000000476837158,
+      1.9999999722776742,
+      0.6473641693592072
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\characters\\voxel-knights-commander.collider.json",
+  "producedAt": "2026-07-24T08:22:07.358Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

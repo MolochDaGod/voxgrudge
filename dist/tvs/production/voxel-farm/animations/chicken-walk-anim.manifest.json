@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\chicken-walk-anim.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\chicken-walk-anim.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 22,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.5624561296426283,
+      -0.6874599444563128,
+      -1
+    ],
+    "max": [
+      0.5624561296426283,
+      0.6874599444563128,
+      1
+    ],
+    "size": [
+      1.1249122592852565,
+      1.3749198889126255,
+      2
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:23:28.264Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

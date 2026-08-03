@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-palace__animations__corgi-walk-anim.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\animations\\corgi-walk-anim.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 26,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.006000000052154064,
+      1.4730218156344677e-9,
+      -0.009958656504750252
+    ],
+    "max": [
+      0.004999999888241291,
+      0.012000001035630703,
+      0.012041343376040459
+    ],
+    "size": [
+      0.010999999940395355,
+      0.011999999562608887,
+      0.02199999988079071
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T09:56:26.209Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

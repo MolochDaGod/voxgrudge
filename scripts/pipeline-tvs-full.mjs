@@ -237,13 +237,17 @@ async function main() {
     results.characters.ok = n;
   }
 
-  // ── Static env / props / animals ─────────────────────────────────────────
+  // ── Static env / props / animals / animations (never characters) ────────
   if (DO_STATIC) {
-    console.log("[tvs-pipeline] statics (environment/props/animals)…");
+    console.log("[tvs-pipeline] statics (environment/props/animals/animations)…");
+    // IMPORTANT: do NOT match characters via loose tag regex — that re-baked
+    // farm heroes without --height 2.0 and wiped colliders/atlases.
     const statics = assetList.filter((a) => {
-      const role = a.role || a.kind || "";
-      return ["environment", "props", "animals", "prop", "env"].includes(role) ||
-        (a.tags || []).some((t) => /environment|prop|animal/i.test(t));
+      const role = String(a.role || a.kind || "").toLowerCase();
+      const r2 = a.r2Key || String(a.cdnUrl || "");
+      if (/\/characters\//i.test(r2)) return false;
+      if (["character", "characters"].includes(role)) return false;
+      return ["environment", "props", "animals", "prop", "env", "animations", "animation"].includes(role);
     }).filter((a) => (a.r2Key || a.cdnUrl || "").match(/\.fbx$/i));
 
     let list = statics;

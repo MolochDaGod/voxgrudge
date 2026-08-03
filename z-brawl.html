@@ -19,6 +19,9 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <link rel="stylesheet" href="ui/craftpix-rpg/craftpix-rpg-ui.css">
 <script src="js/craftpix-rpg-ui.js"></script>
+<script src="js/vox-standards.js"></script>
+<!-- Fleet combat SSOT only — no hanging PlayerController/EnemyBrain loads (those belong to openworld) -->
+<script src="js/vox-rpgbase-combat.js"></script>
 <style>
 /* Z-Brawl layout shell — surfaces/chrome come from craftpix-rpg-ui.css */
 :root {
@@ -46,6 +49,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; back
 }
 .stat-text { font-size:var(--cpx-fs-md); text-shadow:var(--cpx-shadow); margin:3px 0; color:var(--cpx-ink); line-height:1.45; }
 #health-text { color:var(--cpx-good); font-size:var(--cpx-fs-lg); font-weight:800; }
+#stamina-text { color:#7ec8ff; font-size:var(--cpx-fs-md); font-weight:700; }
 #ammo-count { color:var(--cpx-gold); }
 #stats { color:var(--cpx-danger); display:flex; align-items:center; gap:6px; }
 #stats::before { content:''; width:16px; height:16px; background:var(--cpx-ico-skull) center/contain no-repeat; image-rendering:pixelated; display:inline-block; }
@@ -304,6 +308,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; back
         <div id="stats-bar" class="kpx-panel kpx-panel--compact kpx-pixel cpx-panel cpx-panel--uf cpx-pixel" data-cpx-node="unitframe">
             <p class="hud-panel-head cpx-head cpx-head--icon">Vitals</p>
             <div class="stat-text" id="health-text">HP 100</div>
+            <div class="stat-text" id="stamina-text">STA 100</div>
             <div class="kpx-bar cpx-bar cpx-bar--hp" id="hp-bar"><i id="hp-fill"></i></div>
             <div class="stat-text" id="ammo-count">AMMO 30</div>
             <div class="stat-text" id="stats">0</div>
@@ -343,7 +348,8 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; back
 
     <div id="action-dock">
         <button id="build-btn" class="kpx-btn kpx-btn--brown kpx-pixel" onclick="toggleBuildMode()" data-tip-title="BUILD" data-tip-body="Walls/fences: click-drag for long runs. Campfire, farm plot, mill, tent, hall. Keys 1–9.">BUILD</button>
-        <button id="melee-btn" class="kpx-btn kpx-btn--red kpx-pixel" onpointerdown="doMelee(event)" data-tip-title="MELEE" data-tip-body="RMB or F — slash toward cursor.">MELEE</button>
+        <button id="melee-btn" class="kpx-btn kpx-btn--red kpx-pixel" onpointerdown="doMelee(event)" data-tip-title="MELEE" data-tip-body="F / LMB(melee) — combo slash. Tab — SnS / 2H. Hold RMB — block. Soft-target snaps aim.">MELEE</button>
+        <button id="stance-btn" class="kpx-btn kpx-btn--brown kpx-pixel" onclick="cycleMeleeStance()" data-tip-title="STANCE" data-tip-body="Tab / Q — cycle OFF → Sword&Shield → Greatsword. Melee mode uses rpg-base combos + block.">STANCE: GUNS</button>
         <button id="heal-btn" class="kpx-btn kpx-btn--cyan kpx-pixel" onclick="useMedicine()" data-tip-title="HEAL" data-tip-body="H — spend 1 medicine kit.">HEAL</button>
         <button id="ability-btn" class="kpx-btn kpx-btn--cyan kpx-pixel" onclick="useAbility()" data-tip-title="DASH" data-tip-body="Space — burst dodge on foot.">DASH</button>
         <div id="build-actions">
@@ -355,7 +361,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; back
     <div id="bottom-controls">
         <div id="joystick-wrapper"><div id="joystick-base"><div id="joystick-stick"></div></div></div>
         <div id="weapon-wrap">
-            <div id="weapon-label">WEAPONS · LMB fire</div>
+            <div id="weapon-label">WEAPONS · LMB fire · Tab melee stance</div>
             <div id="build-label">STRUCTURES · LMB place</div>
             <div id="equipment-bar" class="kpx-panel kpx-panel--compact kpx-pixel">
                 <div class="kpx-slot unlocked active" id="slot-0" onpointerdown="selectWeapon(0)"><div class="kpx-cost">FREE</div><span class="kpx-label">PISTOL</span></div>
@@ -1006,10 +1012,16 @@ function spawnEnemy(type){
     const dist=minDist+Math.random()*(maxDist-minDist);
     mob.position.set(player.position.x+Math.cos(angle)*dist, 0, player.position.z+Math.sin(angle)*dist);
 
+    const combatRole=(window.VoxRpgBase&&VoxRpgBase.roleForArchetype)
+        ? VoxRpgBase.roleForArchetype(type) : 'minion';
+    const roleCfg=(window.VoxRpgBase&&VoxRpgBase.roleConfig)?VoxRpgBase.roleConfig(combatRole):null;
+    const hpMult=roleCfg?roleCfg.hpMult:1;
+    const dmgMult=roleCfg?roleCfg.dmgMult:1;
     mob.userData={ type, spawnTime:clock?clock.elapsedTime*1000:0, spawnDuration:400,
-        scaleTarget:1, hp:config.hp, maxHp:config.hp, speed:config.speed,
-        damage:config.damage, score:config.score||1, name:config.name, attackCooldown:0,
-        isBoss:type==='BOSS' };
+        scaleTarget:1, hp:Math.max(1,Math.round(config.hp*hpMult)), maxHp:Math.max(1,Math.round(config.hp*hpMult)),
+        speed:config.speed*(roleCfg?roleCfg.speedMult:1),
+        damage:Math.max(1,Math.round(config.damage*dmgMult)), score:config.score||1, name:config.name, attackCooldown:0,
+        isBoss:type==='BOSS', combatRole:combatRole, flankSide:Math.random()<0.5?1:-1, intentTimer:0, lastIntent:'attack' };
     mob.scale.set(0.01,0.01,0.01);
     const zm=ZOMBIE_MODELS[type]||{glb:ZOMBIE_GLB,h:2.0,yaw:0};
     const mobH=zm.h*(config.scale||1);
@@ -1029,12 +1041,61 @@ function updateEnemy(m,dt){
     const dir=toP.normalize();
     let speed=ud.speed*fs;
 
+    // Role intent AI (VoxRpgBase ← ai-rpg combat-intent / combat-roles patterns)
+    ud.intentTimer=(ud.intentTimer||0)-dt;
+    let intent=null;
+    if(window.VoxRpgBase&&VoxRpgBase.selectCombatIntent){
+        if(ud.intentTimer<=0){
+            const stP=ensureRpgCombat();
+            intent=VoxRpgBase.selectCombatIntent(ud.combatRole||'minion',{
+                hpRatio:(ud.hp||1)/(ud.maxHp||1),
+                dist:dist,
+                playerBlocking:!!(stP&&stP.isBlocking),
+                morale:1
+            });
+            ud.lastIntent=intent.intent;
+            ud.intentVerb=intent.verb;
+            ud.intentTimer=0.35+Math.random()*0.45;
+        } else {
+            intent={ verb:ud.intentVerb||'chase', speedMult:1, stopDist:1.5 };
+            const rc=VoxRpgBase.roleConfig(ud.combatRole||'minion');
+            intent.speedMult=rc.speedMult; intent.stopDist=rc.stopDist;
+            intent.role=rc;
+        }
+        // ud.speed already includes role.speedMult — only apply intent boost (flee/pressure)
+        {
+            const baseR=(intent.role&&intent.role.speedMult)||1;
+            const boost=(intent.speedMult||baseR)/baseR;
+            speed=ud.speed*fs*boost;
+        }
+        if(intent.verb==='flank'){
+            const side=new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(ud.flankSide||1);
+            m.position.x+=(dir.x*0.55+side.x*0.9)*speed;
+            m.position.z+=(dir.z*0.55+side.z*0.9)*speed;
+            faceTowards(m, player.position.x, player.position.z);
+            if(ud.actions) playClip(ud,['walk','run','move']);
+            return;
+        }
+        if(intent.verb==='flee'){
+            m.position.x-=dir.x*speed*1.15; m.position.z-=dir.z*speed*1.15;
+            faceTowards(m, m.position.x-dir.x, m.position.z-dir.z);
+            if(ud.actions) playClip(ud,['walk','run','move']);
+            return;
+        }
+        if(intent.verb==='hold' && dist<3.5){
+            // brace — small orbit, still threaten
+            const side=new THREE.Vector3(-dir.z,0,dir.x);
+            m.position.x+=side.x*speed*0.35; m.position.z+=side.z*speed*0.35;
+        }
+    }
+
     if(type==='RUNNER'){
         const wob=Math.sin(clock.elapsedTime*8+m.id)*0.5;
         const side=new THREE.Vector3(-dir.z,0,dir.x);
         m.position.x+=(dir.x+side.x*wob)*speed; m.position.z+=(dir.z+side.z*wob)*speed;
     } else if(type==='SPITTER'){
-        if(dist<10){ const side=new THREE.Vector3(-dir.z,0,dir.x);
+        const keep=intent&&intent.stopDist?intent.stopDist:10;
+        if(dist<keep){ const side=new THREE.Vector3(-dir.z,0,dir.x);
             m.position.x+=side.x*speed*0.5; m.position.z+=side.z*speed*0.5; }
         else { m.position.x+=dir.x*speed*0.6; m.position.z+=dir.z*speed*0.6; }
         ud.attackCooldown-=dt;
@@ -1052,11 +1113,16 @@ function updateEnemy(m,dt){
         if(ud.chargeTime>0){ ud.chargeTime-=fs; m.position.x+=ud.chargeVel.x*fs; m.position.z+=ud.chargeVel.z*fs; }
         else { m.position.x+=dir.x*speed; m.position.z+=dir.z*speed; }
         ud.attackTimer=(ud.attackTimer||0)+dt;
-        if(ud.attackTimer>5){ ud.attackTimer=0;
+        // Boss phase-ish summon (ai-rpg boss phase pattern — every ~5s under 50% HP faster)
+        const phaseCd=(ud.hp/ud.maxHp)<0.5?3.5:5;
+        if(ud.attackTimer>phaseCd){ ud.attackTimer=0;
             for(let i=0;i<3;i++){ const mn=spawnEnemy('GRUNT'); if(mn) mn.position.copy(m.position).add(new THREE.Vector3((Math.random()-0.5)*3,0,(Math.random()-0.5)*3)); } }
     } else if(type==='EXPLODER'){
         m.position.x+=dir.x*speed*1.3; m.position.z+=dir.z*speed*1.3;
-    } else { m.position.x+=dir.x*speed; m.position.z+=dir.z*speed; }
+    } else {
+        const stop=intent&&intent.stopDist?intent.stopDist:1.5;
+        if(dist>stop){ m.position.x+=dir.x*speed; m.position.z+=dir.z*speed; }
+    }
 
     faceTowards(m, player.position.x, player.position.z);
     if(ud.actions) playClip(ud, dist<2.4?['attack','bite','hard','infection']:['walk','walking','run','move']);
@@ -1077,11 +1143,36 @@ function updateEnemy(m,dt){
 // ============================================================================
 function damagePlayer(amount){
     if(sheltered) return;               // safe inside a home
-    health=Math.max(0,health-amount);
+    const st=ensureRpgCombat();
+    let finalAmt=amount, blocked=false, parried=false, guardBreak=false;
+    // Squad intercept (ai-rpg bodyguard / interceptChance)
+    if(window.VoxRpgBase&&VoxRpgBase.allyInterceptDamage&&allies&&allies.length){
+        const ix=VoxRpgBase.allyInterceptDamage(amount, player.position, allies, { radius:3.4, chance:0.28 });
+        if(ix.intercepted){
+            finalAmt=ix.amount;
+            if(ix.ally&&ix.ally.userData){
+                ix.ally.userData.hp=Math.max(0,(ix.ally.userData.hp!=null?ix.ally.userData.hp:40)-ix.transferred);
+                addKillFeed((ix.ally.userData.name||'ALLY')+' INTERCEPT');
+            }
+            amount=finalAmt;
+        }
+    }
+    if(st&&window.VoxRpgBase&&isMeleeStanceOn()){
+        const m=VoxRpgBase.mitigateDamage(st, amount);
+        finalAmt=m.amount; blocked=m.blocked; parried=m.parried; guardBreak=!!m.guardBreak;
+        screenShake=Math.max(screenShake, m.shake||0);
+        if(parried) addKillFeed('PERFECT PARRY');
+        else if(guardBreak) addKillFeed('GUARD BREAK!');
+        else if(blocked&&finalAmt<amount) addKillFeed(meleeStance==='gs'?'2H GUARD':'SHIELD BLOCK');
+    } else {
+        screenShake=Math.max(screenShake,amount*0.3);
+    }
+    health=Math.max(0,health-finalAmt);
     document.getElementById('health-text').innerText=`HP: ${health}`;
-    screenShake=Math.max(screenShake,amount*0.3);
+    refreshStaminaUI();
     const v=document.getElementById('vignette');
-    v.style.boxShadow=`inset 0 0 200px 40px rgba(150,0,0,${Math.min(0.55,0.15+amount*0.03)})`;
+    const flash=parried?0.12:guardBreak?0.45:blocked?0.2:Math.min(0.55,0.15+finalAmt*0.03);
+    v.style.boxShadow=`inset 0 0 200px 40px rgba(150,0,0,${flash})`;
     setTimeout(()=>{ v.style.boxShadow='inset 0 0 200px 40px rgba(120,0,0,0)'; },250);
     if(health<=0) gameOver();
 }
@@ -1260,12 +1351,69 @@ function updateProjectiles(dt){
 }
 
 // ============================================================================
-//  MELEE — RMB / F: slash toward cursor at melee range
+//  MELEE / RPG-BASE — SnS + Greatsword combos, RMB block, soft-target (VoxRpgBase)
 // ============================================================================
 const MELEE_RANGE=3.4, MELEE_REACH=2.5, MELEE_CONE=0.4, MELEE_LUNGE=0.5;
 let meleeCd=0;
 const _meleeAim=new THREE.Vector3(), _meleeStrike=new THREE.Vector3();
+/** @type {'off'|'sns'|'gs'} */
+let meleeStance='off';
+let rpgCombat=null;
+let blockHeld=false;
+let rmbDownAt=0;
+const RMB_BLOCK_HOLD_MS=90; // hold past this = block (when stance on); tap still mines/quick slash when off
 
+function ensureRpgCombat(){
+    if(rpgCombat) return rpgCombat;
+    if(window.VoxRpgBase){
+        rpgCombat=VoxRpgBase.createCombatState({ weapon:'sns' });
+    }
+    return rpgCombat;
+}
+function isMeleeStanceOn(){ return meleeStance==='sns'||meleeStance==='gs'; }
+function stanceLabel(){
+    if(meleeStance==='sns') return 'STANCE: SnS';
+    if(meleeStance==='gs') return 'STANCE: 2H';
+    return 'STANCE: GUNS';
+}
+function refreshStanceUI(){
+    const btn=document.getElementById('stance-btn');
+    if(btn) btn.textContent=stanceLabel();
+    const wLabel=document.getElementById('weapon-label');
+    if(wLabel){
+        if(meleeStance==='sns') wLabel.textContent='BLADE · LMB combo · Hold RMB block · Tab 2H';
+        else if(meleeStance==='gs') wLabel.textContent='GREATSWORD · LMB heavy · Hold RMB parry · Tab guns';
+        else wLabel.textContent='WEAPONS · LMB fire · Tab melee stance';
+    }
+    const mb=document.getElementById('melee-btn');
+    if(mb){
+        mb.classList.toggle('kpx-btn--cyan', isMeleeStanceOn());
+        mb.classList.toggle('kpx-btn--red', !isMeleeStanceOn());
+    }
+    refreshStaminaUI();
+}
+function refreshStaminaUI(){
+    const el=document.getElementById('stamina-text');
+    if(!el) return;
+    const st=ensureRpgCombat();
+    if(!st){ el.textContent='STA —'; return; }
+    const pct=Math.round(st.stamina);
+    el.textContent=st.isBlocking?`STA ${pct} ▌BLOCK`:(st.flag==='off_balance'?`STA ${pct} !BREAK`:`STA ${pct}`);
+    el.style.color=st.stamina<25?'#ff8866':st.isBlocking?'#9ad0ff':'#7ec8ff';
+}
+function cycleMeleeStance(){
+    if(buildMode||playerVehicle||sheltered) return;
+    const order=['off','sns','gs'];
+    const i=order.indexOf(meleeStance);
+    meleeStance=order[(i+1)%order.length];
+    const st=ensureRpgCombat();
+    if(st){
+        if(meleeStance==='off'){ VoxRpgBase.setBlocking(st,false); blockHeld=false; }
+        else { VoxRpgBase.setWeapon(st, meleeStance); }
+    }
+    refreshStanceUI();
+    addKillFeed(meleeStance==='off'?'guns ready':(meleeStance==='sns'?'Sword & Shield':'Greatsword'));
+}
 function refreshAimFromPointer(e){
     if(!e||!camera||!floor) return;
     const t=e.touches?e.touches[0]:e;
@@ -1274,9 +1422,23 @@ function refreshAimFromPointer(e){
     raycaster.setFromCamera(mouse,camera);
     const hits=raycaster.intersectObject(floor);
     if(hits.length>0) mouseWorld.copy(hits[0].point);
+    // Soft-target hover for rpg-base
+    const st=ensureRpgCombat();
+    if(st&&isMeleeStanceOn()&&window.VoxRpgBase){
+        const pick=VoxRpgBase.pickClickTarget(enemies,{ mouseWorld, maxDist:2.8 });
+        st.hoverTarget=pick?{x:pick.x,y:pick.y,z:pick.z}:null;
+    }
 }
 function getMeleeAimDir(out){
     out=out||_meleeAim;
+    const st=ensureRpgCombat();
+    if(st&&window.VoxRpgBase&&isMeleeStanceOn()){
+        const aim=VoxRpgBase.softTargetAngle(player.position, mouseWorld, enemies, st, {});
+        if(aim.angle!=null){
+            out.set(Math.sin(aim.angle),0,Math.cos(aim.angle));
+            return out;
+        }
+    }
     out.copy(mouseWorld).sub(player.position).setY(0);
     if(out.lengthSq()<0.05){
         out.set(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
@@ -1285,50 +1447,71 @@ function getMeleeAimDir(out){
 }
 function meleeStrikePoint(aimDir,out){
     out=out||_meleeStrike;
-    return out.copy(player.position).add(aimDir.clone().multiplyScalar(MELEE_REACH)).setY(0.65);
+    const reach=isMeleeStanceOn()&&rpgCombat? (VoxRpgBase.weaponConfig(rpgCombat.weapon).range*0.75) : MELEE_REACH;
+    return out.copy(player.position).add(aimDir.clone().multiplyScalar(reach)).setY(0.65);
 }
-function spawnMeleeSlash(origin,aimDir){
+function spawnMeleeSlash(origin,aimDir,opts){
+    opts=opts||{};
+    const trail=opts.trail!=null?opts.trail:0x00ffcc;
+    const reach=opts.reach!=null?opts.reach:MELEE_REACH;
     const slash=new THREE.Group();
     slash.position.copy(origin).setY(0.55);
     slash.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),aimDir);
-    const arc=new THREE.Mesh(new THREE.RingGeometry(0.35,1.65,14,1,-0.95,1.9),
-        new THREE.MeshBasicMaterial({color:0x00ffcc,transparent:true,opacity:0.82,side:THREE.DoubleSide,depthWrite:false}));
+    const arc=new THREE.Mesh(new THREE.RingGeometry(0.35, Math.min(2.4,reach*0.55),14,1,-0.95,1.9),
+        new THREE.MeshBasicMaterial({color:trail,transparent:true,opacity:0.82,side:THREE.DoubleSide,depthWrite:false}));
     arc.rotation.x=-Math.PI/2;
     slash.add(arc);
-    const streak=new THREE.Mesh(new THREE.PlaneGeometry(0.12,2.0),
+    const streak=new THREE.Mesh(new THREE.PlaneGeometry(0.12, reach*0.7),
         new THREE.MeshBasicMaterial({color:0xccffee,transparent:true,opacity:0.9,side:THREE.DoubleSide,depthWrite:false}));
-    streak.position.set(0,0.08,1.05); streak.rotation.x=-Math.PI/2;
+    streak.position.set(0,0.08,reach*0.4); streak.rotation.x=-Math.PI/2;
     slash.add(streak);
     slash.userData={
         life:11, maxLife:11, melee:true, meleeSlash:true,
-        origin:origin.clone(), aimDir:aimDir.clone(), reach:MELEE_REACH, swing:-1.05, sparked:false
+        origin:origin.clone(), aimDir:aimDir.clone(), reach:reach, swing:-1.05, sparked:false
     };
     explosions.push(slash); scene.add(slash);
 }
-function meleeHitsInCone(aimDir,dmg){
-    for(let j=enemies.length-1;j>=0;j--){
-        const en=enemies[j];
-        const to=en.position.clone().sub(player.position).setY(0);
-        const d=to.length();
-        if(d>MELEE_RANGE) continue;
-        to.normalize();
-        if(to.dot(aimDir)<MELEE_CONE) continue;
-        damageEnemy(en,dmg);
-        en.position.x+=aimDir.x*1.35; en.position.z+=aimDir.z*1.35;
-        spawnParticles(en.position.clone().add(new THREE.Vector3(0,1,0)),0x00ffcc,5,0.28,0.1,9);
+function meleeHitsInCone(aimDir,dmg,opts){
+    opts=opts||{};
+    const range=opts.range!=null?opts.range:MELEE_RANGE;
+    const arc=opts.arc!=null?opts.arc:Math.PI*0.9;
+    const kb=opts.knockback!=null?opts.knockback:1.35;
+    const trail=opts.trail!=null?opts.trail:0x00ffcc;
+    if(window.VoxRpgBase){
+        const hits=VoxRpgBase.checkArcHit(player.position, aimDir, enemies, arc, range, {});
+        hits.forEach(h=>{
+            damageEnemy(h.entity, dmg);
+            h.entity.position.x+=h.dirX*kb; h.entity.position.z+=h.dirZ*kb;
+            spawnParticles(h.entity.position.clone().add(new THREE.Vector3(0,1,0)),trail,5,0.28,0.1,9);
+        });
+    } else {
+        for(let j=enemies.length-1;j>=0;j--){
+            const en=enemies[j];
+            const to=en.position.clone().sub(player.position).setY(0);
+            const d=to.length();
+            if(d>range) continue;
+            to.normalize();
+            if(to.dot(aimDir)<MELEE_CONE) continue;
+            damageEnemy(en,dmg);
+            en.position.x+=aimDir.x*kb; en.position.z+=aimDir.z*kb;
+            spawnParticles(en.position.clone().add(new THREE.Vector3(0,1,0)),trail,5,0.28,0.1,9);
+        }
     }
     for(let i=resourceNodes.length-1;i>=0;i--){
         const nN=resourceNodes[i];
         const to=nN.position.clone().sub(player.position).setY(0);
         const d=to.length();
-        if(d>MELEE_RANGE) continue;
+        if(d>range) continue;
         to.normalize();
         if(to.dot(aimDir)<0.22) continue;
         mineNode(nN); break;
     }
 }
+/** Quick survival slash (guns mode) — legacy F / tap RMB */
 function doMelee(evt){
-    if(meleeCd>0||buildMode||playerVehicle||sheltered) return;
+    if(buildMode||playerVehicle||sheltered) return;
+    if(isMeleeStanceOn()){ beginRpgAttack(evt); return; }
+    if(meleeCd>0) return;
     if(evt) refreshAimFromPointer(evt);
     meleeCd=0.42;
     const aimDir=getMeleeAimDir();
@@ -1344,6 +1527,78 @@ function doMelee(evt){
     screenShake=Math.max(screenShake,2.2);
     const strike=meleeStrikePoint(aimDir);
     spawnParticles(strike,0x66ffdd,6,0.22,0.12,10);
+}
+function beginRpgAttack(evt){
+    const st=ensureRpgCombat();
+    if(!st||!window.VoxRpgBase){ doMeleeLegacyFallback(evt); return; }
+    if(buildMode||playerVehicle||sheltered) return;
+    if(evt) refreshAimFromPointer(evt);
+    // Click-to-target under cursor
+    const pick=VoxRpgBase.pickClickTarget(enemies,{ mouseWorld, maxDist:3.2 });
+    st.clickedTarget=pick?{x:pick.x,y:pick.y,z:pick.z}:null;
+    if(!VoxRpgBase.attemptAttack(st)) return;
+    const aimDir=getMeleeAimDir();
+    player.rotation.y=Math.atan2(aimDir.x,aimDir.z)+(player.userData.faceYaw||0);
+    if(player.userData.actions) playClip(player.userData,['attack','punch','slash','melee','hit']);
+}
+function doMeleeLegacyFallback(evt){
+    meleeStance='off';
+    doMelee(evt);
+}
+function applyRpgActiveHit(profile, progress, w){
+    const aimDir=getMeleeAimDir();
+    const range=w.range*profile.rangeMult;
+    const dmg=Math.max(1, Math.round((w.damage/12)*profile.dmgMult)); // scale prototype 15/45 → zombie hp units
+    const origin=player.position.clone();
+    spawnMeleeSlash(origin, aimDir, { trail:w.trail, reach:range });
+    meleeHitsInCone(aimDir, dmg, { range, arc:profile.arc, knockback:w.knockback, trail:w.trail });
+    if(profile.heavy){
+        VoxRpgBase.addHitStop(rpgCombat, 5);
+        screenShake=Math.max(screenShake, 0.8*10);
+    } else {
+        screenShake=Math.max(screenShake, 2.2);
+    }
+    if(playerModel&&playerModel.userData.muzzleFlash) playerModel.userData.muzzleFlash.intensity=12;
+    spawnParticles(meleeStrikePoint(aimDir), w.trail, 6, 0.22, 0.12, 10);
+}
+function tickRpgCombat(dt){
+    const st=ensureRpgCombat();
+    if(!st||!window.VoxRpgBase) return;
+    VoxRpgBase.tick(st, dt);
+    if(st.hitStop>0) return; // freeze attack advance during hitstop
+    if(st.isAttacking){
+        VoxRpgBase.tickAttackFrame(st, dt, {
+            onLunge:function(step){
+                const aim=getMeleeAimDir();
+                player.position.x+=aim.x*step;
+                player.position.z+=aim.z*step;
+            },
+            onActiveHit:applyRpgActiveHit,
+            onComplete:function(){ /* combo advanced in module */ }
+        });
+        // DI steering while attacking
+        const aim=getMeleeAimDir();
+        const targetYaw=Math.atan2(aim.x,aim.z)+(player.userData.faceYaw||0);
+        let d=targetYaw-player.rotation.y;
+        while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2;
+        player.rotation.y+=d*0.04;
+    }
+    // Soft aim facing when stance on and not free-firing
+    if(isMeleeStanceOn()&&!st.isAttacking&&!playerVehicle){
+        const aim=VoxRpgBase.softTargetAngle(player.position, mouseWorld, enemies, st, {});
+        if(aim.angle!=null){
+            let d=aim.angle+(player.userData.faceYaw||0)-player.rotation.y;
+            while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2;
+            player.rotation.y+=d*0.55;
+        }
+    }
+}
+function setBlockHeld(on){
+    blockHeld=!!on;
+    const st=ensureRpgCombat();
+    if(!st||!window.VoxRpgBase) return;
+    if(isMeleeStanceOn()) VoxRpgBase.setBlocking(st, on);
+    else VoxRpgBase.setBlocking(st, false);
 }
 
 // ============================================================================
@@ -2145,7 +2400,9 @@ function renderStartMenu(opts){
                 </div>
                 <div class="menu-ctrl-group">
                     <h4>COMBAT</h4>
-                    <div class="menu-ctrl-row"><kbd>RMB</kbd><span>Melee / mine junk</span></div>
+                    <div class="menu-ctrl-row"><kbd>Tab</kbd><span>Stance: Guns → SnS → Greatsword</span></div>
+                    <div class="menu-ctrl-row"><kbd>F</kbd><span>Melee combo (or LMB in melee stance)</span></div>
+                    <div class="menu-ctrl-row"><kbd>RMB</kbd><span>Guns: slash/mine · Melee: hold to block</span></div>
                     <div class="menu-ctrl-row"><kbd>F</kbd><span>Melee slash</span></div>
                     <div class="menu-ctrl-row"><kbd>H</kbd><span>Heal with med kit</span></div>
                     <div class="menu-ctrl-row"><kbd>1-8</kbd><span>Weapon slots</span></div>
@@ -2626,11 +2883,12 @@ function bindEvents(){
             if(k===' '){ e.preventDefault(); if(playerVehicle) gasHeld=true; else useAbility(); }
             if(k==='b' && !playerVehicle){ toggleBuildMode(); }
             if(k==='f') doMelee();
+            if(k==='q' || e.code==='Tab'){ e.preventDefault(); cycleMeleeStance(); }
             if(k==='h') useMedicine();
             if(k==='r' && buildMode) rotateGhost();
             if(k==='e') tryInteract();
             const num=parseInt(e.key);
-            if(num>=1&&num<=8 && !buildMode) selectWeapon(num-1);
+            if(num>=1&&num<=8 && !buildMode && !isMeleeStanceOn()) selectWeapon(num-1);
             if(num>=1&&num<=9 && buildMode){ const idx=num-1; if(idx<BUILDABLES.length){ buildSel=idx; refreshGhost(); buildBuildBar(); } }
         }
     };
@@ -2648,9 +2906,34 @@ function bindEvents(){
             const b=BUILDABLES[buildSel];
             if(b&&b.drag){ beginWallDrag(); }
             else placeBuilding();
+        } else if(isMeleeStanceOn()){
+            refreshAimFromPointer(e);
+            beginRpgAttack(e);
         } else isFiring=true; };
-    window.addEventListener('mousedown',(e)=>{ if(e.button===2){ e.preventDefault(); refreshAimFromPointer(e); doMelee(e); return; } startFire(e); });
-    window.addEventListener('mouseup',()=>{
+    window.addEventListener('mousedown',(e)=>{
+        if(e.button===2){
+            e.preventDefault();
+            refreshAimFromPointer(e);
+            rmbDownAt=performance.now();
+            if(isMeleeStanceOn()){ setBlockHeld(true); }
+            else { doMelee(e); }
+            return;
+        }
+        startFire(e);
+    });
+    window.addEventListener('mouseup',(e)=>{
+        if(e.button===2){
+            const held=performance.now()-rmbDownAt;
+            if(isMeleeStanceOn()){
+                setBlockHeld(false);
+                // short tap while stance on still mines if near a node
+                if(held<RMB_BLOCK_HOLD_MS+40){
+                    const nearNode=resourceNodes.some(n=>n.position.distanceTo(player.position)<MELEE_RANGE+0.5);
+                    if(nearNode) doMelee(e);
+                }
+            }
+            rmbDownAt=0;
+        }
         if(buildMode&&wallDrag&&wallDrag.active) endWallDrag();
         isFiring=false;
     });
@@ -2726,12 +3009,17 @@ function animate(){
     const started=document.getElementById('start-screen').style.display==='none';
 
     if(started){
-        if(isFiring && !buildMode) fire();
+        if(isFiring && !buildMode && !isMeleeStanceOn()) fire();
         if(!isFiring && currentWep===7) minigunSpool=Math.max(0,minigunSpool-0.01);
         if(meleeCd>0) meleeCd-=dt;
+        tickRpgCombat(dt);
+        if(uiAccum+dt>=UI_TICK) refreshStaminaUI();
 
         let movedOnFoot=false;
-        const step=onFootSpeed*dt;
+        const stMove=ensureRpgCombat();
+        let moveMult=(stMove&&window.VoxRpgBase&&isMeleeStanceOn())?VoxRpgBase.moveSpeedMult(stMove):1;
+        if(stMove&&stMove.flag==='off_balance') moveMult*=0.4;
+        const step=onFootSpeed*dt*moveMult;
         if(playerVehicle){ updateVehicleDriving(dt); }
         else if(dashActive){ /* updateDash */ }
         else if(isJoyActive){ const angle=Math.atan2(joystickPos.y,joystickPos.x)-Math.PI/4;
@@ -2750,7 +3038,7 @@ function animate(){
         interactAccum+=dt;
         if(interactAccum>=0.12){ interactAccum=0; updateInteract(); }
 
-        if(!playerVehicle){ _toPlayer.copy(mouseWorld).sub(player.position).setY(0);
+        if(!playerVehicle && !isMeleeStanceOn()){ _toPlayer.copy(mouseWorld).sub(player.position).setY(0);
             if(_toPlayer.lengthSq()>0.1) player.rotation.y=Math.atan2(_toPlayer.x,_toPlayer.z)+(player.userData.faceYaw||0); }
 
         if(playerModel.userData.muzzleFlash) playerModel.userData.muzzleFlash.intensity*=0.65;

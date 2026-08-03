@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-village__props__voxel-village-coin.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-coin.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.001999999163672328,
+      -0.000499999790918082,
+      -0.001999999163672328
+    ],
+    "max": [
+      0.0020000007934868336,
+      0.0005000001983717084,
+      0.0020000007934868336
+    ],
+    "size": [
+      0.003999999957159162,
+      0.0009999999892897904,
+      0.003999999957159162
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:26:14.407Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

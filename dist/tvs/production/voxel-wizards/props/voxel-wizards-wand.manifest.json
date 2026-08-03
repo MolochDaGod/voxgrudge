@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-wand.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-wand.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.1110873743891716,
+      -1,
+      -0.1110873743891716
+    ],
+    "max": [
+      0.1110873743891716,
+      1,
+      0.1110873743891716
+    ],
+    "size": [
+      0.2221747487783432,
+      2,
+      0.2221747487783432
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:26:44.513Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

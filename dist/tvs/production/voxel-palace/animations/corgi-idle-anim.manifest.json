@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\animations\\corgi-idle-anim.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\animations\\corgi-idle-anim.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 26,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.50007629627369,
+      -0.5454878383739739,
+      -1
+    ],
+    "max": [
+      0.50007629627369,
+      0.5454878383739739,
+      1
+    ],
+    "size": [
+      1.00015259254738,
+      1.0909756767479477,
+      2
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T09:56:21.119Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

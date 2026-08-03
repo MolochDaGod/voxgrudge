@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\animations\\human-aim-anim.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\animations\\human-aim-anim.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9714346751304667,
+      -1,
+      -0.2856837672048097
+    ],
+    "max": [
+      0.9714346751304667,
+      1,
+      0.2856837672048097
+    ],
+    "size": [
+      1.9428693502609333,
+      2,
+      0.5713675344096194
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T09:56:50.667Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

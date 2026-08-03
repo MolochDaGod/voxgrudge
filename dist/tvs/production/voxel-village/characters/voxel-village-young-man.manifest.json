@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-village\\voxel-village-young-man\\voxel-village-young-man.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-young-man.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9777871966362,
+      5.4769991209013824e-8,
+      -0.46382415294647217
+    ],
+    "max": [
+      0.9650700092315674,
+      2,
+      0.10760438442230225
+    ],
+    "size": [
+      1.9428572058677673,
+      1.9999999452300088,
+      0.5714285373687744
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-young-man.collider.json",
+  "producedAt": "2026-07-24T08:22:19.578Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

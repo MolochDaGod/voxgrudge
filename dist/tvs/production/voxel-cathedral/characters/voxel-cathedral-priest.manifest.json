@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-cathedral\\voxel-cathedral-priest\\voxel-cathedral-priest.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\characters\\voxel-cathedral-priest.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.878048837184906,
+      7.552768721552638e-8,
+      -0.21934127807617188
+    ],
+    "max": [
+      0.7804878950119019,
+      2,
+      0.2684636414051056
+    ],
+    "size": [
+      1.6585367321968079,
+      1.9999999244723128,
+      0.48780491948127747
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\characters\\voxel-cathedral-priest.collider.json",
+  "producedAt": "2026-07-24T08:22:02.786Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

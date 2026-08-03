@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-wizards\\voxel-wizards-master-witch\\voxel-wizards-master-witch.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-master-witch.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.910763680934906,
+      8.817859509235859e-8,
+      -0.2482372671365738
+    ],
+    "max": [
+      0.8787099719047546,
+      2,
+      0.38334161043167114
+    ],
+    "size": [
+      1.7894736528396606,
+      1.999999911821405,
+      0.6315788775682449
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-master-witch.collider.json",
+  "producedAt": "2026-07-24T08:22:20.806Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-rangers\\voxel-rangers-long-hair-and-beard\\voxel-rangers-long-hair-and-beard.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-long-hair-and-beard.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.0588234663009644,
+      0,
+      -0.8101330995559692
+    ],
+    "max": [
+      0.9411764740943909,
+      2,
+      -0.11764705926179886
+    ],
+    "size": [
+      1.9999999403953552,
+      2,
+      0.6924860402941704
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-long-hair-and-beard.collider.json",
+  "producedAt": "2026-07-24T08:22:14.443Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

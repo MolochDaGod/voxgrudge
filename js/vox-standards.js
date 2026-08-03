@@ -135,6 +135,45 @@
     CALL_HELP_RADIUS: 22,
   };
 
+  /**
+   * RPG-base combat (vox-rpgbase) — SnS / 2H / block / soft-target.
+   * Runtime: js/vox-rpgbase-combat.js (VoxRpgBase).
+   * Used by: Z-Brawl melee stances, openworld extension, DCQ ports, GRUDOX vox-mods.
+   */
+  var COMBAT = {
+    weapons: ['sns', 'gs'],
+    sns: { range: 2.5, damage: 15, comboMax: 3, blockDr: 0.72 },
+    gs: { range: 4.0, damage: 45, comboMax: 2, blockDr: 0.55 },
+    comboWindowMs: 1200,
+    snapRange: 6,
+    snapCone: 0.4,
+    maxStamina: 100,
+    roles: ['brute', 'skirmisher', 'backliner', 'bodyguard', 'minion', 'elite', 'boss', 'coward'],
+    /** Z-Brawl / survival: hold RMB blocks when melee stance on; F swings */
+    inputs: {
+      attack: ['LMB_melee', 'F', 'melee-btn'],
+      block: ['RMB_hold_melee'],
+      cycleStance: ['Tab', 'Q'],
+      dash: ['Space'],
+    },
+    /** Patterns sourced from @ai-rpg-engine/modules (not a runtime dep) */
+    aiRpgPatterns: ['guardReduction', 'combatRoles', 'combatIntent', 'stamina', 'allyIntercept', 'statusLite'],
+  };
+
+  /** Fleet package expectations for voxel cabinets (see grudge-3d-game-packages). */
+  var FLEET = {
+    threePin: '^0.185.0',
+    legacyCdnNote: 'cdn-r128-pinned still on some HTML shells — migrate loaders carefully',
+    rapier: '@dimforge/rapier3d-compat',
+    controller: 'js/player-controller.js',
+    combat: 'js/vox-rpgbase-combat.js',
+    enemyBrain: 'js/enemy-brain.js',
+    enemyCombat: 'js/enemy-combat.js',
+    openLauncher: 'https://open.grudge-studio.com',
+    grudoxHub: 'https://grudox.grudge-studio.com',
+    identity: 'https://id.grudge-studio.com',
+  };
+
   function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));
   }
@@ -158,6 +197,8 @@
     ASSET: ASSET,
     FLOW: FLOW,
     AI: AI,
+    COMBAT: COMBAT,
+    FLEET: FLEET,
     clamp: clamp,
     unitHeightM: unitHeightM,
     worldRadius: worldRadius,

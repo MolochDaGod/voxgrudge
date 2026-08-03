@@ -1,0 +1,127 @@
+/**
+ * VoxelForge icon UI — inventory slots, vendor rows, command dock
+ * Pair with ui/voxel-icons/voxel-icons.js
+ */
+
+.voxel-icon-cmd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 4px;
+  margin: 2px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  image-rendering: pixelated;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.voxel-icon-cmd:hover,
+.voxel-icon-cmd:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 2px #5eb6e8;
+  outline: none;
+}
+.voxel-icon-cmd img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.voxel-inv-slot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 3px;
+  border-radius: 6px;
+  background: rgba(12, 10, 18, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  image-rendering: pixelated;
+}
+.voxel-inv-slot.equipable {
+  border-color: rgba(232, 196, 106, 0.55);
+}
+.voxel-inv-slot img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.voxel-inv-qty {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font: 700 11px/1 ui-monospace, monospace;
+  color: #f4f0e6;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+
+.voxel-vendor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  margin: 4px 0;
+  cursor: pointer;
+}
+.voxel-vendor-row:hover {
+  background: rgba(94, 182, 232, 0.15);
+}
+.voxel-vendor-row img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+.voxel-vendor-row .nm {
+  flex: 1;
+  font-weight: 700;
+  font-size: 13px;
+  color: #f4f0e6;
+}
+.voxel-vendor-row .blurb {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  color: #9aa3b5;
+  margin-top: 2px;
+}
+.voxel-vendor-row .price {
+  font: 700 12px/1 ui-monospace, monospace;
+  color: #e8c46a;
+}
+
+.voxel-equip-slot {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  border: 1px dashed rgba(232, 196, 106, 0.4);
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.voxel-equip-slot img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.voxel-equip-slot[data-slot]::after {
+  content: attr(data-slot);
+  position: absolute;
+  font-size: 9px;
+  color: #888;
+  bottom: 2px;
+}

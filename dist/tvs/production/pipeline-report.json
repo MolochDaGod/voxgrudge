@@ -1,0 +1,1323 @@
+{
+  "generatedAt": "2026-07-24T08:23:13.854Z",
+  "source": "https://the-voxel-store.itch.io/",
+  "packs": [
+    "voxel-cathedral",
+    "voxel-farm",
+    "voxel-knights",
+    "voxel-palace",
+    "voxel-rangers",
+    "voxel-village",
+    "voxel-wizards"
+  ],
+  "catalogAssets": 880,
+  "rosterUnits": 38,
+  "byRole": {
+    "animations": 75,
+    "characters": 114,
+    "environment": 261,
+    "props": 192,
+    "textures": 199,
+    "animals": 38,
+    "misc": 1
+  },
+  "practices": [
+    "Bake with grudge-convert (fbx2glb/glb2glb) before R2",
+    "Characters: height 2.0m, atlas rebind, collider.json, anims.json",
+    "Static env/props: production GLB, NearestFilter voxel materials",
+    "Runtime: TvsUnitLoader preferGlb + magic-byte verify",
+    "Registry: deterministic UUID from r2Key + D1 seed",
+    "Never HTML fake-200; never untextured capsules as final"
+  ],
+  "results": {
+    "characters": {
+      "ok": 0,
+      "fail": 0
+    },
+    "statics": {
+      "ok": 182,
+      "fail": 0
+    },
+    "rows": [
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-bush.fbx",
+        "grudgeUuid": "59fa5938-e4f3-525b-9c77-ec391c7ca5b1",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\environment\\voxel-cathedral-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-cathedral.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-cathedral.fbx",
+        "grudgeUuid": "99f85320-cf86-5bcf-8684-b27449686865",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\environment\\voxel-cathedral-cathedral.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-cross-grave.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-cross-grave.fbx",
+        "grudgeUuid": "887c377d-5e27-5894-a645-0d5b18638f70",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\environment\\voxel-cathedral-cross-grave.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-grave.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-grave.fbx",
+        "grudgeUuid": "499efc7e-6c57-56f7-a543-cca77432b0b4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\environment\\voxel-cathedral-grave.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-statue.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-statue.fbx",
+        "grudgeUuid": "57f61bde-bf3f-52e8-a5b5-1f6d26b15420",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\environment\\voxel-cathedral-statue.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/environment/voxel-cathedral-tree.fbx",
+        "grudgeUuid": "c7aa7a84-4b87-5f9d-9bca-9e1fadfca058",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\environment\\voxel-cathedral-tree.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-grail.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-grail.fbx",
+        "grudgeUuid": "e2896da6-7d47-5660-8843-349d3175f441",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-grail.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-shield.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-shield.fbx",
+        "grudgeUuid": "f133e566-9668-56fd-b265-421b43c904cf",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-shield.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-spear.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-spear.fbx",
+        "grudgeUuid": "48c7f30a-b958-56c8-b71c-d3c14b7eb850",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-spear.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-staff.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-staff.fbx",
+        "grudgeUuid": "ae99f8c6-0c70-5fbe-aab4-c148f302a8ab",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-staff.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-sword.fbx",
+        "grudgeUuid": "6568d515-f7ed-5271-857b-473a080649da",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-sword.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-tome.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-cathedral/props/voxel-cathedral-tome.fbx",
+        "grudgeUuid": "e8868865-5dcc-590f-9b90-116c1da92ab6",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-cathedral\\props\\voxel-cathedral-tome.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/bull-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/bull-idle-anim.fbx",
+        "grudgeUuid": "0f097cbb-91db-5290-87ba-2490b7696689",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\bull-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/chicken-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/chicken-idle-anim.fbx",
+        "grudgeUuid": "8db553b4-b03e-57ef-bfc2-214437a8bb1c",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\chicken-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/chicken-peck-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/chicken-peck-anim.fbx",
+        "grudgeUuid": "0a990288-94a9-548b-8e82-5249da8cfbe8",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\chicken-peck-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/chicken-walk-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/chicken-walk-anim.fbx",
+        "grudgeUuid": "78dd2ce3-c502-5cf3-a774-354121cc3d20",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\chicken-walk-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/cow-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/cow-idle-anim.fbx",
+        "grudgeUuid": "758ad6b8-5ca8-53c0-adc2-0b73f0b04c71",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\cow-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/cow-walk-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/cow-walk-anim.fbx",
+        "grudgeUuid": "53a99998-0b2b-52a4-832c-d207ba592b10",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\cow-walk-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/duck-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/duck-idle-anim.fbx",
+        "grudgeUuid": "fc836dfd-b6d5-564a-b333-6ed28a553d73",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\duck-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/duck-walk-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/duck-walk-anim.fbx",
+        "grudgeUuid": "e84c1529-d359-5e19-a98e-6fd2ea4cc3b3",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\duck-walk-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/pig-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/pig-idle-anim.fbx",
+        "grudgeUuid": "a30449dc-a6cd-5bfe-819e-ef33f92c83cd",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\pig-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/pig-walk-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/pig-walk-anim.fbx",
+        "grudgeUuid": "80c3a46a-75a0-5ddd-8f5e-2a392ea4fc67",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\pig-walk-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/sheep-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/sheep-idle-anim.fbx",
+        "grudgeUuid": "71227010-6ebb-52b8-8f12-95547460511b",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\sheep-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/sheep-walk-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/sheep-walk-anim.fbx",
+        "grudgeUuid": "dd50d28b-a894-5282-8978-fec93e37fcf9",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\sheep-walk-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/human-dig-anim.fbx",
+        "grudgeUuid": "74abbdbd-f975-594d-9e60-111de254f401",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\human-dig-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/human-idle-anim.fbx",
+        "grudgeUuid": "a21718b0-e2da-54da-9839-c2ff3bc5479f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\human-idle-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/human-jump-anim.fbx",
+        "grudgeUuid": "14fce5ff-61e9-5d29-a448-50db2b74c3cf",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\human-jump-anim.glb"
+      },
+      {
+        "role": "animations",
+        "r2Key": "models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animations/human-walk-anim.fbx",
+        "grudgeUuid": "5fa6a138-6675-5bfc-9e30-904f93bea595",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animations\\human-walk-anim.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-bull.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-bull.fbx",
+        "grudgeUuid": "1e10d4eb-5a90-5249-9b1c-fc20b1bc1905",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-bull.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-chicken.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-chicken.fbx",
+        "grudgeUuid": "bae5494d-64b7-57c6-a359-756a6db0e21b",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-chicken.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-cow.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-cow.fbx",
+        "grudgeUuid": "994db7a5-388f-5f94-b580-3d0789cb28b4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-cow.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-duck.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-duck.fbx",
+        "grudgeUuid": "3b26ea20-8bda-5c60-810c-73f696b4dc1e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-duck.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-goat.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-goat.fbx",
+        "grudgeUuid": "462ee5b2-9ef8-5c72-95ee-0ff35ed92db4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-goat.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-mallard.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-mallard.fbx",
+        "grudgeUuid": "6de98e61-97f4-596e-8c4d-b1b8bb9da21b",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-mallard.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-pig.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-pig.fbx",
+        "grudgeUuid": "c789b605-8a4a-5d31-ad58-f77e4bfddc50",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-pig.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-rooster.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-rooster.fbx",
+        "grudgeUuid": "2aa7036c-7e89-5932-b1ba-dbb95bc06d69",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-rooster.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-farm/animals/voxel-farm-sheep.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/animals/voxel-farm-sheep.fbx",
+        "grudgeUuid": "1acde615-914f-506c-801a-40bbe9dfc3af",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-sheep.glb"
+      },
+      {
+        "role": "characters",
+        "r2Key": "models/voxels/tvs/voxel-farm/characters/voxel-farm-farmer.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/characters/voxel-farm-farmer.fbx",
+        "grudgeUuid": "fcccc488-8e53-5c03-ae25-80ea860ffdd8",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farmer.glb"
+      },
+      {
+        "role": "characters",
+        "r2Key": "models/voxels/tvs/voxel-farm/characters/voxel-farm-farmers-daughter.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/characters/voxel-farm-farmers-daughter.fbx",
+        "grudgeUuid": "c9d28fba-4245-58ce-b458-63ac43a0b4a7",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farmers-daughter.glb"
+      },
+      {
+        "role": "characters",
+        "r2Key": "models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/characters/voxel-farm-farm-hand.fbx",
+        "grudgeUuid": "cb847376-813e-562c-9b46-bba871389d10",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farm-hand.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-apple-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-apple-tree.fbx",
+        "grudgeUuid": "67d5cbed-56b1-5872-a2e4-687cd57595f3",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-apple-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-barn.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-barn.fbx",
+        "grudgeUuid": "d8696d01-477c-51f7-9e93-e743353a113c",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-barn.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-blackberry-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-blackberry-bush.fbx",
+        "grudgeUuid": "8f303961-e54c-5052-8797-a5fd722cb7ce",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-blackberry-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-blueberry-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-blueberry-bush.fbx",
+        "grudgeUuid": "56b9aa76-b364-5af0-9c85-0dfb8b7b70b4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-blueberry-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-empty-trough.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-empty-trough.fbx",
+        "grudgeUuid": "51a997a9-84f7-53e3-ba35-226457d8a3b3",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-empty-trough.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-farm-house.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-farm-house.fbx",
+        "grudgeUuid": "677d2b8b-5745-5ef4-8bbb-7d72df8b2e31",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-farm-house.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-fence.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-fence.fbx",
+        "grudgeUuid": "d12219c7-973c-576a-b33c-160e5ce3bfc0",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-fence.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-fence-post.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-fence-post.fbx",
+        "grudgeUuid": "3f58ef3e-fd39-5b60-b253-64f47c243c59",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-fence-post.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-food-trough.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-food-trough.fbx",
+        "grudgeUuid": "2d496a37-ff87-5cd9-85ed-1383ba0c0925",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-food-trough.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-hay-bale.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-hay-bale.fbx",
+        "grudgeUuid": "7adc6b21-48c9-54da-babb-29eb3778bf2f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-hay-bale.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-lemon-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-lemon-tree.fbx",
+        "grudgeUuid": "ce2a9ac7-c0d3-5492-822d-bf4e9bfe1b7b",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-lemon-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-med-plant.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-med-plant.fbx",
+        "grudgeUuid": "3880f0d9-29ba-554f-b407-2f45b27889ec",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-med-plant.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-orange-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-orange-tree.fbx",
+        "grudgeUuid": "52b4d79a-6ac6-57bd-8b4d-79bd54a307f8",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-orange-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-potato.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-potato.fbx",
+        "grudgeUuid": "3e6fe420-4977-5c88-9313-1d93d85fd21d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-potato.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-pumpkin.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-pumpkin.fbx",
+        "grudgeUuid": "7af3d077-afa1-5a48-92b7-cc001901f389",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-pumpkin.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-soil.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-soil.fbx",
+        "grudgeUuid": "cad1137a-1590-5603-a6db-fe05f944e170",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-soil.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-strawberry-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-strawberry-bush.fbx",
+        "grudgeUuid": "1adf78fc-5d0a-5430-86ad-b012648ff3ce",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-strawberry-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-tomato.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-tomato.fbx",
+        "grudgeUuid": "3159387a-b49b-5d88-8558-c44e8b2aad3e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-tomato.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-tree.fbx",
+        "grudgeUuid": "b62a4056-8434-5ecf-8044-6fce9ff2bdfb",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-water-trough.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-water-trough.fbx",
+        "grudgeUuid": "0546b400-221b-5e83-bab1-797dce601753",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-water-trough.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-wheat.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-wheat.fbx",
+        "grudgeUuid": "6c788ce3-ca04-57b1-bc8d-3e5f083e56b0",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-wheat.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-windmill.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-windmill.fbx",
+        "grudgeUuid": "a2947318-9124-5768-b018-67c8b6a8b5ca",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-windmill.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-farm/environment/voxel-farm-young-plant.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/environment/voxel-farm-young-plant.fbx",
+        "grudgeUuid": "976569cf-6eae-534e-b776-f4b66a31a4f2",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\environment\\voxel-farm-young-plant.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-farm/props/voxel-farm-pitch-fork.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/props/voxel-farm-pitch-fork.fbx",
+        "grudgeUuid": "e8c00b90-0ca2-585f-b4e8-59b9af8c035e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\props\\voxel-farm-pitch-fork.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-farm/props/voxel-farm-scythe.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/props/voxel-farm-scythe.fbx",
+        "grudgeUuid": "b06f7123-0e82-5508-b781-9fbfb8e92cfd",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\props\\voxel-farm-scythe.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-farm/props/voxel-farm-spade.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-farm/props/voxel-farm-spade.fbx",
+        "grudgeUuid": "38414f57-a1d9-51f4-93f0-f3a2870c8e76",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\props\\voxel-farm-spade.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-banner.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-banner.fbx",
+        "grudgeUuid": "6c604856-12bf-5a32-bc96-6e814ed9f337",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-banner.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-bridge.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-bridge.fbx",
+        "grudgeUuid": "cfc1afd3-760d-558a-97ce-b7249745948c",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-bridge.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-bush.fbx",
+        "grudgeUuid": "6b82466b-efb5-5e15-9341-a51c3ca8ba11",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-chair.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-chair.fbx",
+        "grudgeUuid": "ba47ef4e-a8a8-5e07-930a-893b01315aef",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-chair.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-chest.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-chest.fbx",
+        "grudgeUuid": "ba8559a2-5464-5893-a3e5-0c5f2da62fa8",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-chest.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-gate.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-gate.fbx",
+        "grudgeUuid": "5024ecad-499c-512a-aec5-83d9aa5fa7c6",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-gate.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-keep.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-keep.fbx",
+        "grudgeUuid": "41af5d92-d0e5-53ec-9cec-606a485a585d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-keep.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-keg.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-keg.fbx",
+        "grudgeUuid": "f7a6fcea-5425-5175-b675-683bcf29dddb",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-keg.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-statue.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-statue.fbx",
+        "grudgeUuid": "13bccb72-679f-55ff-b772-bfa2ce096658",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-statue.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-stool.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-stool.fbx",
+        "grudgeUuid": "3881fa44-7de3-5bb9-8420-5c1f1a81bade",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-stool.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-table.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-table.fbx",
+        "grudgeUuid": "d59d50f3-bddf-5de6-804c-a69633eb68d3",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-table.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-tower.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-tower.fbx",
+        "grudgeUuid": "388ef60c-9151-5300-8eba-2ce30373ecec",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-tower.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-tower-with-door.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-tower-with-door.fbx",
+        "grudgeUuid": "80e4b4f9-3890-5b82-b60f-d0591a09eb21",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-tower-with-door.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-tree.fbx",
+        "grudgeUuid": "81ee55a9-713a-5ad8-85e5-b1556d388061",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-wall.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-wall.fbx",
+        "grudgeUuid": "d9e9a150-7d6c-5c9c-b1cc-1daafea957ab",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-wall.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-knights/environment/voxel-knights-wall-with-stairs.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/environment/voxel-knights-wall-with-stairs.fbx",
+        "grudgeUuid": "ee2ba80e-59ed-5749-a282-61eb04754661",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\environment\\voxel-knights-wall-with-stairs.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-arrow.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-arrow.fbx",
+        "grudgeUuid": "0f1ef867-4206-5a65-aa0e-b3e15cde55f6",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-arrow.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-axe.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-axe.fbx",
+        "grudgeUuid": "c3e89d59-c1c3-558a-b424-efbf7b26c1fc",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-axe.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-bow.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-bow.fbx",
+        "grudgeUuid": "3d70a738-e9e7-585a-bdbe-9c2951e32971",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-bow.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-captain-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-captain-sword.fbx",
+        "grudgeUuid": "02952e93-0fcb-5e53-9077-0f55af0ca50d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-captain-sword.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-champion-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-champion-sword.fbx",
+        "grudgeUuid": "0798a6e7-d3b8-5424-b77d-fdf0d07c85bd",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-champion-sword.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-commander-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-commander-sword.fbx",
+        "grudgeUuid": "c7bbf453-7828-5b2c-87f7-9d88c0a4cb04",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-commander-sword.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-hammer.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-hammer.fbx",
+        "grudgeUuid": "f9f14442-457c-54c6-842f-9381e82eac1d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-hammer.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-lance.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-lance.fbx",
+        "grudgeUuid": "f7c4ffcf-f516-56aa-a160-34795a6ca6b3",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-lance.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-mace.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-mace.fbx",
+        "grudgeUuid": "21eb3887-a535-55a7-9a09-325e65b4f8e2",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-mace.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-scimitar.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-scimitar.fbx",
+        "grudgeUuid": "5b6cffd0-e8fe-5013-86ad-a21b02d22b15",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-scimitar.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-shield.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-shield.fbx",
+        "grudgeUuid": "33166bd1-35fb-5de1-b337-f07836ee7b9f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-shield.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-spear.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-spear.fbx",
+        "grudgeUuid": "55ea63e6-c248-5521-b47a-0272a7aded1b",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-spear.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-knights/props/voxel-knights-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-knights/props/voxel-knights-sword.fbx",
+        "grudgeUuid": "af732eeb-1ea0-5f5d-83d6-cf6fc8992e7c",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\props\\voxel-knights-sword.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-palace/animals/voxel-palace-corgi.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/animals/voxel-palace-corgi.fbx",
+        "grudgeUuid": "f2c023fb-6c19-53a5-90b9-6040a1210810",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\animals\\voxel-palace-corgi.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-palace/animals/voxel-palace-horse.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/animals/voxel-palace-horse.fbx",
+        "grudgeUuid": "d51d4fa6-e1c6-5473-ab0b-3c297e8cea4e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\animals\\voxel-palace-horse.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-bush.fbx",
+        "grudgeUuid": "ff31d9fb-dadd-540d-8f74-0399310a7662",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-carriage.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-carriage.fbx",
+        "grudgeUuid": "3d28775d-a362-5601-94b3-2349608f3e97",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-carriage.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-fence.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-fence.fbx",
+        "grudgeUuid": "eb3dcd02-bb3c-5545-8620-efc547884dbb",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-fence.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-fence-post.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-fence-post.fbx",
+        "grudgeUuid": "9089a084-5d86-5d8c-80ca-023d10c51d9c",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-fence-post.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-fountain.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-fountain.fbx",
+        "grudgeUuid": "025d130d-11e6-5cd1-9ae0-fe15e2bfabf6",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-fountain.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-palace.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-palace.fbx",
+        "grudgeUuid": "793e188d-d2bb-571a-a3b1-9de8cbfb1208",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-palace.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-potted-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-potted-bush.fbx",
+        "grudgeUuid": "a9bb8ff7-a0f5-5083-8457-660fc2c2a011",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-potted-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-potted-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-potted-tree.fbx",
+        "grudgeUuid": "1c41bbd6-8a4c-58ab-8fa9-4046793e6e81",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-potted-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-palace/environment/voxel-palace-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/environment/voxel-palace-tree.fbx",
+        "grudgeUuid": "aa3bfea5-f0fc-563a-bfb4-d9440e2f3bbc",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\environment\\voxel-palace-tree.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-palace/props/voxel-palace-sceptre.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/props/voxel-palace-sceptre.fbx",
+        "grudgeUuid": "dbdd9073-0ece-5b00-a8b5-911a168721f4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\props\\voxel-palace-sceptre.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-palace/props/voxel-palace-shield.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/props/voxel-palace-shield.fbx",
+        "grudgeUuid": "1d5b7f72-2488-5389-93ca-5b05e89eb1ef",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\props\\voxel-palace-shield.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-palace/props/voxel-palace-spear.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/props/voxel-palace-spear.fbx",
+        "grudgeUuid": "dfa09b4f-81f8-5b53-8b9a-0172c0b1ea43",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\props\\voxel-palace-spear.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-palace/props/voxel-palace-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-palace/props/voxel-palace-sword.fbx",
+        "grudgeUuid": "ea742d29-37d0-5104-80b0-4ddc2b5f62d6",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\props\\voxel-palace-sword.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-banner.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-banner.fbx",
+        "grudgeUuid": "ff3a60bb-4f6d-5c76-b65c-f81f5512f601",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-banner.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-bush.fbx",
+        "grudgeUuid": "d5853654-bea4-5f98-898e-b59b66de074e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-frame1.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-frame1.fbx",
+        "grudgeUuid": "a0fc2df2-3008-59b6-afe4-e68bca48e7b8",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-campfire-frame1.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-frame2.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-frame2.fbx",
+        "grudgeUuid": "e0d906b4-a348-57f4-a4fc-965843cbaa85",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-campfire-frame2.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-frame3.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-frame3.fbx",
+        "grudgeUuid": "23bab1f7-8ba3-57f2-929f-4e54249e2756",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-campfire-frame3.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-campfire-tree.fbx",
+        "grudgeUuid": "34ab49f9-5cf1-5c3d-a80a-f75477675ceb",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-campfire-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-chair.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-chair.fbx",
+        "grudgeUuid": "ea10dc44-f246-566e-b83c-6d2d9cd03dd5",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-chair.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-table.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-table.fbx",
+        "grudgeUuid": "a6fcefc7-8054-5a5d-8ff0-694178c518d3",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-table.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-tent.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-tent.fbx",
+        "grudgeUuid": "a8c6d48a-ea05-532c-8853-4bc31ffffd67",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-tent.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-tower.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-tower.fbx",
+        "grudgeUuid": "509aef25-dff0-5006-bac9-5f786a616529",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-tower.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-tower-with-door.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-tower-with-door.fbx",
+        "grudgeUuid": "446014c6-838a-5d60-8abd-473962f8f3bd",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-tower-with-door.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-wall.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-wall.fbx",
+        "grudgeUuid": "719ce57d-d957-5541-86d4-9cb0bfaae669",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-wall.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-wall-with-ladder.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/environment/voxel-rangers-wall-with-ladder.fbx",
+        "grudgeUuid": "fb4972d8-3dbb-5394-9329-83ab416edd64",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\environment\\voxel-rangers-wall-with-ladder.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-arrow.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-arrow.fbx",
+        "grudgeUuid": "9a6b383b-85c9-556e-a007-67c1985842b6",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-arrow.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-axe.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-axe.fbx",
+        "grudgeUuid": "7adea088-e9c2-57b3-9909-812f9af7683f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-axe.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-bow.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-bow.fbx",
+        "grudgeUuid": "62557722-eab3-579c-8911-f1f426fc9a23",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-bow.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-dagger.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-dagger.fbx",
+        "grudgeUuid": "19672efa-6204-5bb1-9b33-1111359ad7a2",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-dagger.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-hammer.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-hammer.fbx",
+        "grudgeUuid": "c406dd4e-1b02-5663-bde5-ea7214eaf994",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-hammer.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-mace.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-mace.fbx",
+        "grudgeUuid": "bddace3a-40d9-5512-bbe3-82f36f2b0699",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-mace.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-scimitar.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-scimitar.fbx",
+        "grudgeUuid": "1bc0fc13-e136-5059-8ce5-87aaa694af76",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-scimitar.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-shield.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-shield.fbx",
+        "grudgeUuid": "c131ee47-4f89-544b-92c4-c4d035cee363",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-shield.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-spear.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-spear.fbx",
+        "grudgeUuid": "dbc55dc8-5efc-5402-b6f0-131b8ba01b11",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-spear.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-rangers/props/voxel-rangers-sword.fbx",
+        "grudgeUuid": "10edf005-bdfa-5a2e-b22c-e451f0a5c43e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\props\\voxel-rangers-sword.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-barrel.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-barrel.fbx",
+        "grudgeUuid": "96bf0886-0bcb-5088-af29-35134a46e7e7",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-barrel.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-bush.fbx",
+        "grudgeUuid": "b83da3d9-f436-5aef-abd7-5ee2e044645d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-chair.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-chair.fbx",
+        "grudgeUuid": "85bbcd4c-6451-557b-bcb6-a5b87ea8a96e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-chair.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-crate.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-crate.fbx",
+        "grudgeUuid": "54693262-bce6-5217-bea2-551d99ae420d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-crate.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-fence.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-fence.fbx",
+        "grudgeUuid": "2f4ebf6e-d89b-5350-ab3f-fc54aa8b7376",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-fence.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-fence-post.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-fence-post.fbx",
+        "grudgeUuid": "d856ca25-5deb-5376-9dd3-9322bcf2d28f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-fence-post.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-house.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-house.fbx",
+        "grudgeUuid": "25a28afd-e2e1-5d2a-97af-1743786f212d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-house.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-inn.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-inn.fbx",
+        "grudgeUuid": "b082acc1-6dec-5461-a0e5-51cc3c66e436",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-inn.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-lamppost.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-lamppost.fbx",
+        "grudgeUuid": "0a79f3f4-2f32-589f-b8d8-cae9a950470f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-lamppost.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-market-box.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-market-box.fbx",
+        "grudgeUuid": "d67506bf-f68f-55e4-be10-e23cabb3f141",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-market-box.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-shop.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-shop.fbx",
+        "grudgeUuid": "8d38e707-cdc1-575e-9831-a87866a6ecb4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-shop.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-stall.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-stall.fbx",
+        "grudgeUuid": "d69cd6c8-0cdb-5b4a-809c-94a1f7f5a808",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-stall.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-table.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-table.fbx",
+        "grudgeUuid": "7007c0a4-5a66-5bab-892d-a28ff7db6af5",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-table.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-tree.fbx",
+        "grudgeUuid": "71c2f91a-868f-59d5-bc43-77f959efcd4b",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-tree.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-village/environment/voxel-village-triple-lamppost.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/environment/voxel-village-triple-lamppost.fbx",
+        "grudgeUuid": "950595ef-4299-5724-8ec5-5c0c8e3f0f4e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\environment\\voxel-village-triple-lamppost.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-apple.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-apple.fbx",
+        "grudgeUuid": "efd9a6c2-ec86-5b05-bc22-0b81464046f1",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-apple.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-beer.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-beer.fbx",
+        "grudgeUuid": "e61357f9-f872-507f-b02d-260c45939fbe",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-beer.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-beer-glass.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-beer-glass.fbx",
+        "grudgeUuid": "c06305ac-bc86-552d-b46f-e794b148c906",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-beer-glass.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-blue-gem.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-blue-gem.fbx",
+        "grudgeUuid": "143c56f6-ce18-5310-9a24-68f277eb5724",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-blue-gem.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-bread-bun.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-bread-bun.fbx",
+        "grudgeUuid": "d673ebd6-e0e0-5596-9cc7-dabbcafdf8d5",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-bread-bun.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-bread-loaf.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-bread-loaf.fbx",
+        "grudgeUuid": "4a9dd223-1ed4-54c5-a1c1-71c5755d8d89",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-bread-loaf.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-butcher-knife.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-butcher-knife.fbx",
+        "grudgeUuid": "2443b186-0bcc-57ce-9232-359e3392efd2",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-butcher-knife.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-chicken-leg.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-chicken-leg.fbx",
+        "grudgeUuid": "1771973f-29fc-5790-af39-90ddb2a7cbde",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-chicken-leg.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-coin.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-coin.fbx",
+        "grudgeUuid": "205ae81f-004f-5dc3-9358-729c59351a8f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-coin.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-coin-purse.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-coin-purse.fbx",
+        "grudgeUuid": "8bb20db8-de24-50fb-9de6-5b1dbf9dd4a1",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-coin-purse.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-gold-bar.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-gold-bar.fbx",
+        "grudgeUuid": "ab65b2b6-2515-5f0c-a38c-1034757a03f1",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-gold-bar.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-grapes.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-grapes.fbx",
+        "grudgeUuid": "1c3a174a-5c77-5c01-b0a8-2072cd9e216d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-grapes.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-green-gem.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-green-gem.fbx",
+        "grudgeUuid": "d7779c1e-30d5-55ab-b438-83fbba9c321d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-green-gem.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-keg.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-keg.fbx",
+        "grudgeUuid": "e46e8d77-167b-5b1c-b90a-af83ba0e6ee7",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-keg.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-pie.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-pie.fbx",
+        "grudgeUuid": "c2fba02a-8434-5dfd-9802-d87d66a32d69",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-pie.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-pork-chop.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-pork-chop.fbx",
+        "grudgeUuid": "e0993ef8-cdb1-52da-b052-013f2743a19c",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-pork-chop.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-red-gem.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-red-gem.fbx",
+        "grudgeUuid": "c3a30878-800c-5eee-a767-cdf8564ae03d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-red-gem.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-sausage.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-sausage.fbx",
+        "grudgeUuid": "6e4a1e0b-212f-55a1-ad7a-99a1194fc7ef",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-sausage.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-sausage-links.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-sausage-links.fbx",
+        "grudgeUuid": "776830b6-21e4-5551-abb2-ec6e811f2a8e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-sausage-links.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-village/props/voxel-village-tomatoes.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-village/props/voxel-village-tomatoes.fbx",
+        "grudgeUuid": "df80e1f2-2393-5e37-abfc-5970a2f79bcf",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\props\\voxel-village-tomatoes.glb"
+      },
+      {
+        "role": "animals",
+        "r2Key": "models/voxels/tvs/voxel-wizards/animals/voxel-wizards-owl.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/animals/voxel-wizards-owl.fbx",
+        "grudgeUuid": "c531172b-724f-5f43-839b-e049a79be3cf",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\animals\\voxel-wizards-owl.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-bush.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-bush.fbx",
+        "grudgeUuid": "99497e9e-b1b3-5481-9691-c9d271b93b75",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\environment\\voxel-wizards-bush.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-stone.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-stone.fbx",
+        "grudgeUuid": "6d7f0114-844a-59f7-a875-2cb74b7e6edc",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\environment\\voxel-wizards-stone.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-sword-in-stone.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-sword-in-stone.fbx",
+        "grudgeUuid": "fc35a564-8bd3-5f0c-95df-2ec02c86712e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\environment\\voxel-wizards-sword-in-stone.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-tower.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-tower.fbx",
+        "grudgeUuid": "44d47ad8-ef46-5ae1-84ac-2fa48c6dbdf2",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\environment\\voxel-wizards-tower.glb"
+      },
+      {
+        "role": "environment",
+        "r2Key": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-tree.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/environment/voxel-wizards-tree.fbx",
+        "grudgeUuid": "f5323567-050e-5f15-a8c1-e7b3de49033e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\environment\\voxel-wizards-tree.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-blue-potion.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-blue-potion.fbx",
+        "grudgeUuid": "7901634b-952a-5106-a716-e87c43c55f71",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-blue-potion.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-broom.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-broom.fbx",
+        "grudgeUuid": "41ba325f-3eb4-5f3a-9218-3c3fc740bef4",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-broom.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-green-potion.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-green-potion.fbx",
+        "grudgeUuid": "11d2cf56-afb1-560d-9ed5-264f6ae0a22f",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-green-potion.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-red-potion.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-red-potion.fbx",
+        "grudgeUuid": "65f00c53-455a-5470-8325-ca3a18bb7b06",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-red-potion.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-staff.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-staff.fbx",
+        "grudgeUuid": "91216724-c4db-598f-9fae-d6a4e15cab3d",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-staff.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-sword.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-sword.fbx",
+        "grudgeUuid": "e2ddea0b-d44a-5071-8bb6-2e9843635c8e",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-sword.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-wand.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-wand.fbx",
+        "grudgeUuid": "298f61ce-d301-5d4c-bc90-fae1792d93c9",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-wand.glb"
+      },
+      {
+        "role": "props",
+        "r2Key": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-yellow-potion.glb",
+        "sourceFbx": "models/voxels/tvs/voxel-wizards/props/voxel-wizards-yellow-potion.fbx",
+        "grudgeUuid": "276b0ca9-7176-5e40-8bfa-4d2fe69175b7",
+        "local": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\props\\voxel-wizards-yellow-potion.glb"
+      }
+    ]
+  },
+  "outputs": {
+    "productionDir": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production",
+    "catalogProduction": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\catalog.production.json",
+    "d1Seed": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\d1-registry-seed-tvs.json"
+  }
+}

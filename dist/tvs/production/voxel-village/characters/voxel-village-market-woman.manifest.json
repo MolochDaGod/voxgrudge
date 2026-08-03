@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-village\\voxel-village-market-woman\\voxel-village-market-woman.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-market-woman.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.006894826889038,
+      5.2938034400540346e-8,
+      -0.7338920831680298
+    ],
+    "max": [
+      0.9931049346923828,
+      2,
+      0.08963722735643387
+    ],
+    "size": [
+      1.999999761581421,
+      1.9999999470619656,
+      0.8235293105244637
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-market-woman.collider.json",
+  "producedAt": "2026-07-24T08:22:17.349Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

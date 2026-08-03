@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-rangers\\voxel-rangers-hooded\\voxel-rangers-hooded.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-hooded.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.0290367603302002,
+      6.295426402402882e-8,
+      -0.43711885809898376
+    ],
+    "max": [
+      0.9709631204605103,
+      2,
+      0.2687634229660034
+    ],
+    "size": [
+      1.9999998807907104,
+      1.999999937045736,
+      0.7058822810649872
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-rangers\\characters\\voxel-rangers-hooded.collider.json",
+  "producedAt": "2026-07-24T08:22:12.739Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

@@ -10,7 +10,9 @@
     "dev:game": "node scripts/dev-static.mjs",
     "dev:server": "npm run dev --prefix server",
     "dev:check": "node scripts/health-dev.mjs",
-    "verify": "node scripts/verify-assets.mjs && node scripts/verify-hud-icons.mjs",
+    "sync:rpgbase": "node scripts/sync-vox-rpgbase.mjs",
+    "sync:rpgbase:check": "node scripts/sync-vox-rpgbase.mjs --check",
+    "verify": "node scripts/verify-assets.mjs && node scripts/verify-hud-icons.mjs && node scripts/sync-vox-rpgbase.mjs --check",
     "verify:hud-icons": "node scripts/verify-hud-icons.mjs",
     "verify:assets": "node scripts/verify-assets.mjs",
     "verify:assets:cdn": "node scripts/verify-assets.mjs --cdn-only",
@@ -30,6 +32,9 @@
     "pipeline:tvs:audit": "node scripts/pipeline-tvs-full.mjs",
     "pipeline:tvs:chars": "node scripts/pipeline-tvs-full.mjs --characters",
     "pipeline:tvs:statics": "node scripts/pipeline-tvs-full.mjs --statics",
+    "pipeline:tvs:anims": "node scripts/pipeline-tvs-anims.mjs",
+    "pipeline:tvs:anims:upload": "node scripts/pipeline-tvs-anims.mjs --upload",
+    "seed:tvs:d1": "node scripts/seed-tvs-d1.mjs",
     "pipeline:tvs:full": "node scripts/pipeline-tvs-full.mjs --all",
     "pipeline:tvs:full:upload": "node scripts/pipeline-tvs-full.mjs --all --upload",
     "upload:tvs": "node scripts/upload-tvs-production.mjs",
@@ -43,6 +48,24 @@
     "node": ">=18"
   },
   "grudgeThreeTrack": "cdn-r128-pinned",
+  "grudgeFleetPackages": {
+    "gameplay": ["js/vox-rpgbase-combat.js", "js/enemy-brain.js", "js/enemy-combat.js"],
+    "controller": "js/player-controller.js",
+    "camera": "js/vox-standards.js#CAMERA",
+    "savesIdentity": "open.grudge-studio.com + id.grudge-studio.com",
+    "assets": "assets.grudge-studio.com",
+    "targetThree": "^0.185.0",
+    "targetPhysics": "@dimforge/rapier3d-compat@^0.19.0",
+    "aiRpgEngine": {
+      "package": "@ai-rpg-engine/modules@3.5.0",
+      "use": "pattern source only — combat roles/intent/guard/status; do not bundle into HTML shells",
+      "doc": "docs/AI_RPG_ENGINE_GAP.md"
+    },
+    "note": "HTML shells still pin three r128 via CDN; shared modules are engine-agnostic. Migrate per-game carefully."
+  },
+  "optionalDevPatterns": {
+    "@ai-rpg-engine/modules": "Text-sim combat/roles/intent — ported into VoxRpgBase; install only for content tooling"
+  },
   "grudgeAssets": {
     "cdn": "https://assets.grudge-studio.com",
     "appPrefix": "voxgrudge",

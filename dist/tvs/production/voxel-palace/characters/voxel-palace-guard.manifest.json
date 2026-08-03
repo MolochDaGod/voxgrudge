@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-palace\\voxel-palace-guard\\voxel-palace-guard.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\characters\\voxel-palace-guard.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.8742309808731079,
+      3.568968054423749e-8,
+      -0.550169050693512
+    ],
+    "max": [
+      0.8693587779998779,
+      2,
+      0.16777965426445007
+    ],
+    "size": [
+      1.7435897588729858,
+      1.9999999643103195,
+      0.717948704957962
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\characters\\voxel-palace-guard.collider.json",
+  "producedAt": "2026-07-24T08:22:09.255Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

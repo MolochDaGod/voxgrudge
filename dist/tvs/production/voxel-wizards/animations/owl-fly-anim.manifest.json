@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\animations\\owl-fly-anim.raw.glb",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\animations\\owl-fly-anim.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 26,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.6000549333170568,
+      -1,
+      -0.33329264198736536
+    ],
+    "max": [
+      0.6000549333170568,
+      1,
+      0.33329264198736536
+    ],
+    "size": [
+      1.2001098666341137,
+      2,
+      0.6665852839747307
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T09:57:17.780Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

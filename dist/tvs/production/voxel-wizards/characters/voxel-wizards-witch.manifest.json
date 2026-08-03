@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-wizards\\voxel-wizards-witch\\voxel-wizards-witch.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-witch.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9074642062187195,
+      8.577413979082849e-8,
+      -0.26299574971199036
+    ],
+    "max": [
+      0.8820093274116516,
+      2,
+      0.36858317255973816
+    ],
+    "size": [
+      1.789473533630371,
+      1.9999999142258602,
+      0.6315789222717285
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-wizards\\characters\\voxel-wizards-witch.collider.json",
+  "producedAt": "2026-07-24T08:22:22.462Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

@@ -518,6 +518,34 @@
     _meta.grudgeId = lsGet('grudge_id');
     _meta.username = lsGet('grudge_username');
 
+    // Open → VoxGrudge handoff: ?characterId=&grudge_token=&open=1&from=gameopen
+    try {
+      if (global.FleetCharacterHandoff) {
+        var hand = global.FleetCharacterHandoff.parseHandoff();
+        if (hand.token) global.FleetCharacterHandoff.applyToken(hand.token);
+        if (hand.characterId) {
+          _meta.characterId = hand.characterId;
+          lsSet('vox_character_id', hand.characterId);
+        }
+      } else {
+        // Fallback parse without module
+        var q = new URLSearchParams(global.location.search || '');
+        var tok = q.get('grudge_token') || q.get('sso') || q.get('token');
+        if (tok) {
+          lsSet('grudge_auth_token', tok);
+          lsSet('grudge_session_token', tok);
+          lsSet('sso_token', tok);
+        }
+        var cid = q.get('characterId') || q.get('character');
+        if (cid) {
+          _meta.characterId = cid;
+          lsSet('vox_character_id', cid);
+        }
+      }
+    } catch (eHand) {
+      console.warn('[VoxCloud] handoff parse', eHand);
+    }
+
     if (global.GrudgeAuth && typeof global.GrudgeAuth.pickup === 'function') {
       try { await global.GrudgeAuth.pickup(); } catch (e) { /* */ }
     }
@@ -529,6 +557,9 @@
     }
 
     await refreshRoster();
+    // Prefer URL characterId over roster[0]
+    var preferId = lsGet('vox_character_id') || _meta.characterId;
+    if (preferId) _meta.characterId = preferId;
     updateAccountBar();
 
     // Re-render chars strip

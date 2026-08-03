@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-farm\\voxel-farm-farm-hand\\voxel-farm-farm-hand.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farm-hand.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.0617320537567139,
+      0,
+      -0.4128957986831665
+    ],
+    "max": [
+      1.0617320537567139,
+      2,
+      0.17695535719394684
+    ],
+    "size": [
+      2.1234641075134277,
+      2,
+      0.5898511558771133
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farm-hand.collider.json",
+  "producedAt": "2026-07-24T09:55:22.404Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

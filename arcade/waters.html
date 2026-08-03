@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Live Waters · GRUDOX Arcade</title>
+    <meta name="description" content="Live Waters naval skirmish + TVS Peon Wars RTS on GRUDOX." />
+    <link rel="icon" type="image/png" href="/grudox-logo.png" />
+    <style>
+      :root { --bg:#071018; --gold:#d4af37; --text:#e8f0f8; --muted:#7a90a0; --panel:rgba(8,16,24,.9); }
+      * { box-sizing: border-box; }
+      html, body { margin:0; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:Inter,system-ui,sans-serif; }
+      #game { position:fixed; inset:0; }
+      #top {
+        position:fixed; left:0; right:0; top:0; z-index:12; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;
+        padding:.55rem .75rem; background:linear-gradient(180deg,#071018f0,transparent); pointer-events:none;
+      }
+      #top .chip { pointer-events:none; background:var(--panel); border:1px solid #1e3a4a; border-radius:6px; padding:.35rem .6rem; font-size:.78rem; }
+      #top b { color:var(--gold); }
+      #bar {
+        position:fixed; left:0; right:0; bottom:0; z-index:12; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center;
+        padding:.55rem .75rem; background:var(--panel); border-top:1px solid #1e3a4a;
+      }
+      #bar a, #bar button {
+        appearance:none; border:1px solid #1e3a4a; background:#0e1a24; color:var(--text);
+        padding:.4rem .65rem; border-radius:6px; font-size:.7rem; font-weight:700; letter-spacing:.06em;
+        text-transform:uppercase; text-decoration:none; cursor:pointer;
+      }
+      #bar a.primary, #bar button.primary { border-color:var(--gold); color:var(--gold); }
+      #msg { position:fixed; left:50%; bottom:4.2rem; transform:translateX(-50%); z-index:12; background:var(--panel);
+        border:1px solid #2a4a5a; border-radius:8px; padding:.4rem .8rem; font-size:.8rem; color:#cfe8f8; max-width:90vw; text-align:center; }
+      .help { margin-left:auto; color:var(--muted); font-size:.68rem; }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="top">
+      <div class="chip">Live Waters <b>10× sea</b></div>
+      <div class="chip">Net <b id="net">…</b></div>
+      <div class="chip">HP <b id="hp">—</b></div>
+      <div class="chip">Kills <b id="kills">0</b></div>
+      <div class="chip">Players <b id="players">1</b></div>
+    </div>
+    <div id="msg">Click sea to plot course · hold LMB drag to orbit · 1–5 weapons when live</div>
+    <div id="bar">
+      <a href="/arcade/">← Arcade</a>
+      <a href="/">Hub</a>
+      <a class="primary" href="/arcade/play/peon-wars">TVS Peon Wars RTS</a>
+      <button type="button" id="btnRespawn">Respawn</button>
+      <span class="help">Offline skirmish always runs · live room joins when /api/space is up</span>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+      /**
+       * Waters offline skirmish + live probe.
+       * Arena half-extent 6000 matches space-net SHIP.arena (10× original 600).
+       */
+      (function () {
+        var SEA_HALF = 6000;
+        var container = document.getElementById("game");
+        var w = window.innerWidth, h = window.innerHeight;
+        var scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x6eb6e0);
+        scene.fog = new THREE.Fog(0x6eb6e0, SEA_HALF * 0.25, SEA_HALF * 1.6);
+
+        var camera = new THREE.PerspectiveCamera(55, w / h, 2, SEA_HALF * 3.5);
+        var renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+        renderer.setSize(w, h);
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.HemisphereLight(0xddeeff, 0x224466, 0.85));
+        var sun = new THREE.DirectionalLight(0xfff5dd, 0.9);
+        sun.position.set(SEA_HALF * 0.1, SEA_HALF * 0.2, SEA_HALF * 0.05);
+        scene.add(sun);
+
+        // Water plane
+        var water = new THREE.Mesh(
+          new THREE.PlaneGeometry(SEA_HALF * 2.15, SEA_HALF * 2.15, 64, 64),
+          new THREE.MeshStandardMaterial({ color: 0x1f6a9a, metalness: 0.15, roughness: 0.35 })
+        );
+        water.rotation.x = -Math.PI / 2;
+        scene.add(water);
+
+        // Boundary ring
+        var ring = new THREE.Mesh(
+          new THREE.RingGeometry(SEA_HALF - 40, SEA_HALF, 128),
+          new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 2;
+        scene.add(ring);
+
+        function makeShip(color, len) {
+          var g = new THREE.Group();
+          var hull = new THREE.Mesh(
+            new THREE.BoxGeometry(len * 0.28, len * 0.12, len),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 })
+          );
+          hull.position.y = len * 0.08;
+          g.add(hull);
+          var mast = new THREE.Mesh(
+            new THREE.CylinderGeometry(len * 0.02, len * 0.025, len * 0.55, 8),
+            new THREE.MeshStandardMaterial({ color: 0x5a4030 })
+          );
+          mast.position.y = len * 0.4;
+          g.add(mast);
+          var sail = new THREE.Mesh(
+            new THREE.PlaneGeometry(len * 0.35, len * 0.4),
+            new THREE.MeshStandardMaterial({ color: 0xf5f0e6, side: THREE.DoubleSide })
+          );
+          sail.position.set(0, len * 0.42, 0);
+          g.add(sail);
+          return g;
+        }
+
+        var player = {
+          mesh: makeShip(0x3b82f6, 150),
+          x: 0, z: 0, yaw: 0, hp: 100, maxHp: 100, speed: 70, alive: true, kills: 0,
+          course: null,
+        };
+        player.mesh.position.set(0, 0, 0);
+        scene.add(player.mesh);
+
+        var enemies = [];
+        for (var i = 0; i < 5; i++) {
+          var e = {
+            mesh: makeShip(0xef4444, 140 + Math.random() * 40),
+            x: (Math.random() - 0.5) * SEA_HALF * 1.2,
+            z: (Math.random() - 0.5) * SEA_HALF * 1.2,
+            yaw: Math.random() * Math.PI * 2,
+            hp: 80, maxHp: 80, speed: 55 + Math.random() * 20, alive: true, fireCd: 0,
+          };
+          e.mesh.position.set(e.x, 0, e.z);
+          scene.add(e.mesh);
+          enemies.push(e);
+        }
+
+        var projectiles = [];
+        var cam = { yaw: Math.PI, pitch: 0.95, dist: 480 };
+        var dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
+        var raycaster = new THREE.Raycaster();
+        var ndc = new THREE.Vector2();
+        var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        var hit = new THREE.Vector3();
+        var keys = {};
+        var netStatus = "offline";
+        var ws = null;
+
+        function setNet(s) {
+          netStatus = s;
+          document.getElementById("net").textContent = s;
+        }
+
+        function probeLive() {
+          setNet("probing");
+          var proto = location.protocol === "https:" ? "wss:" : "ws:";
+          var url = proto + "//" + location.host + "/api/space";
+          try {
+            ws = new WebSocket(url);
+            var t = setTimeout(function () {
+              if (ws && ws.readyState !== 1) {
+                try { ws.close(); } catch (e) {}
+                setNet("offline skirmish");
+                document.getElementById("msg").textContent =
+                  "Live room offline — local AI skirmish on 10× sea (arena half=" + SEA_HALF + "). Or play Peon Wars RTS.";
+              }
+            }, 2500);
+            ws.onopen = function () {
+              clearTimeout(t);
+              setNet("live /api/space");
+              document.getElementById("msg").textContent =
+                "Connected to live waters room. Full cabinet still uses monorepo WatersGame when arcade SPA is rebuilt; this shell stays playable.";
+              // Keep offline sim as visual until full protocol client is wired
+            };
+            ws.onerror = function () {
+              clearTimeout(t);
+              setNet("offline skirmish");
+            };
+            ws.onclose = function () {
+              if (netStatus !== "live /api/space") setNet("offline skirmish");
+            };
+          } catch (e) {
+            setNet("offline skirmish");
+          }
+        }
+
+        function groundFromEvent(ev) {
+          var rect = renderer.domElement.getBoundingClientRect();
+          ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+          ndc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(ndc, camera);
+          if (raycaster.ray.intersectPlane(plane, hit)) return hit.clone();
+          return null;
+        }
+
+        renderer.domElement.addEventListener("mousedown", function (e) {
+          if (e.button !== 0) return;
+          dragging = true;
+          downX = lastX = e.clientX;
+          downY = lastY = e.clientY;
+        });
+        window.addEventListener("mousemove", function (e) {
+          if (!dragging) return;
+          var dx = e.clientX - lastX;
+          var dy = e.clientY - lastY;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          cam.yaw -= dx * 0.0065;
+          cam.pitch = Math.max(0.35, Math.min(1.35, cam.pitch + dy * 0.004));
+        });
+        window.addEventListener("mouseup", function (e) {
+          if (!dragging) return;
+          dragging = false;
+          if (Math.abs(e.clientX - downX) < 4 && Math.abs(e.clientY - downY) < 4 && player.alive) {
+            var p = groundFromEvent(e);
+            if (p) {
+              var lim = SEA_HALF - 80;
+              player.course = {
+                x: Math.max(-lim, Math.min(lim, p.x)),
+                z: Math.max(-lim, Math.min(lim, p.z)),
+              };
+              document.getElementById("msg").textContent = "Course plotted (" + (player.course.x | 0) + ", " + (player.course.z | 0) + ")";
+            }
+          }
+        });
+        renderer.domElement.addEventListener("wheel", function (e) {
+          e.preventDefault();
+          cam.dist = Math.max(160, Math.min(2800, cam.dist + e.deltaY * 0.35));
+        }, { passive: false });
+        window.addEventListener("keydown", function (e) { keys[e.code] = true; });
+        window.addEventListener("keyup", function (e) { keys[e.code] = false; });
+        window.addEventListener("resize", function () {
+          w = window.innerWidth; h = window.innerHeight;
+          camera.aspect = w / h; camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        });
+        document.getElementById("btnRespawn").onclick = function () {
+          player.alive = true; player.hp = player.maxHp; player.x = 0; player.z = 0; player.course = null;
+        };
+
+        function fireAt(from, to, color) {
+          var dx = to.x - from.x, dz = to.z - from.z;
+          var d = Math.hypot(dx, dz) || 1;
+          projectiles.push({
+            mesh: new THREE.Mesh(new THREE.SphereGeometry(4, 8, 8), new THREE.MeshBasicMaterial({ color: color })),
+            x: from.x, z: from.z, vx: (dx / d) * 220, vz: (dz / d) * 220, life: 2.5, team: from === player ? "p" : "e",
+          });
+          scene.add(projectiles[projectiles.length - 1].mesh);
+        }
+
+        var clock = new THREE.Clock();
+        var fireCd = 0;
+        function loop() {
+          requestAnimationFrame(loop);
+          var dt = Math.min(0.05, clock.getDelta());
+          fireCd = Math.max(0, fireCd - dt);
+
+          if (player.alive && player.course) {
+            var dx = player.course.x - player.x;
+            var dz = player.course.z - player.z;
+            var d = Math.hypot(dx, dz);
+            if (d < 20) player.course = null;
+            else {
+              var targetYaw = Math.atan2(dx, dz);
+              var dyaw = targetYaw - player.yaw;
+              while (dyaw > Math.PI) dyaw -= Math.PI * 2;
+              while (dyaw < -Math.PI) dyaw += Math.PI * 2;
+              player.yaw += Math.max(-1.2 * dt, Math.min(1.2 * dt, dyaw));
+              player.x += Math.sin(player.yaw) * player.speed * dt;
+              player.z += Math.cos(player.yaw) * player.speed * dt;
+            }
+          }
+          if (keys.KeyQ) cam.yaw += 1.35 * dt;
+          if (keys.KeyE) cam.yaw -= 1.35 * dt;
+
+          player.mesh.position.set(player.x, 0, player.z);
+          player.mesh.rotation.y = player.yaw;
+
+          // AI enemies
+          enemies.forEach(function (e) {
+            if (!e.alive) return;
+            e.fireCd = Math.max(0, e.fireCd - dt);
+            var dx = player.x - e.x, dz = player.z - e.z;
+            var d = Math.hypot(dx, dz);
+            var targetYaw = Math.atan2(dx, dz);
+            var dyaw = targetYaw - e.yaw;
+            while (dyaw > Math.PI) dyaw -= Math.PI * 2;
+            while (dyaw < -Math.PI) dyaw += Math.PI * 2;
+            e.yaw += Math.max(-1 * dt, Math.min(1 * dt, dyaw));
+            if (d > 200) {
+              e.x += Math.sin(e.yaw) * e.speed * dt;
+              e.z += Math.cos(e.yaw) * e.speed * dt;
+            }
+            // clamp arena
+            var lim = SEA_HALF - 100;
+            e.x = Math.max(-lim, Math.min(lim, e.x));
+            e.z = Math.max(-lim, Math.min(lim, e.z));
+            e.mesh.position.set(e.x, 0, e.z);
+            e.mesh.rotation.y = e.yaw;
+            if (player.alive && d < 700 && e.fireCd <= 0) {
+              fireAt(e, player, 0xff6644);
+              e.fireCd = 1.4 + Math.random();
+            }
+          });
+
+          // player auto-fire nearest
+          if (player.alive && fireCd <= 0) {
+            var best = null, bd = 750;
+            enemies.forEach(function (e) {
+              if (!e.alive) return;
+              var d = Math.hypot(e.x - player.x, e.z - player.z);
+              if (d < bd) { bd = d; best = e; }
+            });
+            if (best) {
+              fireAt(player, best, 0x88ccff);
+              fireCd = 0.9;
+            }
+          }
+
+          for (var i = projectiles.length - 1; i >= 0; i--) {
+            var p = projectiles[i];
+            p.life -= dt;
+            p.x += p.vx * dt; p.z += p.vz * dt;
+            p.mesh.position.set(p.x, 12, p.z);
+            var hitSomething = false;
+            if (p.team === "e" && player.alive && Math.hypot(p.x - player.x, p.z - player.z) < 40) {
+              player.hp -= 8; hitSomething = true;
+              if (player.hp <= 0) { player.alive = false; player.hp = 0; document.getElementById("msg").textContent = "Ship destroyed — Respawn."; }
+            }
+            if (p.team === "p") {
+              enemies.forEach(function (e) {
+                if (!e.alive) return;
+                if (Math.hypot(p.x - e.x, p.z - e.z) < 40) {
+                  e.hp -= 18; hitSomething = true;
+                  if (e.hp <= 0) {
+                    e.alive = false; scene.remove(e.mesh); player.kills++;
+                    // respawn far
+                    setTimeout(function () {
+                      e.alive = true; e.hp = e.maxHp;
+                      e.x = (Math.random() - 0.5) * SEA_HALF; e.z = (Math.random() - 0.5) * SEA_HALF;
+                      scene.add(e.mesh);
+                    }, 3000);
+                  }
+                }
+              });
+            }
+            if (p.life <= 0 || hitSomething) {
+              scene.remove(p.mesh);
+              projectiles.splice(i, 1);
+            }
+          }
+
+          // camera follow
+          var cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+          camera.position.set(
+            player.x - Math.sin(cam.yaw) * cam.dist * cp,
+            cam.dist * sp,
+            player.z - Math.cos(cam.yaw) * cam.dist * cp
+          );
+          camera.lookAt(player.x, 20, player.z);
+
+          document.getElementById("hp").textContent = (player.hp | 0) + "/" + player.maxHp;
+          document.getElementById("kills").textContent = player.kills;
+          document.getElementById("players").textContent = 1 + enemies.filter(function (e) { return e.alive; }).length;
+          renderer.render(scene, camera);
+        }
+        loop();
+        probeLive();
+      })();
+    </script>
+  </body>
+</html>

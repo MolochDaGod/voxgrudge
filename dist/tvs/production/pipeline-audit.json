@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-07-24T08:04:33.982Z",
+  "source": "https://the-voxel-store.itch.io/",
+  "packs": [
+    "voxel-cathedral",
+    "voxel-farm",
+    "voxel-knights",
+    "voxel-palace",
+    "voxel-rangers",
+    "voxel-village",
+    "voxel-wizards"
+  ],
+  "catalogAssets": 880,
+  "rosterUnits": 38,
+  "byRole": {
+    "animations": 75,
+    "characters": 114,
+    "environment": 261,
+    "props": 192,
+    "textures": 199,
+    "animals": 38,
+    "misc": 1
+  },
+  "practices": [
+    "Bake with grudge-convert (fbx2glb/glb2glb) before R2",
+    "Characters: height 2.0m, atlas rebind, collider.json, anims.json",
+    "Static env/props: production GLB, NearestFilter voxel materials",
+    "Runtime: TvsUnitLoader preferGlb + magic-byte verify",
+    "Registry: deterministic UUID from r2Key + D1 seed",
+    "Never HTML fake-200; never untextured capsules as final"
+  ]
+}

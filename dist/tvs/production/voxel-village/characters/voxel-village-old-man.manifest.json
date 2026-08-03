@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-village\\voxel-village-old-man\\voxel-village-old-man.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-old-man.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.9974423050880432,
+      5.631320831867015e-8,
+      -0.47788137197494507
+    ],
+    "max": [
+      1.0025575160980225,
+      2,
+      0.11035387217998505
+    ],
+    "size": [
+      1.9999998211860657,
+      1.9999999436867917,
+      0.5882352441549301
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-old-man.collider.json",
+  "producedAt": "2026-07-24T08:22:17.917Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

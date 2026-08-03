@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "packs": {
+    "mining-ops": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "action_bar(11)",
+        "command(11)",
+        "hotkey(11)",
+        "inventory(8)",
+        "build_menu(6)"
+      ],
+      "primarySurface": "build_bar",
+      "how": "Inventory materials/tools, craft stations, build menu, vendor goods/stations"
+    },
+    "command-actions": {
+      "count": 25,
+      "topUses": [
+        "action_bar(25)",
+        "codex(25)",
+        "command(25)",
+        "hotkey(25)",
+        "rts_order(25)"
+      ],
+      "primarySurface": "codex",
+      "how": "Command dock / RTS orders / action bar — not bag items"
+    },
+    "mining-blocks": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(21)",
+        "vendor_goods(11)",
+        "material(9)",
+        "vendor_buy_sell(9)",
+        "craft_recipe(7)"
+      ],
+      "primarySurface": "codex",
+      "how": "Inventory materials/tools, craft stations, build menu, vendor goods/stations"
+    },
+    "mining-gear": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(13)",
+        "vendor_goods(12)",
+        "build_menu(12)",
+        "craft_station(8)",
+        "vendor_station(8)"
+      ],
+      "primarySurface": "codex",
+      "how": "Inventory materials/tools, craft stations, build menu, vendor goods/stations"
+    },
+    "crafting-stations": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(14)",
+        "build_menu(11)",
+        "vendor_goods(11)",
+        "craft_station(8)",
+        "vendor_station(8)"
+      ],
+      "primarySurface": "build_bar",
+      "how": "Inventory materials/tools, craft stations, build menu, vendor goods/stations"
+    },
+    "industrial-gear": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(18)",
+        "vendor_goods(16)",
+        "equipment(8)",
+        "vendor_gear(8)",
+        "build_menu(8)"
+      ],
+      "primarySurface": "codex",
+      "how": "Inventory materials/tools, craft stations, build menu, vendor goods/stations"
+    },
+    "heavy-gear": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(17)",
+        "vendor_goods(15)",
+        "build_menu(10)",
+        "equipment(7)",
+        "vendor_gear(7)"
+      ],
+      "primarySurface": "codex",
+      "how": "Inventory materials/tools, craft stations, build menu, vendor goods/stations"
+    },
+    "ops-tier-1": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "inventory(17)",
+        "vendor_goods(15)",
+        "craft_recipe(11)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "ops-tier-2": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "inventory(17)",
+        "vendor_goods(15)",
+        "craft_recipe(12)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "ops-tier-3": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "inventory(19)",
+        "vendor_goods(17)",
+        "craft_recipe(14)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "ops-tier-4": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "inventory(17)",
+        "vendor_goods(15)",
+        "craft_recipe(11)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "ops-tier-5": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "inventory(19)",
+        "vendor_goods(17)",
+        "craft_recipe(13)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "ops-tier-6": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "inventory(17)",
+        "vendor_goods(15)",
+        "craft_recipe(12)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "fantasy-common": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "equipment(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "vendor_gear(25)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "fantasy-rare": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "equipment(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "vendor_gear(25)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "fantasy-epic": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "equipment(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "vendor_gear(25)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "fantasy-legendary": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "equipment(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "vendor_gear(25)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "tactical-common": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "equipment(24)",
+        "vendor_gear(24)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "tactical-rare": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "equipment(24)",
+        "vendor_gear(24)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "tactical-epic": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "equipment(24)",
+        "vendor_gear(24)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "tactical-legendary": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(25)",
+        "progression(25)",
+        "tiered_gear(25)",
+        "equipment(24)",
+        "vendor_gear(24)"
+      ],
+      "primarySurface": "codex",
+      "how": "Equipment + vendor gear tabs; inventory equip by slot"
+    },
+    "projectiles-fx": {
+      "count": 25,
+      "topUses": [
+        "codex(25)",
+        "inventory(16)",
+        "ammo(13)",
+        "combat_item(13)",
+        "vendor_goods(13)",
+        "ability_fx(8)"
+      ],
+      "primarySurface": "codex",
+      "how": "Ammo / combat items / VFX skill icons"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-palace__animations__horse-eat-anim.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-palace\\animations\\horse-eat-anim.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 1,
+    "nodes": 31,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.012000000104308128,
+      0,
+      -0.01899999938905239
+    ],
+    "max": [
+      0.0009999989997595549,
+      0.02499999850988388,
+      0.029999999329447746
+    ],
+    "size": [
+      0.012999999104067683,
+      0.02499999850988388,
+      0.04899999871850014
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T09:56:30.207Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

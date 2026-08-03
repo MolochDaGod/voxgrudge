@@ -1,0 +1,111 @@
+{
+  "unitId": "voxel-village-market-woman",
+  "skeleton": "humanoid",
+  "classHint": "civilian",
+  "preferGlb": true,
+  "clips": {
+    "idle": {
+      "id": "human-bar-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.glb",
+      "grudgeUuid": "54d83481-5945-5373-97ad-62f7a38472f7"
+    },
+    "locomotion": {
+      "id": "human-drunk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-drunk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-drunk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-drunk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-drunk-anim.glb",
+      "grudgeUuid": "1b0b39a5-ddc8-5e09-b4ab-d00a889034e9"
+    },
+    "jump": {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-jump-anim.glb",
+      "grudgeUuid": "248f2ac4-80b4-5875-8c07-7ea9470c0c13"
+    },
+    "sit": {
+      "id": "human-sitting-anim",
+      "semantic": "sit",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-sitting-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-sitting-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-sitting-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-sitting-anim.glb",
+      "grudgeUuid": "e7fb6ab6-5e72-58aa-bf87-6956ccc6dc58"
+    }
+  },
+  "allClips": [
+    {
+      "id": "human-bar-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-bar-idle-anim.glb",
+      "grudgeUuid": "54d83481-5945-5373-97ad-62f7a38472f7"
+    },
+    {
+      "id": "human-barter-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-barter-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-barter-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-barter-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-barter-anim.glb",
+      "grudgeUuid": "9320df0f-5605-5e7a-9b8c-8176fc6327ca"
+    },
+    {
+      "id": "human-drunk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-drunk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-drunk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-drunk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-drunk-anim.glb",
+      "grudgeUuid": "1b0b39a5-ddc8-5e09-b4ab-d00a889034e9"
+    },
+    {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-idle-anim.glb",
+      "grudgeUuid": "368dfd4c-0f29-5108-baed-bd612bfec92b"
+    },
+    {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-jump-anim.glb",
+      "grudgeUuid": "248f2ac4-80b4-5875-8c07-7ea9470c0c13"
+    },
+    {
+      "id": "human-sitting-anim",
+      "semantic": "sit",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-sitting-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-sitting-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-sitting-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-sitting-anim.glb",
+      "grudgeUuid": "e7fb6ab6-5e72-58aa-bf87-6956ccc6dc58"
+    },
+    {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-village/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-village/animations/human-walk-anim.glb",
+      "grudgeUuid": "a5334548-d343-5dff-9e19-e0f5673b5420"
+    }
+  ],
+  "generatedAt": "2026-07-24T09:57:31.182Z",
+  "pipeline": "pipeline-tvs-anims"
+}

@@ -1,0 +1,129 @@
+{
+  "unitId": "voxel-wizards-master-witch",
+  "skeleton": "humanoid",
+  "classHint": "magic",
+  "preferGlb": true,
+  "clips": {
+    "idle": {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-idle-anim.glb",
+      "grudgeUuid": "b8e2c3ec-a3f8-54c9-a57c-c839fa76b723"
+    },
+    "locomotion": {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-walk-anim.glb",
+      "grudgeUuid": "f09e2cac-6196-580c-a673-ce30ef7cb673"
+    },
+    "attack": {
+      "id": "human-magic-block-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.glb",
+      "grudgeUuid": "6ff1a92e-b59b-54ea-915e-2f9d50f31b24"
+    },
+    "jump": {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-jump-anim.glb",
+      "grudgeUuid": "34347b12-a3f0-59ac-a0f6-5cd4ed95d97e"
+    }
+  },
+  "allClips": [
+    {
+      "id": "owl-fly-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/owl-fly-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/owl-fly-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/owl-fly-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/owl-fly-anim.glb",
+      "grudgeUuid": "8be5071b-9ce1-596c-9313-65475bbb087b"
+    },
+    {
+      "id": "owl-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/owl-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/owl-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/owl-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/owl-idle-anim.glb",
+      "grudgeUuid": "0dd56002-4294-5231-b239-6fffce23304c"
+    },
+    {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-idle-anim.glb",
+      "grudgeUuid": "b8e2c3ec-a3f8-54c9-a57c-c839fa76b723"
+    },
+    {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-jump-anim.glb",
+      "grudgeUuid": "34347b12-a3f0-59ac-a0f6-5cd4ed95d97e"
+    },
+    {
+      "id": "human-magic-block-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-magic-block-anim.glb",
+      "grudgeUuid": "6ff1a92e-b59b-54ea-915e-2f9d50f31b24"
+    },
+    {
+      "id": "human-riding-broom-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-riding-broom-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-riding-broom-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-riding-broom-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-riding-broom-anim.glb",
+      "grudgeUuid": "4eb70d0f-3271-5fbc-ab29-f70aa6b41f9d"
+    },
+    {
+      "id": "human-staff-spell-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-staff-spell-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-staff-spell-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-staff-spell-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-staff-spell-anim.glb",
+      "grudgeUuid": "a2c552e9-1c4b-5fba-8382-ac86c48690fa"
+    },
+    {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-walk-anim.glb",
+      "grudgeUuid": "f09e2cac-6196-580c-a673-ce30ef7cb673"
+    },
+    {
+      "id": "human-wand-spell-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-wand-spell-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-wand-spell-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-wizards/animations/human-wand-spell-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-wizards/animations/human-wand-spell-anim.glb",
+      "grudgeUuid": "22c68089-6ee1-5ae6-b89f-576b1e92aad6"
+    }
+  ],
+  "generatedAt": "2026-07-24T09:57:31.218Z",
+  "pipeline": "pipeline-tvs-anims"
+}

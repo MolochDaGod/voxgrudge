@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\models__voxels__tvs__voxel-farm__animals__voxel-farm-mallard.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\animals\\voxel-farm-mallard.raw.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 22,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.0034739237744361162,
+      0,
+      -0.004000000189989805
+    ],
+    "max": [
+      0.003526075975969434,
+      0.012000000104308128,
+      0.008999999612569809
+    ],
+    "size": [
+      0.00699999975040555,
+      0.012000000104308128,
+      0.012999999802559614
+    ],
+    "bodyOnly": false
+  },
+  "collider": null,
+  "producedAt": "2026-07-24T08:23:46.213Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 512,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

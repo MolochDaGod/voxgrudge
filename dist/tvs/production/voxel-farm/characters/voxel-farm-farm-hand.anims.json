@@ -1,0 +1,192 @@
+{
+  "unitId": "voxel-farm-farm-hand",
+  "skeleton": "humanoid",
+  "classHint": "civilian",
+  "preferGlb": true,
+  "clips": {
+    "idle": {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+      "grudgeUuid": "47cf34fc-effc-57cd-a611-394d045efb4e"
+    },
+    "locomotion": {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+      "grudgeUuid": "ef833856-f4c6-51bd-8d7a-e7076b91df51"
+    },
+    "attack": {
+      "id": "human-dig-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-dig-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+      "grudgeUuid": "a045325a-cc15-5d49-9734-e937f4bbdadb"
+    },
+    "jump": {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+      "grudgeUuid": "d576df98-f7ce-502f-85aa-f003a530bef8"
+    }
+  },
+  "allClips": [
+    {
+      "id": "bull-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/bull-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/bull-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/bull-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/bull-idle-anim.glb",
+      "grudgeUuid": "92b7d9d5-53a3-50e4-b1e2-5d195f7a65d8"
+    },
+    {
+      "id": "chicken-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/chicken-idle-anim.glb",
+      "grudgeUuid": "2288b196-4f84-55c0-99aa-c6228e9bd2af"
+    },
+    {
+      "id": "chicken-peck-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-peck-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-peck-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-peck-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/chicken-peck-anim.glb",
+      "grudgeUuid": "b9c4ab21-c152-59c4-be1f-c08630807b28"
+    },
+    {
+      "id": "chicken-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/chicken-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/chicken-walk-anim.glb",
+      "grudgeUuid": "98b0485c-3f58-5f32-9d3d-ebfa50295b69"
+    },
+    {
+      "id": "cow-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/cow-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/cow-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/cow-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/cow-idle-anim.glb",
+      "grudgeUuid": "39249b2b-2f28-5394-bede-b01527050889"
+    },
+    {
+      "id": "cow-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/cow-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/cow-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/cow-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/cow-walk-anim.glb",
+      "grudgeUuid": "8186c54c-9062-5c36-b20b-92a59ad89601"
+    },
+    {
+      "id": "duck-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/duck-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/duck-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/duck-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/duck-idle-anim.glb",
+      "grudgeUuid": "2766500e-2fa4-59ab-bfaf-8d96a56738f2"
+    },
+    {
+      "id": "duck-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/duck-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/duck-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/duck-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/duck-walk-anim.glb",
+      "grudgeUuid": "7b26a033-2c1d-58c3-aecc-12ae22997776"
+    },
+    {
+      "id": "pig-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/pig-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/pig-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/pig-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/pig-idle-anim.glb",
+      "grudgeUuid": "2297418c-3a4e-5dd6-b8b7-a2608f0f303f"
+    },
+    {
+      "id": "pig-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/pig-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/pig-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/pig-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/pig-walk-anim.glb",
+      "grudgeUuid": "e53ac196-d104-5166-9ac3-8d603e8adac1"
+    },
+    {
+      "id": "sheep-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/sheep-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/sheep-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/sheep-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/sheep-idle-anim.glb",
+      "grudgeUuid": "9f951bd9-4e9b-50a0-a47f-a0ac010eb64b"
+    },
+    {
+      "id": "sheep-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/sheep-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/sheep-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/sheep-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/sheep-walk-anim.glb",
+      "grudgeUuid": "4aee5864-6446-599d-95c6-870c065b4a83"
+    },
+    {
+      "id": "human-dig-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-dig-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-dig-anim.glb",
+      "grudgeUuid": "a045325a-cc15-5d49-9734-e937f4bbdadb"
+    },
+    {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-idle-anim.glb",
+      "grudgeUuid": "47cf34fc-effc-57cd-a611-394d045efb4e"
+    },
+    {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-jump-anim.glb",
+      "grudgeUuid": "d576df98-f7ce-502f-85aa-f003a530bef8"
+    },
+    {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-farm/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-farm/animations/human-walk-anim.glb",
+      "grudgeUuid": "ef833856-f4c6-51bd-8d7a-e7076b91df51"
+    }
+  ],
+  "generatedAt": "2026-07-24T09:57:31.042Z",
+  "pipeline": "pipeline-tvs-anims"
+}

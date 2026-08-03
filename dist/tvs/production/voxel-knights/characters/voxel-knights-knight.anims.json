@@ -1,0 +1,192 @@
+{
+  "unitId": "voxel-knights-knight",
+  "skeleton": "humanoid",
+  "classHint": "melee",
+  "preferGlb": true,
+  "clips": {
+    "idle": {
+      "id": "human-banner-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.glb",
+      "grudgeUuid": "695aa313-2ec6-528a-9702-658633c237ca"
+    },
+    "locomotion": {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-walk-anim.glb",
+      "grudgeUuid": "4303c2b1-69d8-586f-8462-a8d8e29a3e81"
+    },
+    "attack": {
+      "id": "human-slash-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-slash-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-slash-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-slash-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-slash-anim.glb",
+      "grudgeUuid": "4fb33242-3111-5d21-a544-9878cbd001d4"
+    },
+    "defend": {
+      "id": "human-defend-anim",
+      "semantic": "defend",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-defend-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-defend-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-defend-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-defend-anim.glb",
+      "grudgeUuid": "24649e77-0517-5f37-baa9-2ef5462f9fd7"
+    },
+    "jump": {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-jump-anim.glb",
+      "grudgeUuid": "51758d0d-418a-520f-a44a-61dfa46d2099"
+    },
+    "sit": {
+      "id": "human-sitting-anim",
+      "semantic": "sit",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-sitting-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-sitting-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-sitting-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-sitting-anim.glb",
+      "grudgeUuid": "68c0d608-a2a0-5157-8fee-89cd1bc1c9e2"
+    }
+  },
+  "allClips": [
+    {
+      "id": "horse-buck-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-buck-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-buck-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-buck-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/horse-buck-anim.glb",
+      "grudgeUuid": "803fd6e8-37d6-5bf6-bd37-34006f513b2c"
+    },
+    {
+      "id": "horse-eat-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-eat-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-eat-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-eat-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/horse-eat-anim.glb",
+      "grudgeUuid": "74267d2a-a348-5158-be43-78e55844d1f5"
+    },
+    {
+      "id": "horse-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/horse-idle-anim.glb",
+      "grudgeUuid": "e21a1889-59dd-5dec-8439-25d5cde89bd3"
+    },
+    {
+      "id": "horse-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/horse-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/horse-walk-anim.glb",
+      "grudgeUuid": "01fcb263-6451-5b8b-8724-7a81c1f84a4b"
+    },
+    {
+      "id": "human-aim-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-aim-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-aim-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-aim-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-aim-anim.glb",
+      "grudgeUuid": "e9cc2dcc-8242-5b41-b1b7-b6e7246c6084"
+    },
+    {
+      "id": "human-banner-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-banner-idle-anim.glb",
+      "grudgeUuid": "695aa313-2ec6-528a-9702-658633c237ca"
+    },
+    {
+      "id": "human-command-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-command-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-command-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-command-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-command-anim.glb",
+      "grudgeUuid": "18cdf0cb-df1c-539f-87a3-8b09682b8c41"
+    },
+    {
+      "id": "human-defend-anim",
+      "semantic": "defend",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-defend-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-defend-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-defend-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-defend-anim.glb",
+      "grudgeUuid": "24649e77-0517-5f37-baa9-2ef5462f9fd7"
+    },
+    {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-idle-anim.glb",
+      "grudgeUuid": "a1106847-1a39-589f-9487-664bec660993"
+    },
+    {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-jump-anim.glb",
+      "grudgeUuid": "51758d0d-418a-520f-a44a-61dfa46d2099"
+    },
+    {
+      "id": "human-mounted-anim",
+      "semantic": "other",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-mounted-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-mounted-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-mounted-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-mounted-anim.glb",
+      "grudgeUuid": "13035c85-ae17-5225-b701-0af57bbbef36"
+    },
+    {
+      "id": "human-sitting-anim",
+      "semantic": "sit",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-sitting-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-sitting-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-sitting-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-sitting-anim.glb",
+      "grudgeUuid": "68c0d608-a2a0-5157-8fee-89cd1bc1c9e2"
+    },
+    {
+      "id": "human-slash-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-slash-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-slash-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-slash-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-slash-anim.glb",
+      "grudgeUuid": "4fb33242-3111-5d21-a544-9878cbd001d4"
+    },
+    {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-knights/animations/human-walk-anim.glb",
+      "grudgeUuid": "4303c2b1-69d8-586f-8462-a8d8e29a3e81"
+    }
+  ],
+  "generatedAt": "2026-07-24T09:57:31.077Z",
+  "pipeline": "pipeline-tvs-anims"
+}

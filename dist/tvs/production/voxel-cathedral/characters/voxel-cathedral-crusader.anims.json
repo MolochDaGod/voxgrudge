@@ -1,0 +1,147 @@
+{
+  "unitId": "voxel-cathedral-crusader",
+  "skeleton": "humanoid",
+  "classHint": "melee",
+  "preferGlb": true,
+  "clips": {
+    "idle": {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.glb",
+      "grudgeUuid": "e8a37edc-c544-5be8-83f4-0648ee3a04ae"
+    },
+    "locomotion": {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.glb",
+      "grudgeUuid": "2961b457-bcbd-5d16-bf73-1d3bc99133d3"
+    },
+    "attack": {
+      "id": "human-slash-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.glb",
+      "grudgeUuid": "44b7a8fa-7f2f-5363-9dd9-d10741bd9f73"
+    },
+    "defend": {
+      "id": "human-defend-anim",
+      "semantic": "defend",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.glb",
+      "grudgeUuid": "7737a442-c443-50e8-87e4-7a4fa05b64d3"
+    },
+    "jump": {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.glb",
+      "grudgeUuid": "1b199c9e-e56c-5b44-bf9d-9e61373561d1"
+    },
+    "sit": {
+      "id": "human-sitting-anim",
+      "semantic": "sit",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.glb",
+      "grudgeUuid": "94eca401-fef4-5e53-b327-6eda2d6b43c1"
+    },
+    "emote": {
+      "id": "human-praying-anim",
+      "semantic": "emote",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.glb",
+      "grudgeUuid": "4abe8b66-b118-5f83-a4c0-9079f2b1ffc1"
+    }
+  },
+  "allClips": [
+    {
+      "id": "human-defend-anim",
+      "semantic": "defend",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-defend-anim.glb",
+      "grudgeUuid": "7737a442-c443-50e8-87e4-7a4fa05b64d3"
+    },
+    {
+      "id": "human-idle-anim",
+      "semantic": "idle",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-idle-anim.glb",
+      "grudgeUuid": "e8a37edc-c544-5be8-83f4-0648ee3a04ae"
+    },
+    {
+      "id": "human-jump-anim",
+      "semantic": "jump",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-jump-anim.glb",
+      "grudgeUuid": "1b199c9e-e56c-5b44-bf9d-9e61373561d1"
+    },
+    {
+      "id": "human-praying-anim",
+      "semantic": "emote",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-praying-anim.glb",
+      "grudgeUuid": "4abe8b66-b118-5f83-a4c0-9079f2b1ffc1"
+    },
+    {
+      "id": "human-preach-anim",
+      "semantic": "emote",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-preach-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-preach-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-preach-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-preach-anim.glb",
+      "grudgeUuid": "6473f2d9-f1d5-5574-85a7-6b8b452d4117"
+    },
+    {
+      "id": "human-sitting-anim",
+      "semantic": "sit",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-sitting-anim.glb",
+      "grudgeUuid": "94eca401-fef4-5e53-b327-6eda2d6b43c1"
+    },
+    {
+      "id": "human-slash-anim",
+      "semantic": "attack",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-slash-anim.glb",
+      "grudgeUuid": "44b7a8fa-7f2f-5363-9dd9-d10741bd9f73"
+    },
+    {
+      "id": "human-walk-anim",
+      "semantic": "locomotion",
+      "url": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.glb",
+      "glbUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.glb",
+      "fbxUrl": "https://assets.grudge-studio.com/models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.fbx",
+      "r2Key": "models/voxels/tvs/voxel-cathedral/animations/human-walk-anim.glb",
+      "grudgeUuid": "2961b457-bcbd-5d16-bf73-1d3bc99133d3"
+    }
+  ],
+  "generatedAt": "2026-07-24T09:57:30.997Z",
+  "pipeline": "pipeline-tvs-anims"
+}

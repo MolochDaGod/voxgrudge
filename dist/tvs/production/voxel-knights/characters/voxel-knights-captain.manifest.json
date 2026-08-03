@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-knights\\voxel-knights-captain\\voxel-knights-captain.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\characters\\voxel-knights-captain.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -0.8375350832939148,
+      3.216420552121235e-8,
+      -0.5051077604293823
+    ],
+    "max": [
+      0.8624649047851562,
+      2,
+      0.14742249250411987
+    ],
+    "size": [
+      1.699999988079071,
+      1.9999999678357945,
+      0.6525302529335022
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-knights\\characters\\voxel-knights-captain.collider.json",
+  "producedAt": "2026-07-24T08:22:06.079Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

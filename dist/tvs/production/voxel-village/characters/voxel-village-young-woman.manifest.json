@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-village\\voxel-village-young-woman\\voxel-village-young-woman.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-young-woman.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.001508116722107,
+      4.9747015395951166e-8,
+      -0.49465495347976685
+    ],
+    "max": [
+      0.9413490295410156,
+      2,
+      0.07677361369132996
+    ],
+    "size": [
+      1.9428571462631226,
+      1.9999999502529846,
+      0.5714285671710968
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-village\\characters\\voxel-village-young-woman.collider.json",
+  "producedAt": "2026-07-24T08:22:20.183Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

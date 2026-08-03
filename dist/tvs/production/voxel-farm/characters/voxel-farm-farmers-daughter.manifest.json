@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\voxgrudge\\dist\\tvs\\work\\voxel-farm\\voxel-farm-farmers-daughter\\voxel-farm-farmers-daughter.fbx",
+  "output": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farmers-daughter.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 1,
+    "animations": 0,
+    "nodes": 28,
+    "skins": 1
+  },
+  "aabb": {
+    "min": [
+      -1.0018621683120728,
+      5.384997336932429e-8,
+      -0.4930006265640259
+    ],
+    "max": [
+      0.9981377124786377,
+      2,
+      0.09523463249206543
+    ],
+    "size": [
+      1.9999998807907104,
+      1.9999999461500266,
+      0.5882352590560913
+    ],
+    "bodyOnly": false
+  },
+  "collider": "F:\\GitHub\\voxgrudge\\dist\\tvs\\production\\voxel-farm\\characters\\voxel-farm-farmers-daughter.collider.json",
+  "producedAt": "2026-07-24T09:55:20.467Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "png",
+    "maxTexture": 256,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}
