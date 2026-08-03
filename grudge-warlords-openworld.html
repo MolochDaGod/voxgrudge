@@ -319,10 +319,12 @@ body.game-cursor-on,#c.game-cursor-on{cursor:none!important}
 
   <div id="vox-panel-hero" class="vox-section-panel">
     <div class="vox-container" style="width:min(96vw,980px);margin:0 auto">
-      <div class="vox-container__header"><h2 class="vox-container__title">TVS hero · scale · texture · production GLB</h2></div>
+      <div class="vox-container__header"><h2 class="vox-container__title">Voxel race · avatar · production GLB</h2></div>
       <div class="vox-container__body">
         <div id="tvs-hero-preview" aria-label="Hero 3D preview (2m stick)"></div>
         <div id="skin-picker">
+          <div class="skin-picker-label">Voxel race avatar (default per race · free-rpg T-pose heroes)</div>
+          <div id="voxel-race-row" class="char-select-row" aria-label="Voxel race selection"></div>
           <div class="skin-picker-label">TVS Hero (carousel · D1/R2 · compressed GLB when available)</div>
           <div id="tvs-hero-carousel" aria-label="TVS hero carousel"></div>
           <div id="tvs-unit-row" class="char-select-row" style="display:none"></div>
@@ -1043,6 +1045,104 @@ let blockInstMesh, blockDirty = false;
 let dayTimer = 0, dayNumber = 1, isNight = false, nightRaidCount = 0, raidAlertTimer = 0;
 let DAY_LEN = 90, NIGHT_LEN = 60;
 let playerClass = null;
+/** Selected voxel race avatar (free-rpg T-pose unitId) — not grudge6 */
+let playerVoxelRaceId = null;
+
+/**
+ * Default playable voxel race avatars — Free RPG / TVS free-rpg GLBs.
+ * One mesh per race body type (DungeonCrawler free pack).
+ */
+const VOXEL_RACE_DEFAULTS = [
+  { id: 'human', name: 'Human', unitId: 'free-rpg-00-tpose-character', glb: 'models/voxels/free-rpg/TPose_Character.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🧑', classHint: 'melee' },
+  { id: 'human-f', name: 'Human ♀', unitId: 'free-rpg-01-tpose-character01', glb: 'models/voxels/free-rpg/TPose_Character01.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '👩', classHint: 'melee' },
+  { id: 'orc', name: 'Orc', unitId: 'free-rpg-02-tpose-character02', glb: 'models/voxels/free-rpg/TPose_Character02.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '👹', classHint: 'melee' },
+  { id: 'elf', name: 'Elf', unitId: 'free-rpg-03-tpose-character03', glb: 'models/voxels/free-rpg/TPose_Character03.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🧝', classHint: 'ranged' },
+  { id: 'dwarf', name: 'Dwarf', unitId: 'free-rpg-04-tpose-character04', glb: 'models/voxels/free-rpg/TPose_Character04.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🧔', classHint: 'melee' },
+  { id: 'goblin', name: 'Goblin', unitId: 'free-rpg-05-tpose-character05', glb: 'models/voxels/free-rpg/TPose_Character05.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '👺', classHint: 'rogue' },
+  { id: 'undead', name: 'Undead', unitId: 'free-rpg-06-tpose-character06', glb: 'models/voxels/free-rpg/TPose_Character06.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '💀', classHint: 'magic' },
+  { id: 'troll', name: 'Troll', unitId: 'free-rpg-07-tpose-character07', glb: 'models/voxels/free-rpg/TPose_Character07.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🧌', classHint: 'melee' },
+  { id: 'knight', name: 'Knight', unitId: 'free-rpg-08-tpose-character08', glb: 'models/voxels/free-rpg/TPose_Character08.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🛡️', classHint: 'melee' },
+  { id: 'mage', name: 'Mage', unitId: 'free-rpg-09-tpose-character09', glb: 'models/voxels/free-rpg/TPose_Character09.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🔮', classHint: 'magic' },
+  { id: 'ranger', name: 'Ranger', unitId: 'free-rpg-10-tpose-character10', glb: 'models/voxels/free-rpg/TPose_Character10.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🏹', classHint: 'ranged' },
+  { id: 'rogue', name: 'Rogue', unitId: 'free-rpg-11-tpose-character11', glb: 'models/voxels/free-rpg/TPose_Character11.glb', tex: 'models/voxels/free-rpg/DungeonCrawler_Character.png', emoji: '🗡️', classHint: 'rogue' },
+];
+
+function voxelRaceToUnit(race) {
+  if (!race) return null;
+  const glb = (window.GrudgeAssets && GrudgeAssets.localOrR2)
+    ? GrudgeAssets.localOrR2(race.glb)
+    : ('/' + race.glb.replace(/^\//, ''));
+  const tex = (window.GrudgeAssets && GrudgeAssets.localOrR2)
+    ? GrudgeAssets.localOrR2(race.tex)
+    : ('/' + race.tex.replace(/^\//, ''));
+  return {
+    unitId: race.unitId,
+    displayName: race.name + ' (voxel race)',
+    label: race.name,
+    glbUrl: glb,
+    modelUrl: glb,
+    textureUrl: tex,
+    heightM: 2.0,
+    pack: 'free-rpg',
+    classHint: race.classHint || 'melee',
+    tags: ['free-rpg', 'voxel', 'race-default', race.id],
+    raceId: race.id,
+  };
+}
+
+function selectVoxelRace(raceId) {
+  const race = VOXEL_RACE_DEFAULTS.find(function (r) { return r.id === raceId; });
+  if (!race) return;
+  playerVoxelRaceId = race.id;
+  const unit = voxelRaceToUnit(race);
+  // Prefer TVS unit loader path so preview + spawn share one object shape
+  if (unit && typeof selectTvsUnit === 'function') {
+    selectTvsUnit(unit);
+  } else {
+    playerTvsUnit = unit;
+    playerTvsUnitId = unit.unitId;
+    if (typeof refreshHeroPreview === 'function') refreshHeroPreview(unit);
+  }
+  // Highlight race cards
+  document.querySelectorAll('#voxel-race-row .char-card').forEach(function (c) {
+    c.classList.toggle('sel', c.dataset.raceId === raceId);
+  });
+  // Ensure start is available once class + race picked
+  const sb = document.getElementById('start-btn');
+  if (sb && playerClass) {
+    sb.classList.remove('hidden');
+    sb.disabled = false;
+  }
+}
+
+function renderVoxelRacePicker() {
+  const row = document.getElementById('voxel-race-row');
+  if (!row) return;
+  row.innerHTML = '';
+  VOXEL_RACE_DEFAULTS.forEach(function (race) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'char-card voxel-race-card' + (playerVoxelRaceId === race.id ? ' sel' : '');
+    card.dataset.raceId = race.id;
+    card.dataset.unitId = race.unitId;
+    const texUrl = (window.GrudgeAssets && GrudgeAssets.localOrR2)
+      ? GrudgeAssets.localOrR2(race.tex)
+      : race.tex;
+    card.innerHTML =
+      '<div class="char-swatch" style="background-image:url(\'' + texUrl + '\');display:flex;align-items:center;justify-content:center;font-size:22px">' +
+      (race.emoji || '') +
+      '</div>' +
+      '<div class="char-name">' + race.name + '</div>' +
+      '<div class="char-tag">race</div>';
+    card.title = race.name + ' · voxel free-rpg · ' + race.unitId;
+    card.onclick = function () { selectVoxelRace(race.id); };
+    row.appendChild(card);
+  });
+  // Default first race if none chosen (so Hero tab is never empty)
+  if (!playerVoxelRaceId && VOXEL_RACE_DEFAULTS[0]) {
+    selectVoxelRace(VOXEL_RACE_DEFAULTS[0].id);
+  }
+}
 let playerCombatant = null;
 let playerFightState = { lastDamagedBy: null, grudgeReady: true };
 let playerSkinBody = 'a';
@@ -1433,14 +1533,21 @@ function renderTvsUnitPicker(){
     });
   }
   updateSkinPickerUI();
+  // Voxel race avatars (free-rpg) — paint immediately so Hero tab is usable offline
+  try{ renderVoxelRacePicker(); }catch(eRace){ console.warn('[voxel-race]', eRace); }
   if(window.TvsUnitLoader){
     TvsUnitLoader.loadTvsRoster().then(function(r){
       tvsRosterCache = r;
       function afterRosterReady(){
+        renderVoxelRacePicker();
         renderTvsUnitPicker();
         refreshTvsHeroCarousel();
-        if(playerTvsUnit) refreshHeroPreview(playerTvsUnit);
-        else if(tvsRosterCache.units && tvsRosterCache.units[0]){
+        // Prefer selected voxel race avatar over random TVS roster unit
+        if(playerVoxelRaceId && playerTvsUnit){
+          refreshHeroPreview(playerTvsUnit);
+        } else if(playerTvsUnit){
+          refreshHeroPreview(playerTvsUnit);
+        } else if(tvsRosterCache.units && tvsRosterCache.units[0]){
           const pref = playerClass ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass) : tvsRosterCache.units[0];
           if(pref){ playerTvsUnit = pref; playerTvsUnitId = pref.unitId; refreshHeroPreview(pref); }
         }
@@ -2506,18 +2613,23 @@ function init(){
       console.warn('[VoxGrudge] fleet handoff error', handErr);
     }
 
-    // 2) TVS voxel hero (D1/R2)
+    // 2) Selected voxel race avatar (free-rpg defaults) or TVS unit (D1/R2)
     try {
       if(!window.TvsUnitLoader) throw new Error('TvsUnitLoader missing');
       if(!tvsRosterCache) tvsRosterCache = await TvsUnitLoader.loadTvsRoster();
       else if(TvsUnitLoader.normalizeRoster) tvsRosterCache = TvsUnitLoader.normalizeRoster(tvsRosterCache);
       let unit = playerTvsUnit;
+      // Prefer explicit voxel race selection over class-matched TVS
+      if(playerVoxelRaceId){
+        const race = VOXEL_RACE_DEFAULTS.find(function(r){ return r.id===playerVoxelRaceId; });
+        if(race) unit = voxelRaceToUnit(race);
+      }
       if(!unit && playerTvsUnitId) unit = TvsUnitLoader.findUnit(tvsRosterCache, playerTvsUnitId);
       if(!unit) unit = TvsUnitLoader.pickBestUnit
         ? TvsUnitLoader.pickBestUnit(tvsRosterCache, playerClass)
         : (TvsUnitLoader.pickUnit && TvsUnitLoader.pickUnit(tvsRosterCache, playerClass));
       if(!unit) throw new Error('no TVS unit');
-      unit = TvsUnitLoader.normalizeUnit(unit);
+      unit = TvsUnitLoader.normalizeUnit ? TvsUnitLoader.normalizeUnit(unit) : unit;
       if(!unit.modelUrl && !unit.glbUrl) throw new Error('unit missing modelUrl after normalize: '+(unit.unitId||'?'));
       playerTvsUnit = unit;
       playerTvsUnitId = unit.unitId;
