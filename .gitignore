@@ -10,3 +10,7 @@ dist/tvs/work/
 Mine-Loader/
 
 .vercel
+
+# Local-only large debris pack (not wired yet)
+models/debris/
+
