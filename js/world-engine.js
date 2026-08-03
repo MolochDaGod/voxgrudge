@@ -78,15 +78,16 @@
         nodes: [], chests: [], buildings: [], walls: [], survivors: [], camps: [],
       };
 
-      const nodeCount = 2 + Math.floor(rand() * 4);
+      // Denser nature nodes — multi-block voxel trees/rocks (VoxNatureProps)
+      const nodeCount = 6 + Math.floor(rand() * 8);
       for (let i = 0; i < nodeCount; i++) {
-        const types = ['tree', 'tree', 'rock', 'ore'];
+        const types = ['tree', 'tree', 'tree', 'rock', 'rock', 'ore'];
         const type = types[Math.floor(rand() * types.length)];
-        if (type === 'ore' && biome.zoneId < 2 && rand() < 0.6) continue;
+        if (type === 'ore' && biome.zoneId < 2 && rand() < 0.55) continue;
         chunk.nodes.push({
           type,
-          x: cx * CHUNK_SIZE + 8 + rand() * (CHUNK_SIZE - 16),
-          z: cz * CHUNK_SIZE + 8 + rand() * (CHUNK_SIZE - 16),
+          x: cx * CHUNK_SIZE + 6 + rand() * (CHUNK_SIZE - 12),
+          z: cz * CHUNK_SIZE + 6 + rand() * (CHUNK_SIZE - 12),
         });
       }
 
@@ -234,24 +235,51 @@
         });
       }
 
-      const waterSize = 300 * WORLD_SCALE;
-      const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize, 48, 48);
-      const waterMat = new THREE.MeshStandardMaterial({ color: 0x2266aa, transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.4 });
-      const water = new THREE.Mesh(waterGeo, waterMat);
-      water.rotation.x = -Math.PI / 2;
-      water.position.y = -1.2;
-      water.receiveShadow = true;
-      water.name = 'vox-water';
-      scene.add(water);
-      if (coll && global.VoxLayers) {
-        coll.register({
-          id: 'world_water',
-          kind: 'water',
-          layer: global.VoxLayers.LAYERS.WATER,
-          mesh: water,
-          solid: false,
-          trigger: true,
+      // Water mesh is owned by host (VoxNatureProps.buildWater) for wave quality.
+      // Keep a thin under-plane only if host did not attach one yet.
+      let water = null;
+      if (global.VoxNatureProps && typeof global.VoxNatureProps.buildWater === 'function') {
+        try {
+          water = global.VoxNatureProps.buildWater(THREE, {
+            size: 300 * WORLD_SCALE,
+            segments: 72,
+            y: -1.2,
+          });
+        } catch (e) {
+          water = null;
+        }
+      }
+      if (!water) {
+        const waterSize = 300 * WORLD_SCALE;
+        const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize, 48, 48);
+        const waterMat = new THREE.MeshStandardMaterial({
+          color: 0x1a6a8a,
+          transparent: true,
+          opacity: 0.72,
+          roughness: 0.18,
+          metalness: 0.35,
+          emissive: 0x062030,
+          emissiveIntensity: 0.15,
         });
+        water = new THREE.Mesh(waterGeo, waterMat);
+        water.rotation.x = -Math.PI / 2;
+        water.position.y = -1.2;
+        water.receiveShadow = true;
+        water.name = 'vox-water';
+      }
+      // Host may re-parent / replace; only add if not already in scene
+      if (water && !water.parent) scene.add(water);
+      if (coll && global.VoxLayers) {
+        try {
+          coll.register({
+            id: 'world_water',
+            kind: 'water',
+            layer: global.VoxLayers.LAYERS.WATER,
+            mesh: water,
+            solid: false,
+            trigger: true,
+          });
+        } catch (e) { /* host retries layers */ }
       }
       return water;
     }

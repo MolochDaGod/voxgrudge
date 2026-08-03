@@ -708,6 +708,7 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/vox-ui-deps.js"></script>
 <script src="js/vox-boot.js"></script>
 <script src="js/vox-ui-kit.js"></script>
+<script src="js/vox-nature-props.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
 <script src="js/fleet-character-handoff.js"></script>
@@ -3305,13 +3306,102 @@ async function spawnSelectedSettlements(){
   }
 }
 
-function buildWorld(){
-  if(worldEngine){
-    window._waterPlane=worldEngine.buildGround(scene,genProcTexture,THREE);
-    worldEngine.updateChunks(0,0,THREE,getWorldHelpers());
-    WATER_LEVEL=-1.2;
+function registerWorldLayersWithRetry(){
+  if(!window.VoxNatureProps || !VoxNatureProps.withRetry){
+    if(collisionWorld && window._waterPlane && window.VoxLayers){
+      try{
+        collisionWorld.register({
+          id:'world_water', kind:'water', layer:VoxLayers.LAYERS.WATER,
+          mesh:window._waterPlane, solid:false, trigger:true,
+        });
+      }catch(e){}
+    }
     return;
   }
+  VoxNatureProps.withRetry(function(){
+    if(!collisionWorld || !window.VoxLayers) return false;
+    if(window._terrainHandle && collisionWorld.registerTerrain){
+      try{ collisionWorld.registerTerrain(window._terrainHandle); }catch(e){}
+    }
+    if(window._waterPlane){
+      try{
+        collisionWorld.register({
+          id:'world_water', kind:'water', layer:VoxLayers.LAYERS.WATER,
+          mesh:window._waterPlane, solid:false, trigger:true,
+        });
+      }catch(e){ return false; }
+    }
+    if(BIOMES && BIOMES[0] && collisionWorld.registerSafeZone){
+      try{
+        collisionWorld.registerSafeZone(0, 0, BIOMES[0].maxD * 10 * 0.95, {
+          label:'Starter Island', noAggro:true,
+        });
+      }catch(e){}
+    }
+    return !!(window._waterPlane || window._terrainHandle);
+  }, { tries:6, delay:150, label:'world-layers' });
+}
+
+function bootUiLayersWithRetry(){
+  function tryBoot(){
+    var ok = true;
+    try{
+      if(window.GrudgeAssets && GrudgeAssets.applyHudCssVars) GrudgeAssets.applyHudCssVars();
+    }catch(e){ ok = false; }
+    try{
+      if(window.CraftpixRpgUI && CraftpixRpgUI.boot){
+        CraftpixRpgUI.boot({ compositions:['hudVitals','hudDock','weaponSlots'] }).catch(function(){});
+      }
+    }catch(e){ ok = false; }
+    try{
+      if(window.VoxUiKit && typeof VoxUiKit.init === 'function' && !window._voxUiKitInited){
+        // init is async in openworld shell; section tabs only need DOM which exists
+        window._voxUiKitInited = true;
+      }
+    }catch(e){}
+    return ok;
+  }
+  if(window.VoxNatureProps && VoxNatureProps.withRetry){
+    VoxNatureProps.withRetry(tryBoot, { tries:5, delay:200, label:'ui-layers' });
+  } else {
+    tryBoot();
+  }
+}
+
+function buildWorld(){
+  WATER_LEVEL = -1.2;
+
+  function attachWater(water){
+    if(!water) return;
+    scene.add(water);
+    window._waterPlane = water;
+  }
+
+  if(worldEngine){
+    // Terrain rings + improved water (engine uses VoxNatureProps when present)
+    var engineWater = null;
+    try{
+      engineWater = worldEngine.buildGround(scene, genProcTexture, THREE);
+    }catch(e){
+      console.warn('[buildWorld] ground', e);
+    }
+    if(engineWater){
+      window._waterPlane = engineWater;
+    } else if(window.VoxNatureProps && VoxNatureProps.buildWater){
+      try{
+        attachWater(VoxNatureProps.buildWater(THREE, {
+          size: 300 * ((window.VoxStandards && VoxStandards.SCALE && VoxStandards.SCALE.WORLD_SCALE) || 10),
+          segments: 72,
+          y: WATER_LEVEL,
+        }));
+      }catch(e2){}
+    }
+    worldEngine.updateChunks(0, 0, THREE, getWorldHelpers());
+    registerWorldLayersWithRetry();
+    bootUiLayersWithRetry();
+    return;
+  }
+
   const biomeTexTypes=['grass','swamp','ruins','wasteland','dark'];
   if(window.VoxTerrain){
     const terrain=VoxTerrain.build({
@@ -3321,8 +3411,6 @@ function buildWorld(){
       genProcTexture:genProcTexture, biomeTexTypes:biomeTexTypes,
     });
     window._terrainHandle=terrain;
-    if(collisionWorld) collisionWorld.registerTerrain(terrain);
-    if(collisionWorld) collisionWorld.registerSafeZone(0,0,BIOMES[0].maxD*10*0.95,{label:'Starter Island',noAggro:true});
     worldPlane=terrain.mesh;
   } else {
     BIOMES.forEach((biome,bi)=>{
@@ -3343,16 +3431,27 @@ function buildWorld(){
       }
     });
   }
-  const waterSize=600;
-  const waterGeo=new THREE.PlaneGeometry(waterSize,waterSize,32,32);
-  const waterMat=new THREE.MeshStandardMaterial({color:0x2266aa,transparent:true,opacity:0.55,roughness:0.1,metalness:0.4});
-  const water=new THREE.Mesh(waterGeo,waterMat);
-  water.rotation.x=-Math.PI/2; water.position.y=-1.2; water.receiveShadow=true;
-  scene.add(water);
-  window._waterPlane=water;
-  if(collisionWorld) collisionWorld.register({id:'legacy_water',kind:'water',layer:VoxLayers.LAYERS.WATER,mesh:water,solid:false,trigger:true});
-  WATER_LEVEL=-1.2;
+
+  var water = null;
+  if(window.VoxNatureProps && VoxNatureProps.buildWater){
+    try{
+      water = VoxNatureProps.buildWater(THREE, { size: 900, segments: 64, y: WATER_LEVEL });
+    }catch(e){ water = null; }
+  }
+  if(!water){
+    const waterGeo=new THREE.PlaneGeometry(900,900,48,48);
+    const waterMat=new THREE.MeshStandardMaterial({
+      color:0x1a6a8a, transparent:true, opacity:0.72,
+      roughness:0.18, metalness:0.35, emissive:0x062030, emissiveIntensity:0.15,
+    });
+    water=new THREE.Mesh(waterGeo,waterMat);
+    water.rotation.x=-Math.PI/2; water.position.y=WATER_LEVEL; water.receiveShadow=true;
+    water.name='vox-water';
+  }
+  attachWater(water);
+  registerWorldLayersWithRetry();
   spawnResourceNodes();
+  bootUiLayersWithRetry();
 }
 
 function buildSurvivorNPC(sv){
@@ -3434,9 +3533,9 @@ function keyIs(action,code){
 
 function spawnResourceNodes(){
   const types = [
-    {type:'tree',  count:80, emoji:'🌲', rMin:3,  rMax:100, color:0x228822, scY:3.5},
-    {type:'rock',  count:50, emoji:'🪨', rMin:10, rMax:120, color:0x666666, scY:1.8},
-    {type:'ore',   count:30, emoji:'⚙️', rMin:40, rMax:120, color:0x4488aa, scY:1.5},
+    {type:'tree',  count:110, rMin:4,  rMax:140},
+    {type:'rock',  count:70,  rMin:8,  rMax:150},
+    {type:'ore',   count:36,  rMin:35, rMax:150},
   ];
   types.forEach(t=>{
     for(let i=0;i<t.count;i++){
@@ -3450,48 +3549,53 @@ function spawnResourceNodes(){
 }
 
 function spawnResourceNode(type, x, z){
-  const configs = {
-    tree: {color:0x228822, emColor:0x000000, scX:0.8, scY:2.5, giveWood:2, giveStone:0, giveOre:0},
-    rock: {color:0x666666, emColor:0x000000, scX:1.2, scY:0.8, giveWood:0, giveStone:2, giveOre:0},
-    ore:  {color:0x224455, emColor:0x002233, scX:0.9, scY:0.9, giveWood:0, giveStone:1, giveOre:1},
+  const yields = {
+    tree: { wood:2, stone:0, ore:0 },
+    rock: { wood:0, stone:2, ore:0 },
+    ore:  { wood:0, stone:1, ore:1 },
   };
-  const cfg = configs[type];
-  const geo = new THREE.BoxGeometry(1.5*cfg.scX, 1.5*cfg.scY, 1.5*cfg.scX);
-  const mat = new THREE.MeshStandardMaterial({color:cfg.color, emissive:cfg.emColor, emissiveIntensity:0.3});
-  const mesh = new THREE.Mesh(geo, mat);
-  const gy=getGroundY(x,z);
-  mesh.position.set(x, gy+cfg.scY*0.75, z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  scene.add(mesh);
-  registerEntityCollider('node_'+type+'_'+x.toFixed(0)+'_'+z.toFixed(0),'node',mesh,null,{solid:true,trigger:false,data:{type:type,x:x,z:z}});
-
-  // For trees: add a cap
-  if(type==='tree'){
-    const capGeo = new THREE.BoxGeometry(3,2.5,3);
-    const capMat = new THREE.MeshStandardMaterial({color:0x116611});
-    const cap = new THREE.Mesh(capGeo, capMat);
-    cap.position.set(0, cfg.scY*0.75+1.5, 0);
-    mesh.add(cap);
+  const give = yields[type] || yields.rock;
+  const gy = typeof getGroundY === 'function' ? getGroundY(x, z) : 0;
+  let mesh;
+  if (window.VoxNatureProps && VoxNatureProps.buildProp) {
+    mesh = VoxNatureProps.buildProp(THREE, type, x, z, { groundY: gy });
+  } else {
+    // Legacy single-box fallback (should rarely run)
+    const h = type === 'tree' ? 2.5 : 1.0;
+    const col = type === 'tree' ? 0x228822 : type === 'ore' ? 0x224455 : 0x666666;
+    mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, h, 1.2),
+      new THREE.MeshStandardMaterial({ color: col, flatShading: true })
+    );
+    mesh.position.set(x, gy + h * 0.5, z);
+    mesh.castShadow = true;
   }
-
-  // Type indicator (small colored marker instead of emoji)
-  const markerGeo = new THREE.SphereGeometry(0.25,6,6);
-  const markerCol = type==='tree'?0x44ff44:type==='rock'?0xaaaaaa:0x44aaff;
-  const markerMat = new THREE.MeshStandardMaterial({color:markerCol,emissive:markerCol,emissiveIntensity:0.4});
-  const marker = new THREE.Mesh(markerGeo,markerMat);
-  marker.position.set(0, cfg.scY+1.2, 0);
-  mesh.add(marker);
+  // Feet on ground (voxel groups sit at y=0 local)
+  if (mesh.userData && mesh.userData.natureKind) {
+    mesh.position.set(x, gy, z);
+  }
+  scene.add(mesh);
+  registerEntityCollider(
+    'node_' + type + '_' + x.toFixed(0) + '_' + z.toFixed(0),
+    'node',
+    mesh,
+    null,
+    { solid: true, trigger: false, data: { type: type, x: x, z: z } }
+  );
 
   const node = {
-    mesh, type, x, z,
-    wood: configs[type].giveWood,
-    stone: configs[type].giveStone,
-    ore: configs[type].giveOre,
+    mesh: mesh,
+    type: type,
+    x: x,
+    z: z,
+    wood: give.wood,
+    stone: give.stone,
+    ore: give.ore,
     alive: true,
     respawnTimer: 0,
   };
   resourceNodes.push(node);
+  return node;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -7522,16 +7626,20 @@ function animate(){
     }
   }
 
-  // Animate water plane
+  // Animate water (VoxNature wave buffer, else legacy Y displace)
   if(window._waterPlane){
-    const wPos=window._waterPlane.geometry.attributes.position;
-    const t=survivalTime;
-    for(let i=0;i<wPos.count;i++){
-      const x=wPos.getX(i),z=wPos.getZ(i);
-      wPos.setY(i, Math.sin(x*0.3+t*1.5)*0.15+Math.cos(z*0.3+t*1.2)*0.15);
+    if(window.VoxNatureProps && VoxNatureProps.updateWater && window._waterPlane.userData && window._waterPlane.userData.wave){
+      VoxNatureProps.updateWater(window._waterPlane, survivalTime);
+    } else {
+      const wPos=window._waterPlane.geometry.attributes.position;
+      const t=survivalTime;
+      for(let i=0;i<wPos.count;i++){
+        const x=wPos.getX(i),z=wPos.getZ(i);
+        wPos.setY(i, Math.sin(x*0.08+t*1.1)*0.18+Math.cos(z*0.07+t*0.9)*0.14);
+      }
+      wPos.needsUpdate=true;
+      window._waterPlane.geometry.computeVertexNormals();
     }
-    wPos.needsUpdate=true;
-    window._waterPlane.geometry.computeVertexNormals();
   }
 
   // Apply screen shake to camera
