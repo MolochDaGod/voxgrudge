@@ -1062,7 +1062,7 @@ let collisionWorld = null;
 let blockColliderIds = [];
 const PLAYER_COLL_RADIUS = 1.1;
 let enemies = [], bullets = [], particles = [], worldItems = [], resourceNodes = [], minions = [];
-let hp, maxHp, score, survivalTime, isGameOver=false, gameStarted=false;
+let hp = 100, maxHp = 100, score = 0, survivalTime = 0, isGameOver=false, gameStarted=false;
 let spawnGraceTimer = 0;
 let currentWeapon, attackTimer;
 let itemHotbar = [{},{},{},{},{},{}];
@@ -2565,6 +2565,8 @@ function init(){
   applySkillPassives();
   if(!Number.isFinite(maxHp)||maxHp<=0) maxHp=Math.round(100*(cls.hpMult||1));
   if(!Number.isFinite(hp)||hp<=0) hp=maxHp;
+  score = 0;
+  survivalTime = 0;
   spawnGraceTimer=15;
   iFrames=true;
   iFrameTimer=15;
@@ -4478,8 +4480,12 @@ function killEnemy(e){
   e.alive = false;
   disposeEnemyFx(e);
   scene.remove(e.mesh);
-  score += e.def.score;
-  exp += e.def.score;
+  if(!Number.isFinite(score)) score = 0;
+  if(!Number.isFinite(exp)) exp = 0;
+  const killPts = Number(e.def && e.def.score);
+  const pts = Number.isFinite(killPts) ? killPts : 25;
+  score += pts;
+  exp += pts;
   spawnHitFlash(e.mesh.position, 0xff6600, 10);
   // Death VFX burst
   spawnVFXSprite('bone_burst_1',e.mesh.position.clone().add(new THREE.Vector3(0,1.5,0)),{scale:4.0,duration:0.6});
@@ -4575,7 +4581,7 @@ function triggerGameOver(){
   isGameOver = true;
   if(window.GameFlow) GameFlow.enterDeath();
   const m = Math.floor(survivalTime/60), s = Math.floor(survivalTime%60);
-  document.getElementById('go-stats').textContent = 'Survived: '+m+'m'+s+'s  Ãƒâ€šÃ‚Â·  Eliminated: '+score+'  Ãƒâ€šÃ‚Â·  Level: '+level+'  Ãƒâ€šÃ‚Â·  Day: '+dayNumber;
+  document.getElementById('go-stats').textContent = 'Survived: '+m+'m'+s+'s  Ãƒâ€šÃ‚Â·  Eliminated: '+(Number.isFinite(score)?score:0)+'  Ãƒâ€šÃ‚Â·  Level: '+level+'  Ãƒâ€šÃ‚Â·  Day: '+dayNumber;
   document.getElementById('game-over').classList.remove('hidden');
   if(window.VoxCloud){ try{ VoxCloud.saveNow('gameover'); }catch(e){} }
 }
@@ -6616,9 +6622,11 @@ function updateHUD(){
   if(hpFill) hpFill.style.width=hpPct+'%';
   const hpVal=document.getElementById('hp-val');
   if(hpVal) hpVal.textContent=Math.ceil(hp||0)+'/'+Math.ceil(maxHp||0);
+  if(!Number.isFinite(score)) score=0;
   const scoreEl=document.getElementById('score-val');
-  if(scoreEl) scoreEl.textContent=String(score||0).padStart(4,'0');
-  const m=Math.floor((survivalTime||0)/60),s=Math.floor((survivalTime||0)%60);
+  if(scoreEl) scoreEl.textContent=String(Math.max(0,Math.floor(score))).padStart(4,'0');
+  if(!Number.isFinite(survivalTime)) survivalTime=0;
+  const m=Math.floor(survivalTime/60),s=Math.floor(survivalTime%60);
   const timerEl=document.getElementById('timer-val');
   if(timerEl) timerEl.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
   const expPct=(expToNext>0?(exp/expToNext):0)*100;
@@ -7646,7 +7654,8 @@ function animate(){
 
   const dt=Math.min(clock.getDelta(),0.05);
   if(spawnGraceTimer>0) spawnGraceTimer=Math.max(0,spawnGraceTimer-dt);
-  survivalTime+=dt;
+  if(!Number.isFinite(survivalTime)) survivalTime=0;
+  if(Number.isFinite(dt)) survivalTime+=dt;
 
   // Tick skill CDs
   ['Q','E','R','F'].forEach(k=>{ if(skillCds[k]>0) skillCds[k]=Math.max(0,skillCds[k]-dt); });
