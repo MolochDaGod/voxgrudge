@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="ui/craftpix-rpg/craftpix-rpg-ui.css">
 <script src="js/craftpix-rpg-ui.js"></script>
 <script src="js/vox-standards.js"></script>
+<script src="js/fleet-game-runtime.js"></script>
 <!-- Fleet combat SSOT only — no hanging PlayerController/EnemyBrain loads (those belong to openworld) -->
 <script src="js/vox-rpgbase-combat.js"></script>
 <style>
@@ -3001,11 +3002,19 @@ function selectWeapon(idx){ if(kills<WEAPONS[idx].unlock) return; currentWep=idx
     document.querySelectorAll('#equipment-bar .kpx-slot').forEach((el,i)=>el.classList.toggle('active',i===idx)); }
 
 // ============================================================================
-//  MAIN LOOP
+//  MAIN LOOP — Fleet fixed-step when FleetGameRuntime present (GF pattern)
 // ============================================================================
+var _zSimAccum=0;
 function animate(){
     requestAnimationFrame(animate);
-    const dt=Math.min(0.05,clock.getDelta());
+    if(typeof document!=='undefined'&&document.hidden){ _zSimAccum=0; return; }
+    var wallDt=Math.min(0.25,clock.getDelta());
+    var FIXED=1/60;
+    _zSimAccum+=wallDt;
+    if(_zSimAccum<FIXED) return;
+    if(_zSimAccum>FIXED*4) _zSimAccum=FIXED*4;
+    _zSimAccum-=FIXED;
+    const dt=FIXED;
     const started=document.getElementById('start-screen').style.display==='none';
 
     if(started){

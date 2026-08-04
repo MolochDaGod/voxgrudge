@@ -715,6 +715,15 @@ window.VoxGltfConfigure = function (loader) {
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
 <script src="js/fleet-character-handoff.js"></script>
+<script src="js/fleet-game-runtime.js"></script>
+<script>
+/* Fleet runtime bootstrap (GF patterns → no Closure). */
+(function () {
+  if (!window.FleetGameRuntime) return;
+  window.fleetInput = window.FleetGameRuntime.createInputActionMap();
+  window.fleetLoop = null;
+})();
+</script>
 <script src="js/tvs-hero-preview.js"></script>
 <script src="js/tvs-world-content.js"></script>
 <script src="js/tvs-settlement-builder.js"></script>
@@ -3227,7 +3236,21 @@ function getWorldHelpers(){
 }
 
 function keyIs(action,code){
-  if(window.GrudgeStudioUI&&GrudgeStudioUI.getBind)return GrudgeStudioUI.getBind(action)===code;
+  if(window.GrudgeStudioUI&&GrudgeStudioUI.getBind){
+    var bound = GrudgeStudioUI.getBind(action);
+    if(bound) return bound===code;
+  }
+  /* Fleet action map (GF-style) — fallback when studio binds missing */
+  var fleetMap = {
+    interact:'interact', build:'build', craft:'craft', inventory:'inventory',
+    equip:'inventory', allies:'interact', mine:'interact',
+    skill1:'skill1', skill2:'skill2', skill3:'skill3', skill4:'skill4',
+    commandCenter:'command_center', jump:'jump', sprint:'sprint'
+  };
+  var fid = fleetMap[action];
+  if(fid && window.fleetInput && typeof fleetInput.codeMatches==='function'){
+    return fleetInput.codeMatches(fid, code);
+  }
   return false;
 }
 
@@ -7145,20 +7168,48 @@ function isNearClimbable(){
 }
 
 // ¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢
-// MAIN LOOP
-// ¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢
+// MAIN LOOP — FleetGameLoop (benvanik/games-framework fixed-step pattern)
+// ────────────────────────────────────────────────────────────────────────────
 function animate(){
+  /* Prefer fleet fixed-timestep loop once (idempotent). */
+  if(window.FleetGameRuntime && !window.fleetLoop){
+    window.fleetLoop = FleetGameRuntime.createGameLoop({
+      fixedDt: 1/60,
+      maxFrameDt: 0.25,
+      pauseWhenHidden: true,
+      renderWhileHidden: true,
+      shouldUpdate: function(){
+        if(!renderer||!scene||!camera) return false;
+        var flowOk = !gameFlow || gameFlow.shouldTick();
+        var canvasOk = !gameCanvasHost || !gameCanvasHost.isPaused();
+        return !!(gameStarted && !isGameOver && flowOk && canvasOk);
+      },
+      onUpdate: function(fr){ tickOpenworld(fr.dt); },
+      onRender: function(){
+        if(!renderer||!scene||!camera) return;
+        try{ renderer.render(scene,camera); }catch(e){}
+      }
+    });
+    window.fleetLoop.start();
+    return;
+  }
+  if(window.fleetLoop) return;
+  /* Legacy rAF path if runtime script missing */
   requestAnimationFrame(animate);
   if(!renderer||!scene||!camera) return;
-  // Soft pause: still draw last frame when paused / not started / dead
   const flowOk = !gameFlow || gameFlow.shouldTick();
   const canvasOk = !gameCanvasHost || !gameCanvasHost.isPaused();
   if(!gameStarted||isGameOver||!flowOk||!canvasOk){
   try{ renderer.render(scene,camera); }catch(e){}
   return;
   }
-
   const dt=Math.min(clock.getDelta(),0.05);
+  tickOpenworld(dt);
+  try{ renderer.render(scene,camera); }catch(e){}
+}
+function tickOpenworld(dt){
+  if(!renderer||!scene||!camera) return;
+  if(!Number.isFinite(dt) || dt<=0) return;
   if(spawnGraceTimer>0) spawnGraceTimer=Math.max(0,spawnGraceTimer-dt);
   if(!Number.isFinite(survivalTime)) survivalTime=0;
   if(Number.isFinite(dt)) survivalTime+=dt;
@@ -7298,7 +7349,7 @@ function animate(){
   if(fpsEl)fpsEl.textContent='FPS: '+fpsDisplay;
   }
 
-  renderer.render(scene,camera);
+  /* render owned by FleetGameLoop.onRender */
 }
 
 // ¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢¢â‚¬¢
