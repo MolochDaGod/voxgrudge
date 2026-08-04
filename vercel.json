@@ -106,8 +106,12 @@
       "destination": "https://assets.grudge-studio.com/models/grudge6/:path*"
     },
     {
+      "source": "/models/voxels/tvs/:path*",
+      "destination": "https://assets.grudge-studio.com/models/voxels/tvs/:path*"
+    },
+    {
       "source": "/models/voxels/:path*",
-      "destination": "https://assets.grudge-studio.com/models/voxels/:path*"
+      "destination": "/assets/voxels/:path*"
     },
     {
       "source": "/icons/:path*",

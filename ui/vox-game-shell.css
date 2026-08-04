@@ -10,6 +10,38 @@
   --vox-shell-accent: #e86a1a;
   --vox-shell-ok: #3dd6a5;
   --vox-shell-danger: #e63d3d;
+  --vox-font: Inter, system-ui, "Segoe UI", Roboto, sans-serif;
+  --vox-font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+/* Readable type — avoid mojibake “tofu” looking like broken UI */
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--vox-font);
+}
+#class-screen h1 {
+  font-family: var(--vox-font);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+#class-screen .sub,
+#class-screen .version,
+.create-step-hint,
+.create-nav-status,
+.stat-label,
+.class-card .c-desc,
+.class-card .c-name {
+  font-family: var(--vox-font);
+}
+#fps-counter,
+.stat-value,
+#mouse-help,
+#cam-mode-pill {
+  font-family: var(--vox-font-mono);
 }
 
 /* Flow step rail on class screen */

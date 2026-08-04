@@ -155,13 +155,23 @@
       });
   }
 
-  /** TVS shared pack — always R2 when online (canonical fleet path). */
+  /**
+   * TVS shared pack — R2 models/voxels/tvs/* when online.
+   * Catalog/roster JSON also ship under same-origin /assets/voxels/ (Vercel);
+   * callers should fall back with resolveUrl / multi-fetch (see tvs-unit-loader).
+   */
   function tvsUrl(rel) {
     var p = String(rel || '').replace(/^\//, '');
+    var cleaned = p.replace(/^models\/voxels\/tvs\//, '').replace(/^assets\/voxels\//, '');
+    // Localhost or ?local=1 → bundled assets/voxels
     if (isLocalHost() && queryFlag('cdn') !== true) {
-      return bundleUrl('assets/voxels/' + p.replace(/^models\/voxels\/tvs\//, ''));
+      return bundleUrl('assets/voxels/' + cleaned);
     }
-    return cdnUrl('models/voxels/tvs/' + p.replace(/^models\/voxels\/tvs\//, ''));
+    // Prefer CDN for GLB/binaries; JSON catalogs often 404 on CDN → use same-origin first
+    if (/\.json(\?|#|$)/i.test(cleaned)) {
+      return bundleUrl('assets/voxels/' + cleaned);
+    }
+    return cdnUrl('models/voxels/tvs/' + cleaned);
   }
 
   function vfxFrame(folder, name) {
