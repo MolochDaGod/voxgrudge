@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- tvs-showcase-rev=2026-08-09-paint-fix-singular-hud · GLB raw+FBX · one CraftPix bar -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -45,8 +46,7 @@
   .unit .name { font-size: 12px; font-weight: 700; }
   .unit .meta { font-size: 9px; color: var(--mute); }
   .unit .hint { font-size: 9px; color: var(--magic); text-transform: uppercase; letter-spacing: 1px; align-self: center; }
-  #stage-wrap { position: relative; min-width: 0; }
-  #stage { width: 100%; height: 100%; display: block; }
+  /* stage-wrap / stage styled below with camera chrome */
   #hud {
     position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end;
     pointer-events: none;
@@ -77,8 +77,35 @@
   .anim-btns button:hover, .anim-btns button.on { border-color: var(--magic); color: #d8c8ff; }
   a.back { color: var(--mute); font-size: 10px; text-decoration: none; letter-spacing: 1px; text-transform: uppercase; }
   a.back:hover { color: var(--accent); }
-  #status { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: 1px; color: var(--mute); background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--line); max-width: 80%; text-align: center; }
+  #status { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: 1px; color: var(--mute); background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--line); max-width: 80%; text-align: center; z-index: 5; }
   #status.err { color: #ffb0b0; border-color: var(--bad); }
+  #cam-bar {
+    position: absolute; top: 12px; right: 12px; z-index: 6; display: flex; flex-wrap: wrap; gap: 6px;
+    justify-content: flex-end; max-width: min(420px, 92%);
+  }
+  #cam-bar button {
+    pointer-events: auto; background: rgba(12,18,28,0.9); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; font-size: 10px; padding: 7px 10px; cursor: pointer; letter-spacing: 0.5px;
+    text-transform: uppercase; backdrop-filter: blur(8px);
+  }
+  #cam-bar button:hover { border-color: var(--accent); color: #fff; }
+  #cam-bar button.active { background: rgba(232,106,26,0.22); border-color: var(--accent); color: #ffd0a8; }
+  #cam-help {
+    position: absolute; left: 12px; top: 48px; z-index: 5; max-width: 280px;
+    background: rgba(8,12,20,0.88); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; font-size: 10px; line-height: 1.45; color: var(--mute);
+    backdrop-filter: blur(10px); pointer-events: none;
+  }
+  #cam-help b { color: var(--ink); }
+  #cam-help kbd {
+    display: inline-block; min-width: 1.4em; text-align: center; padding: 1px 5px; margin: 0 1px;
+    border: 1px solid #2a3a52; border-radius: 4px; background: #121a28; color: #c8d4e8; font-size: 9px;
+  }
+  #stage-wrap { position: relative; min-width: 0; background:
+    radial-gradient(ellipse 70% 55% at 50% 42%, #142033 0%, var(--bg) 72%); }
+  #stage { width: 100%; height: 100%; display: block; outline: none; cursor: grab; }
+  #stage.flying { cursor: crosshair; }
+  #stage:active { cursor: grabbing; }
   @media (max-width: 960px) {
     #app { grid-template-columns: 1fr; grid-template-rows: 40vh 1fr auto; }
     aside.right { display: none; }
@@ -90,14 +117,30 @@
   <aside>
     <header class="brand">
       <h1>TVS Voxel Showcase</h1>
-      <p>Best assets from <code>resources/</code> via D1/R2 roster · scale · texture · color · anim</p>
-      <p style="margin-top:8px"><a class="back" href="index.html">← VoxGrudge game</a></p>
+      <p>Real TVS from assets.grudge-studio.com · Meshopt GLB · 6 races · 7 packs · SI ground</p>
+      <p style="margin-top:8px"><a class="back" href="index.html">← VoxGrudge game</a>
+        · <a class="back" href="https://assets.grudge-studio.com/models/voxels/tvs/unit-roster.json" target="_blank" rel="noopener">roster</a>
+        · <a class="back" href="https://assets.grudge-studio.com/models/voxels/tvs/catalog.json" target="_blank" rel="noopener">catalog</a>
+      </p>
     </header>
     <div class="toolbar">
-      <label>Pack
+      <label>Browse
+        <select id="mode-filter">
+          <option value="races">Default races (6)</option>
+          <option value="units">Characters · units (38)</option>
+          <option value="weapons">Weapons & shields</option>
+          <option value="items">Items</option>
+          <option value="props">Props</option>
+          <option value="nature">Nature</option>
+          <option value="buildings">Buildings / env</option>
+          <option value="animals">Animals</option>
+          <option value="all" selected>All mesh assets</option>
+        </select>
+      </label>
+      <label id="pack-filter-wrap">Pack
         <select id="pack-filter"><option value="">All packs</option></select>
       </label>
-      <label>Class
+      <label id="class-filter-wrap" style="display:none">Class
         <select id="class-filter">
           <option value="">All</option>
           <option value="melee">Melee</option>
@@ -106,31 +149,86 @@
           <option value="civilian">Civilian</option>
         </select>
       </label>
+      <label>Search
+        <input type="search" id="asset-search" placeholder="slug / name…" style="min-width:120px;background:#121a28;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px">
+      </label>
+      <button type="button" id="btn-races">Race lineup</button>
       <button type="button" id="btn-army">Army sample</button>
-      <button type="button" id="btn-settlements" class="active">Settlements</button>
+      <button type="button" id="btn-settlements">Settlements</button>
+      <button type="button" id="btn-prefabs" title="5 NPC prefabs: armour/magic/weapons shops, missions, enemy camp">NPC prefabs</button>
+      <button type="button" id="btn-force-tex" title="Rebind external PNG atlas">Force atlas</button>
       <button type="button" id="btn-verify">Verify CDN</button>
     </div>
     <div class="list" id="unit-list"></div>
   </aside>
 
   <div id="stage-wrap">
-    <canvas id="stage"></canvas>
+    <canvas id="stage" tabindex="0" title="Click stage for focus · WASD fly · scroll zoom"></canvas>
     <div id="status">Loading roster from assets.grudge-studio.com…</div>
+    <div id="cam-bar">
+      <button type="button" id="btn-cam-orbit" class="active" title="Orbit around framed asset">Orbit</button>
+      <button type="button" id="btn-cam-fly" title="WASD flight camera">Fly</button>
+      <button type="button" id="btn-cam-frame" title="Re-frame selection (F)">Frame</button>
+      <button type="button" id="btn-cam-zoom-in" title="Zoom in">Zoom +</button>
+      <button type="button" id="btn-cam-zoom-out" title="Zoom out">Zoom −</button>
+      <button type="button" id="btn-cam-reset" title="Reset camera">Reset</button>
+    </div>
+    <div id="cam-help">
+      <b>Camera</b> · <span id="cam-mode-label">Orbit</span><br>
+      <kbd>LMB</kbd> orbit / look · <kbd>RMB</kbd> pan · <kbd>Wheel</kbd> zoom<br>
+      <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Q</kbd><kbd>E</kbd> down/up · <kbd>Shift</kbd> sprint<br>
+      <kbd>F</kbd> re-frame · <kbd>V</kbd> toggle fly · <kbd>Home</kbd> reset
+    </div>
     <div id="hud">
       <div class="pill" id="pill-scale"><span class="k">Scale</span><b>—</b></div>
       <div class="pill" id="pill-tex"><span class="k">Texture</span><b>—</b></div>
       <div class="pill" id="pill-anim"><span class="k">Anim</span><b>—</b></div>
       <div class="pill" id="pill-uuid"><span class="k">D1 grudgeUuid</span><b style="font-size:10px">—</b></div>
+      <div class="pill" id="pill-cam"><span class="k">View</span><b style="font-size:10px">orbit</b></div>
+    </div>
+    <!-- CraftPix Main Panel (tight HUD) — frames / bars / slots for voxel play + craft -->
+    <div id="cpx-main-panel" class="cpx-theme" style="position:absolute;inset:0;pointer-events:none;z-index:8;display:none">
+      <div class="cpx-uf" id="cpx-player-frame" style="position:absolute;left:16px;top:16px;width:240px;pointer-events:auto;padding:12px 14px 10px">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="cpx-slot" id="cpx-portrait" style="width:56px;height:56px;flex-shrink:0;background-size:cover;background-position:center"></div>
+          <div style="flex:1;min-width:0">
+            <div id="cpx-name" style="font:bold 13px var(--cpx-font,sans-serif);color:var(--cpx-ink,#f4e6c8);text-shadow:0 2px 0 #000">—</div>
+            <div id="cpx-meta" style="font:10px sans-serif;color:var(--cpx-ink-dim,#b9a688)">voxel · danger mixer</div>
+            <div class="cpx-bar cpx-bar--hp" id="cpx-hp" style="margin-top:6px;height:14px"><i style="width:100%"></i></div>
+            <div class="cpx-bar cpx-bar--load" id="cpx-sta" style="margin-top:4px;height:10px"><i style="width:100%"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="cpx-dock-bg" id="cpx-hotbar" style="position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:6px;padding:12px 18px 14px;pointer-events:auto">
+        <!-- Icons filled by fillExplorerHotbar (grudge-game-hud / codex / mine-loader) — no emoji chrome in production -->
+        <button type="button" class="cpx-slot" data-skill="atk-ss-1" data-icon-id="ss_shield_bash" data-emoji="⚔" title="F · Melee"><span class="cpx-slot-key">F</span></button>
+        <button type="button" class="cpx-slot" data-skill="atk-ss-3" data-icon-id="ss_dash_strike" data-emoji="🗡" title="Heavy"><span class="cpx-slot-key">1</span></button>
+        <button type="button" class="cpx-slot" data-skill="atk-greatsword" data-icon-id="gs_whirlwind" data-emoji="⚒" title="Greatsword"><span class="cpx-slot-key">2</span></button>
+        <button type="button" class="cpx-slot" data-skill="dodge" data-icon-id="shadow_edge" data-cd="dodge" data-emoji="💨" title="Q / Ctrl · Dodge"><span class="cpx-slot-key">Q</span><i class="cpx-cd" hidden></i></button>
+        <button type="button" class="cpx-slot" data-skill="dash" data-icon-id="blood_rush" data-cd="dash" data-emoji="⚡" title="V / Alt · Dash"><span class="cpx-slot-key">V</span><i class="cpx-cd" hidden></i></button>
+        <button type="button" class="cpx-slot" data-skill="harvest" data-icon-id="harvest" data-emoji="🪓" title="E · Harvest"><span class="cpx-slot-key">E</span></button>
+        <button type="button" class="cpx-slot" data-skill="jump" data-icon-id="jump" data-emoji="⤒" title="Space · Jump"><span class="cpx-slot-key">Sp</span></button>
+        <button type="button" class="cpx-slot" data-skill="climb" data-icon-id="climb" data-emoji="🧗" title="C · Climb"><span class="cpx-slot-key">C</span></button>
+        <button type="button" class="cpx-slot" data-skill="craft" data-icon-id="craft" data-emoji="🔨" title="Craft panel"><span class="cpx-slot-key">B</span></button>
+      </div>
+      <div class="cpx-paper" id="cpx-craft" style="display:none;position:absolute;right:16px;bottom:100px;width:280px;padding:16px;pointer-events:auto">
+        <div style="font:bold 12px sans-serif;color:var(--cpx-gold,#e8c46a);letter-spacing:0.12em;margin-bottom:8px">CRAFT</div>
+        <div id="cpx-craft-body" style="font:11px sans-serif;color:var(--cpx-ink,#f4e6c8);line-height:1.45">
+          Voxel crafting — harvest + stockpile recipes (Main Panel craft flow).
+        </div>
+        <button type="button" class="cpx-btn-sm" id="cpx-craft-close" style="margin-top:10px;width:100%">Close</button>
+      </div>
     </div>
   </div>
 
   <aside class="right">
     <div class="checks" id="checks">
-      <div class="check"><span class="dot" id="c-roster"></span> Unit roster (CDN/D1)</div>
-      <div class="check"><span class="dot" id="c-fbx"></span> FBX magic-byte OK</div>
-      <div class="check"><span class="dot" id="c-tex"></span> Texture atlas bound</div>
-      <div class="check"><span class="dot" id="c-scale"></span> Height ~2.0m</div>
-      <div class="check"><span class="dot" id="c-anim"></span> Semantic clips</div>
+      <div class="check"><span class="dot" id="c-roster"></span> Roster / catalog / races</div>
+      <div class="check"><span class="dot" id="c-fbx"></span> Mesh load (GLB→FBX)</div>
+      <div class="check"><span class="dot" id="c-tex"></span> Texture / voxel mats</div>
+      <div class="check"><span class="dot" id="c-scale"></span> SI scale · feet grounded</div>
+      <div class="check"><span class="dot" id="c-anim"></span> Semantic clips (CDN pack)</div>
+      <div class="check"><span class="dot" id="c-brain"></span> AI brain / strategy</div>
       <div class="check"><span class="dot" id="c-color"></span> Color editable</div>
     </div>
     <div class="detail" id="detail">
@@ -145,61 +243,221 @@
       <button type="button" id="btn-reset-color" style="margin-top:8px;width:100%;background:#121a28;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:8px;cursor:pointer">Reset color</button>
       <h3 style="margin-top:16px">Animations</h3>
       <div class="anim-btns" id="anim-btns"></div>
+      <h3 style="margin-top:16px">AI brain / strategy</h3>
+      <p id="brain-summary" style="font-size:10px;color:var(--mute);margin:0 0 6px;line-height:1.45">—</p>
+      <div class="anim-btns" id="brain-btns">
+        <button type="button" id="btn-brain-demo" title="Run brain think against a dummy target">Demo AI</button>
+        <button type="button" id="btn-brain-stop" title="Stop AI demo">Stop AI</button>
+      </div>
+      <div class="pill" id="pill-brain" style="margin-top:8px"><span class="k">Intent</span><b>—</b></div>
+      <h3 style="margin-top:16px">Explorer (CraftPix Main Panel)</h3>
+      <p style="font-size:10px;color:var(--mute);margin:0 0 8px;line-height:1.4">
+        One HUD only: bottom hotbar · F attack · Q dodge · V dash · E harvest · WASD
+      </p>
+      <div class="anim-btns" id="explorer-btns">
+        <button type="button" id="btn-exp-play" title="Enable CraftPix Main Panel + control">Play / stop control</button>
+      </div>
+      <div class="pill" id="pill-hp" style="margin-top:8px"><span class="k">HP</span><b>—</b></div>
+      <div class="pill" id="pill-mixer" style="margin-top:6px"><span class="k">Mixer</span><b>—</b></div>
       <h3 style="margin-top:16px">D1 / R2 metadata</h3>
       <code id="meta-json">{}</code>
     </div>
   </aside>
 </div>
 
+<script>
+/** CDN-first asset base (Cloudflare R2 → assets.grudge-studio.com). Local js/ is fallback for file://. */
+window.TVS_CDN = "https://assets.grudge-studio.com";
+window.TVS_CDN_PREFIX = "models/voxels/tvs";
+window.TVS_JS = (function () {
+  var file = typeof location !== "undefined" && location.protocol === "file:";
+  return file ? "js/" : "js/"; // same-origin on edge; file:// uses relative js/
+})();
+// Fleet base so relative js/ui resolve under /voxgrudge/
+(function () {
+  try {
+    var path = (location && location.pathname) || "";
+    if (path.indexOf("/voxgrudge") >= 0 && !document.querySelector("base[data-vox-base]")) {
+      var el = document.createElement("base");
+      el.setAttribute("data-vox-base", "1");
+      el.href = "/voxgrudge/";
+      document.head.insertBefore(el, document.head.firstChild);
+    }
+  } catch (e) {}
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<!-- Meshopt REQUIRED — all production TVS GLBs are Meshopt-compressed -->
+<script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js"></script>
+<script src="js/tvs-production-pipeline.js"></script>
+<script src="js/tvs-asset-categories.js"></script>
+<script src="js/tvs-ai-brain.js"></script>
+<script src="js/tvs-voxel-colors.js"></script>
 <script src="js/tvs-voxel-assets.js"></script>
 <script src="js/tvs-unit-loader.js"></script>
+<script src="js/tvs-cse-sfx.js"></script>
+<script src="js/tvs-voxel-race-defaults.js"></script>
 <script src="js/tvs-world-content.js"></script>
 <script src="js/tvs-settlement-builder.js"></script>
+<script src="js/tvs-npc-prefabs.js"></script>
+<script src="js/grudge-explorer-combat.js"></script>
+<script src="js/grudge-codex-icons.js"></script>
+<script src="js/grudge-game-hud.js"></script>
+<script src="js/tvs-explorer-skeleton.js"></script>
+<script src="js/tvs-danger-anim.js"></script>
+<script src="js/tvs-explorer-rig.js"></script>
+<link rel="stylesheet" href="ui/craftpix-rpg/craftpix-rpg-ui.css" />
+<script src="js/craftpix-rpg-ui.js"></script>
+<style>
+  /* Tight hotbar icons — mine-loader / codex imgs inside CraftPix slots */
+  #cpx-hotbar .cpx-slot {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: 0;
+  }
+  #cpx-hotbar .cpx-slot .hud-icon-img,
+  #cpx-hotbar .cpx-slot img.gg-icon {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+    image-rendering: auto;
+    pointer-events: none;
+  }
+  #cpx-hotbar .cpx-slot-key {
+    position: absolute;
+    left: 3px;
+    top: 2px;
+    font: 700 9px/1 ui-sans-serif, system-ui, sans-serif;
+    color: #f4e6c8;
+    text-shadow: 0 1px 0 #000, 0 0 3px #000;
+    z-index: 2;
+    pointer-events: none;
+  }
+  #cpx-hotbar .cpx-cd {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    color: #f4e6c8;
+    font: 700 11px/48px ui-sans-serif, system-ui, sans-serif;
+    text-align: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #cpx-hotbar .cpx-slot.is-cd { filter: saturate(0.55); }
+  #cpx-hotbar .cpx-slot.is-cd .cpx-cd { display: block !important; }
+</style>
 <script>
 (function () {
   var canvas = document.getElementById('stage');
   var statusEl = document.getElementById('status');
   var roster = null;
+  var catalog = null;
+  var raceManifest = null;
+  var browseMode = 'races';
   var currentRoot = null;
   var armyRoots = [];
   var clock = new THREE.Clock();
   var selectedUnit = null;
+  var selectedAsset = null;
+  var selectedRace = null;
+  var explorer = null;
+  var explorerUnbind = null;
+  var explorerActive = false;
+  var brainDemo = null; // { roots, t, dummy }
+  var prefabRoots = [];
+  var frameTarget = new THREE.Vector3(0, 1, 0);
+  var framedRoot = null;
+  var frameBoxHelper = null;
+  var frameRing = null;
 
-  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  /** Camera: orbit (default) or fly (WASD free flight) */
+  var camMode = 'orbit'; // 'orbit' | 'fly'
+  var yaw = 0.45;
+  var pitch = 0.18;
+  var dist = 5.2;
+  var distMin = 0.35;
+  var distMax = 120;
+  var flyPos = new THREE.Vector3(0, 1.6, 5.2);
+  var flyYaw = 0;
+  var flyPitch = 0;
+  var keys = Object.create(null);
+  var flySpeed = 4.5; // m/s base
+  var dragBtn = 0; // 0 none, 1 left, 2 right
+  var dragging = false;
+  var lx = 0;
+  var ly = 0;
+  var panOffset = new THREE.Vector3(0, 0, 0);
+
+  var renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: "high-performance",
+  });
   renderer.setClearColor(0x0a101c, 1);
-  renderer.shadowMap.enabled = true;
+  // Modern color management when THREE exposes it; else r128 defaults
+  if (window.TvsProductionPipeline && TvsProductionPipeline.configureRenderer) {
+    TvsProductionPipeline.configureRenderer(renderer, { pixelRatio: Math.min(devicePixelRatio, 1.5), exposure: 1.05 });
+  } else {
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer.shadowMap.enabled = true;
+  }
 
   var scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0a101c, 12, 40);
+  scene.fog = new THREE.FogExp2(0x0a101c, 0.018);
 
-  var camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.05, 500);
   camera.position.set(0, 1.6, 5.2);
 
-  var amb = new THREE.AmbientLight(0xb0c4de, 0.55);
+  // Bright-enough lighting so voxel atlases read true colour (not muddy grey)
+  var amb = new THREE.AmbientLight(0xc8d4e8, 0.72);
   scene.add(amb);
-  var sun = new THREE.DirectionalLight(0xffe8c8, 1.15);
+  var sun = new THREE.DirectionalLight(0xfff0dd, 1.25);
   sun.position.set(4, 10, 6);
   sun.castShadow = true;
   scene.add(sun);
-  var fill = new THREE.DirectionalLight(0x6688ff, 0.35);
+  var fill = new THREE.DirectionalLight(0x88aaff, 0.45);
   fill.position.set(-5, 3, -4);
   scene.add(fill);
+  var hemi = new THREE.HemisphereLight(0xe8f0ff, 0x2a2030, 0.35);
+  scene.add(hemi);
 
-  // Ground grid
-  var grid = new THREE.GridHelper(20, 20, 0x2a3a50, 0x152030);
+  // Ground grid + larger flight playfield
+  var grid = new THREE.GridHelper(60, 60, 0x2a3a50, 0x152030);
   grid.position.y = 0.001;
   scene.add(grid);
   var floor = new THREE.Mesh(
-    new THREE.CircleGeometry(8, 48),
+    new THREE.CircleGeometry(24, 64),
     new THREE.MeshStandardMaterial({ color: 0x121a28, roughness: 0.95, metalness: 0 })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
+
+  // Soft viewing “stage” ring under selection
+  var stageRing = new THREE.Mesh(
+    new THREE.RingGeometry(1.15, 1.35, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0xe86a1a,
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    })
+  );
+  stageRing.rotation.x = -Math.PI / 2;
+  stageRing.position.y = 0.02;
+  stageRing.visible = false;
+  scene.add(stageRing);
 
   // Height reference stick (2m)
   var refGeo = new THREE.BoxGeometry(0.05, 2, 0.05);
@@ -236,20 +494,228 @@
   window.addEventListener('resize', resize);
   resize();
 
-  // Orbit-ish mouse
-  var yaw = 0.35, pitch = 0.15, dist = 5.2, dragging = false, lx = 0, ly = 0;
-  canvas.addEventListener('pointerdown', function (e) { dragging = true; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener('pointerup', function () { dragging = false; });
+  function setCamMode(mode) {
+    camMode = mode === 'fly' ? 'fly' : 'orbit';
+    canvas.classList.toggle('flying', camMode === 'fly');
+    var orbitBtn = document.getElementById('btn-cam-orbit');
+    var flyBtn = document.getElementById('btn-cam-fly');
+    if (orbitBtn) orbitBtn.classList.toggle('active', camMode === 'orbit');
+    if (flyBtn) flyBtn.classList.toggle('active', camMode === 'fly');
+    var lab = document.getElementById('cam-mode-label');
+    if (lab) lab.textContent = camMode === 'fly' ? 'Fly (WASD)' : 'Orbit';
+    var pill = document.getElementById('pill-cam');
+    if (pill) {
+      var b = pill.querySelector('b');
+      if (b) b.textContent = camMode === 'fly' ? 'fly · WASD' : 'orbit · wheel zoom';
+    }
+    if (camMode === 'fly') {
+      // Seed fly pose from current orbit camera
+      flyPos.copy(camera.position);
+      var look = frameTarget.clone().add(panOffset);
+      var dx = look.x - flyPos.x;
+      var dz = look.z - flyPos.z;
+      var dy = look.y - flyPos.y;
+      flyYaw = Math.atan2(dx, dz);
+      flyPitch = Math.atan2(dy, Math.hypot(dx, dz));
+      flyPitch = Math.max(-1.2, Math.min(1.2, flyPitch));
+    } else {
+      // Snap orbit dist from current cam → target
+      var t = frameTarget.clone().add(panOffset);
+      dist = Math.max(distMin, camera.position.distanceTo(t));
+      var off = camera.position.clone().sub(t);
+      yaw = Math.atan2(off.x, off.z);
+      pitch = Math.asin(Math.max(-0.99, Math.min(0.99, off.y / Math.max(0.01, dist))));
+    }
+  }
+
+  function clearFrameHelpers() {
+    if (frameBoxHelper) {
+      scene.remove(frameBoxHelper);
+      if (frameBoxHelper.geometry) frameBoxHelper.geometry.dispose();
+      if (frameBoxHelper.material) frameBoxHelper.material.dispose();
+      frameBoxHelper = null;
+    }
+    if (frameRing) {
+      scene.remove(frameRing);
+      if (frameRing.geometry) frameRing.geometry.dispose();
+      if (frameRing.material) frameRing.material.dispose();
+      frameRing = null;
+    }
+    stageRing.visible = false;
+  }
+
+  /** Draw bbox frame + ground ring under selection for clear viewing. */
+  function showFrameHelpers(root, box) {
+    clearFrameHelpers();
+    if (!root || !box || box.isEmpty()) return;
+    var size = new THREE.Vector3();
+    box.getSize(size);
+    var center = new THREE.Vector3();
+    box.getCenter(center);
+
+    // Wire box (THREE.Box3Helper in r128)
+    try {
+      frameBoxHelper = new THREE.Box3Helper(box.clone(), 0x3dd6a5);
+      frameBoxHelper.material.transparent = true;
+      frameBoxHelper.material.opacity = 0.85;
+      scene.add(frameBoxHelper);
+    } catch (e) {
+      /* older three */
+    }
+
+    var r = Math.max(size.x, size.z) * 0.55 + 0.25;
+    r = Math.max(0.4, Math.min(18, r));
+    frameRing = new THREE.Mesh(
+      new THREE.RingGeometry(r * 0.92, r, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0x3dd6a5,
+        transparent: true,
+        opacity: 0.55,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      })
+    );
+    frameRing.rotation.x = -Math.PI / 2;
+    frameRing.position.set(center.x, Math.max(0.015, box.min.y + 0.02), center.z);
+    scene.add(frameRing);
+
+    stageRing.position.set(center.x, 0.02, center.z);
+    stageRing.scale.setScalar(Math.max(0.5, r * 0.85));
+    stageRing.visible = true;
+  }
+
+  // ── Pointer: orbit / look / pan ─────────────────────────────────
+  canvas.addEventListener('pointerdown', function (e) {
+    canvas.focus();
+    dragging = true;
+    dragBtn = e.button === 2 ? 2 : 1;
+    lx = e.clientX;
+    ly = e.clientY;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  canvas.addEventListener('pointerup', function () {
+    dragging = false;
+    dragBtn = 0;
+  });
+  canvas.addEventListener('pointercancel', function () {
+    dragging = false;
+    dragBtn = 0;
+  });
+  canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   canvas.addEventListener('pointermove', function (e) {
     if (!dragging) return;
-    yaw -= (e.clientX - lx) * 0.01;
-    pitch = Math.max(-0.4, Math.min(0.8, pitch + (e.clientY - ly) * 0.01));
-    lx = e.clientX; ly = e.clientY;
+    var dx = e.clientX - lx;
+    var dy = e.clientY - ly;
+    lx = e.clientX;
+    ly = e.clientY;
+    if (camMode === 'fly') {
+      // Free look
+      flyYaw -= dx * 0.0045;
+      flyPitch = Math.max(-1.25, Math.min(1.25, flyPitch - dy * 0.004));
+      return;
+    }
+    if (dragBtn === 2) {
+      // Pan orbit target in camera plane
+      var right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+      var up = new THREE.Vector3(0, 1, 0);
+      var panScale = dist * 0.0018;
+      panOffset.addScaledVector(right, -dx * panScale);
+      panOffset.addScaledVector(up, dy * panScale);
+      return;
+    }
+    yaw -= dx * 0.008;
+    pitch = Math.max(-1.15, Math.min(1.25, pitch + dy * 0.007));
   });
   canvas.addEventListener('wheel', function (e) {
-    dist = Math.max(2.5, Math.min(12, dist + e.deltaY * 0.01));
     e.preventDefault();
+    var delta = e.deltaY;
+    // Normalize trackpad vs mouse wheel
+    if (e.deltaMode === 1) delta *= 16;
+    if (camMode === 'fly') {
+      // Dolly forward/back along look
+      var lookDir = new THREE.Vector3(
+        Math.sin(flyYaw) * Math.cos(flyPitch),
+        Math.sin(flyPitch),
+        Math.cos(flyYaw) * Math.cos(flyPitch)
+      );
+      flyPos.addScaledVector(lookDir, -delta * 0.012);
+      return;
+    }
+    var factor = Math.exp(delta * 0.0011);
+    dist = Math.max(distMin, Math.min(distMax, dist * factor));
   }, { passive: false });
+
+  // ── Keyboard WASD flight + shortcuts ───────────────────────────
+  window.addEventListener('keydown', function (e) {
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    keys[e.code] = true;
+    if (e.code === 'KeyV') {
+      setCamMode(camMode === 'fly' ? 'orbit' : 'fly');
+      e.preventDefault();
+    }
+    if (e.code === 'KeyF') {
+      if (framedRoot) frameOnRoot(framedRoot, { animate: true });
+      else frameOnRoot(null);
+      e.preventDefault();
+    }
+    if (e.code === 'Home') {
+      panOffset.set(0, 0, 0);
+      if (framedRoot) frameOnRoot(framedRoot, { animate: true });
+      else {
+        frameTarget.set(0, 1, 0);
+        dist = 5.2;
+        yaw = 0.45;
+        pitch = 0.18;
+        setCamMode('orbit');
+      }
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('keyup', function (e) {
+    keys[e.code] = false;
+  });
+
+  document.getElementById('btn-cam-orbit').onclick = function () { setCamMode('orbit'); };
+  document.getElementById('btn-cam-fly').onclick = function () { setCamMode('fly'); };
+  document.getElementById('btn-cam-frame').onclick = function () {
+    if (framedRoot) frameOnRoot(framedRoot, { animate: true });
+  };
+  document.getElementById('btn-cam-zoom-in').onclick = function () {
+    if (camMode === 'fly') {
+      var lookDir = new THREE.Vector3(
+        Math.sin(flyYaw) * Math.cos(flyPitch),
+        Math.sin(flyPitch),
+        Math.cos(flyYaw) * Math.cos(flyPitch)
+      );
+      flyPos.addScaledVector(lookDir, 0.85);
+    } else {
+      dist = Math.max(distMin, dist * 0.82);
+    }
+  };
+  document.getElementById('btn-cam-zoom-out').onclick = function () {
+    if (camMode === 'fly') {
+      var lookDir2 = new THREE.Vector3(
+        Math.sin(flyYaw) * Math.cos(flyPitch),
+        Math.sin(flyPitch),
+        Math.cos(flyYaw) * Math.cos(flyPitch)
+      );
+      flyPos.addScaledVector(lookDir2, -0.85);
+    } else {
+      dist = Math.min(distMax, dist * 1.22);
+    }
+  };
+  document.getElementById('btn-cam-reset').onclick = function () {
+    panOffset.set(0, 0, 0);
+    if (framedRoot) frameOnRoot(framedRoot, { animate: true });
+    else {
+      frameTarget.set(0, 1, 0);
+      dist = 5.2;
+      yaw = 0.45;
+      pitch = 0.18;
+      setCamMode('orbit');
+    }
+  };
 
   function setStatus(msg, err) {
     statusEl.textContent = msg;
@@ -262,13 +728,41 @@
     el.className = 'dot' + (state === true ? ' ok' : state === false ? ' bad' : state === 'run' ? ' run' : '');
   }
 
+  function disposeObject(obj) {
+    if (!obj) return;
+    obj.traverse(function (ch) {
+      if (ch.geometry && ch.geometry.dispose) {
+        try { ch.geometry.dispose(); } catch (e) {}
+      }
+      var mats = ch.material ? (Array.isArray(ch.material) ? ch.material : [ch.material]) : [];
+      mats.forEach(function (m) {
+        if (!m) return;
+        if (m.map && m.map.dispose) try { m.map.dispose(); } catch (e2) {}
+        if (m.dispose) try { m.dispose(); } catch (e3) {}
+      });
+    });
+  }
+
   function clearStage() {
+    stopBrainDemo();
+    detachExplorer();
     if (currentRoot) {
       scene.remove(currentRoot);
+      disposeObject(currentRoot);
       currentRoot = null;
     }
-    armyRoots.forEach(function (r) { scene.remove(r); });
+    armyRoots.forEach(function (r) {
+      scene.remove(r);
+      disposeObject(r);
+    });
     armyRoots = [];
+    prefabRoots.forEach(function (r) {
+      scene.remove(r);
+      disposeObject(r);
+    });
+    prefabRoots = [];
+    framedRoot = null;
+    clearFrameHelpers();
   }
 
   function measureHeight(obj) {
@@ -277,19 +771,265 @@
     return box.max.y - box.min.y;
   }
 
+  /**
+   * Fit camera distance to bbox using FOV + aspect (proper framing).
+   * Padding > 1 = more air around the asset.
+   */
+  function fitDistForBox(box, padding) {
+    padding = padding == null ? 1.35 : padding;
+    var size = new THREE.Vector3();
+    box.getSize(size);
+    var maxDim = Math.max(size.x, size.y, size.z, 0.05);
+    var fov = (camera.fov * Math.PI) / 180;
+    var aspect = Math.max(0.4, camera.aspect || 1);
+    // Vertical fit
+    var distV = (size.y * 0.5 * padding) / Math.tan(fov * 0.5);
+    // Horizontal fit
+    var distH = (size.x * 0.5 * padding) / (Math.tan(fov * 0.5) * aspect);
+    // Depth contribution so long models don't clip
+    var distD = size.z * 0.65 * padding + maxDim * 0.15;
+    var d = Math.max(distV, distH, distD, maxDim * 1.1);
+    return Math.max(distMin, Math.min(distMax, d));
+  }
+
+  /** Orbit / fly framing from mesh bbox · shows selection frame. */
+  function frameOnRoot(root, opts) {
+    opts = opts || {};
+    framedRoot = root || null;
+    panOffset.set(0, 0, 0);
+    if (!root) {
+      frameTarget.set(0, 1, 0);
+      dist = 5.2;
+      yaw = 0.45;
+      pitch = 0.18;
+      distMin = 0.35;
+      distMax = 120;
+      clearFrameHelpers();
+      if (camMode === 'fly') {
+        flyPos.set(0, 1.6, 5.2);
+        flyYaw = 0;
+        flyPitch = -0.1;
+      }
+      return;
+    }
+    root.updateMatrixWorld(true);
+    var box = new THREE.Box3().setFromObject(root);
+    if (!isFinite(box.min.x) || box.isEmpty()) {
+      frameTarget.set(0, 1, 0);
+      dist = 5;
+      return;
+    }
+    var size = new THREE.Vector3();
+    var center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    // Prefer slightly above feet so heroes frame on torso/head
+    var yLo = box.min.y + size.y * 0.35;
+    var yHi = box.min.y + size.y * 0.72;
+    var lookY = Math.max(yLo, Math.min(center.y, yHi));
+    frameTarget.set(center.x, lookY, center.z);
+
+    var maxDim = Math.max(size.x, size.y, size.z, 0.05);
+    distMin = Math.max(0.2, maxDim * 0.12);
+    distMax = Math.max(24, maxDim * 28);
+
+    var fit = fitDistForBox(box, opts.padding != null ? opts.padding : 1.42);
+    if (root.userData && root.userData.suggestDist) {
+      fit = Math.max(fit * 0.85, root.userData.suggestDist);
+    }
+    dist = Math.max(distMin, Math.min(distMax, fit));
+
+    // ¾ view — slightly elevated, not top-down
+    yaw = opts.yaw != null ? opts.yaw : 0.55;
+    pitch = opts.pitch != null
+      ? opts.pitch
+      : Math.max(0.08, Math.min(0.42, 0.14 + Math.min(0.25, size.y * 0.04)));
+
+    showFrameHelpers(root, box);
+
+    // Keep fly camera near framed asset when switching modes
+    if (camMode === 'fly' || opts.seedFly) {
+      var t = frameTarget.clone();
+      flyPos.set(
+        t.x + Math.sin(yaw) * Math.cos(pitch) * dist,
+        t.y + Math.sin(pitch) * dist + 0.2,
+        t.z + Math.cos(yaw) * Math.cos(pitch) * dist
+      );
+      flyYaw = yaw + Math.PI; // face the target
+      flyPitch = -pitch * 0.85;
+    }
+
+    // Fog scale with subject size so large buildings stay readable
+    if (scene.fog && typeof scene.fog.density === 'number') {
+      scene.fog.density = Math.max(0.004, Math.min(0.04, 0.55 / (dist + 8)));
+    }
+  }
+
+  function updateFilterVisibility() {
+    var mode = document.getElementById('mode-filter').value || 'all';
+    var packWrap = document.getElementById('pack-filter-wrap');
+    var classWrap = document.getElementById('class-filter-wrap');
+    if (packWrap) packWrap.style.display = mode === 'races' ? 'none' : '';
+    if (classWrap) classWrap.style.display = mode === 'units' ? '' : 'none';
+  }
+
+  function searchQuery() {
+    var el = document.getElementById('asset-search');
+    return el && el.value ? String(el.value).trim().toLowerCase() : '';
+  }
+
+  function matchesSearch(text) {
+    var q = searchQuery();
+    if (!q) return true;
+    return String(text || '').toLowerCase().indexOf(q) >= 0;
+  }
+
+  function meshHasTexture(root) {
+    if (!root) return false;
+    if (root.userData && root.userData.hasTexture) return true;
+    if (window.TvsVoxelColors && TvsVoxelColors.hasUsableMap) {
+      return TvsVoxelColors.hasUsableMap(root);
+    }
+    return !!(root.userData && (root.userData.textureUrl || root.userData.texture));
+  }
+
+  function finishMaterials(root) {
+    if (!root) return;
+    if (window.TvsVoxelColors) {
+      if (TvsVoxelColors.ensureReadableAlbedo) {
+        TvsVoxelColors.ensureReadableAlbedo(root, { THREE: THREE });
+      }
+      if (TvsVoxelColors.attachColorApi) {
+        TvsVoxelColors.attachColorApi(root, { THREE: THREE });
+      }
+    } else if (window.TvsProductionPipeline && TvsProductionPipeline.prepMeshMaterials) {
+      TvsProductionPipeline.prepMeshMaterials(root, { voxel: true });
+    }
+    // Make skinned voxel kits always readable (KHR_mesh_quantization + r128)
+    root.traverse(function (o) {
+      if (!o || (!o.isMesh && !o.isSkinnedMesh)) return;
+      o.visible = true;
+      o.frustumCulled = false;
+      o.castShadow = true;
+      o.receiveShadow = true;
+      if (o.isSkinnedMesh && o.skeleton) {
+        try {
+          o.skeleton.update();
+        } catch (eS) {}
+      }
+      var mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      var next = [];
+      mats.forEach(function (m) {
+        if (!m) return;
+        // r128: SkinnedMesh will not skin (often invisible/wrong pose) without this
+        if (o.isSkinnedMesh) m.skinning = true;
+        m.side = THREE.DoubleSide;
+        m.transparent = false;
+        m.opacity = 1;
+        m.depthWrite = true;
+        if (m.map) {
+          m.map.flipY = false;
+          m.map.needsUpdate = true;
+          if (m.map.encoding != null && THREE.sRGBEncoding != null) m.map.encoding = THREE.sRGBEncoding;
+          if (m.map.magFilter != null) m.map.magFilter = THREE.NearestFilter;
+          if (m.map.minFilter != null) m.map.minFilter = THREE.NearestFilter;
+          m.map.generateMipmaps = false;
+        }
+        // Avoid pure black silent kits when atlas fails
+        if (m.color && !m.map) {
+          var c = m.color;
+          if (c.r + c.g + c.b < 0.08) m.color.setHex(0xb8c0cc);
+        }
+        // MeshStandard without env can read as black on some r128/WebGL stacks —
+        // promote skinned voxel kits to MeshBasic (unlit) while keeping map + skinning.
+        if (o.isSkinnedMesh && m.isMeshStandardMaterial && !m.userData._tvsUnlit) {
+          var basic = new THREE.MeshBasicMaterial({
+            map: m.map || null,
+            color: m.color ? m.color.clone() : new THREE.Color(0xffffff),
+            side: THREE.DoubleSide,
+            skinning: true,
+            transparent: false,
+            opacity: 1,
+            name: m.name,
+          });
+          basic.userData = Object.assign({}, m.userData || {}, {
+            _tvsUnlit: true,
+            _baseColor: m.userData && m.userData._baseColor != null
+              ? m.userData._baseColor
+              : m.color
+                ? m.color.getHex()
+                : 0xffffff,
+          });
+          if (!basic.map) basic.color.setHex(0xb8c0cc);
+          m = basic;
+        }
+        m.needsUpdate = true;
+        next.push(m);
+      });
+      if (next.length) {
+        o.material = Array.isArray(o.material) ? next : next[0];
+      }
+    });
+    root.userData.hasTexture = meshHasTexture(root);
+  }
+
   function updatePills(root, unit) {
     var h = root ? measureHeight(root) : 0;
-    var scaleOk = h > 1.6 && h < 2.5;
-    document.getElementById('pill-scale').innerHTML = '<span class="k">Scale</span><b>' + (h ? h.toFixed(2) + 'm' : '—') + '</b>';
+    var scaleOk = h > 0.05 && h < 40;
+    var texOk = meshHasTexture(root);
+    var texLabel = '—';
+    if (root && root.userData) {
+      if (root.userData.externalAtlas) texLabel = 'atlas PNG';
+      else if (texOk && String(root.userData.textureUrl || '').indexOf('#embed') >= 0) texLabel = 'GLB embed';
+      else if (texOk) texLabel = 'bound';
+      else texLabel = 'missing';
+    }
+    var fixNote = '';
+    if (root && root.userData) {
+      if (root.userData.fixedAuthorScale) fixNote = ' · fixed×100';
+      else if (root.userData.siFit) fixNote = ' · siFit';
+      else if (root.userData.unitFix && root.userData.unitFix !== 1) {
+        fixNote = ' · u' + Number(root.userData.unitFix).toFixed(3);
+      }
+    }
+    var catNote = '';
+    if (root && root.userData) {
+      if (root.userData.category) {
+        catNote =
+          ' · ' +
+          root.userData.category +
+          (root.userData.targetMeasureM != null
+            ? '→' + Number(root.userData.targetMeasureM).toFixed(2) + 'm'
+            : root.userData.targetHeight != null
+              ? '→' + Number(root.userData.targetHeight).toFixed(2) + 'm'
+              : '');
+      } else if (root.userData.relativeToCharacter != null) {
+        catNote = ' · ×' + Number(root.userData.relativeToCharacter).toFixed(2) + 'char';
+      }
+    }
+    document.getElementById('pill-scale').innerHTML =
+      '<span class="k">Scale</span><b>' + (h ? h.toFixed(2) + 'm' + fixNote + catNote : '—') + '</b>';
     document.getElementById('pill-scale').className = 'pill' + (scaleOk || !h ? '' : ' warn');
-    document.getElementById('pill-tex').innerHTML = '<span class="k">Texture</span><b>' + (root && root.userData.textureUrl ? 'bound' : '—') + '</b>';
+    document.getElementById('pill-tex').innerHTML = '<span class="k">Texture</span><b>' + texLabel + '</b>';
+    document.getElementById('pill-tex').className = 'pill' + (texOk || !root ? '' : ' warn');
     var animKeys = root && root.userData.animActions ? Object.keys(root.userData.animActions) : [];
     document.getElementById('pill-anim').innerHTML = '<span class="k">Anim</span><b>' + (animKeys.length ? animKeys.join(', ') : '—') + '</b>';
-    document.getElementById('pill-uuid').innerHTML = '<span class="k">D1 grudgeUuid</span><b style="font-size:10px">' + ((unit && unit.grudgeUuid) || '—') + '</b>';
+    document.getElementById('pill-uuid').innerHTML = '<span class="k">D1 grudgeUuid</span><b style="font-size:10px">' + ((unit && unit.grudgeUuid) || (root && root.userData && root.userData.tvsAsset && root.userData.tvsAsset.grudgeUuid) || '—') + '</b>';
+    var brainOk = !!(root && root.userData && (root.userData.aiAgent || root.userData.brain));
+    var bMerged = root && root.userData && root.userData.brainMerged;
+    document.getElementById('pill-brain').innerHTML =
+      '<span class="k">Brain</span><b>' +
+      (bMerged
+        ? (bMerged.archetype || '?') + ' · ' + (bMerged.id || '').replace(/^brain-/, '')
+        : brainOk
+          ? 'json'
+          : '—') +
+      '</b>';
     setCheck('c-scale', scaleOk);
-    setCheck('c-tex', !!(root && root.userData.textureUrl));
+    setCheck('c-tex', texOk);
     setCheck('c-anim', animKeys.length > 0);
-    setCheck('c-color', !!(root && root.userData.setColorTint));
+    setCheck('c-brain', brainOk);
+    setCheck('c-color', !!(root && root.userData && root.userData.setColorTint));
   }
 
   function fillDetail(unit, root) {
@@ -297,54 +1037,152 @@
     document.getElementById('sel-meta').textContent = unit
       ? unit.pack + ' · ' + unit.classHint + ' · ' + unit.unitId
       : 'Pick a unit';
+    var bMerged = root && root.userData && root.userData.brainMerged;
+    var agent = root && root.userData && root.userData.aiAgent;
     var meta = unit
       ? {
           unitId: unit.unitId,
           grudgeUuid: unit.grudgeUuid,
           pack: unit.pack,
           classHint: unit.classHint,
+          glbUrl: unit.glbUrl,
           modelUrl: unit.modelUrl,
           textureUrl: unit.textureUrl,
           animationPackUrl: unit.animationPackUrl,
           colliderUrl: unit.colliderUrl,
           brainUrl: unit.brainUrl,
+          brainId: unit.brainId,
+          source: 'cdn-roster · assets.grudge-studio.com',
           scaleFactor: root && root.userData.scaleFactor,
           nativeHeight: root && root.userData.nativeHeight,
           targetHeight: root && root.userData.targetHeight,
+          animClips: root && root.userData.animActions ? Object.keys(root.userData.animActions) : [],
+          strategy: bMerged
+            ? {
+                id: bMerged.id,
+                archetype: bMerged.archetype,
+                senses: bMerged.senses,
+                combat: bMerged.combat,
+                locomotion: bMerged.locomotion,
+                goals: bMerged.goals,
+                blackboard: bMerged.blackboard,
+                voxBehavior: root.userData.voxBehavior,
+              }
+            : null,
+          importReport: root && root.userData && root.userData.importReport,
         }
       : {};
     document.getElementById('meta-json').textContent = JSON.stringify(meta, null, 2);
 
+    var brainSum = document.getElementById('brain-summary');
+    if (brainSum) {
+      if (bMerged) {
+        var goals = (bMerged.goals || [])
+          .slice(0, 4)
+          .map(function (g) {
+            return g.id + '→' + g.action;
+          })
+          .join(' · ');
+        brainSum.textContent =
+          (bMerged.archetype || unit.classHint || '?') +
+          ' · vision ' +
+          ((bMerged.senses && bMerged.senses.visionRange) || '—') +
+          'm · range ' +
+          ((bMerged.combat && bMerged.combat.preferredRange) || '—') +
+          'm · ' +
+          goals +
+          (agent ? ' · agent ready' : '');
+      } else if (unit && unit.brainUrl) {
+        brainSum.textContent = 'brainUrl present but agent not built (check TvsAiBrain)';
+      } else {
+        brainSum.textContent = 'No brain on this selection (CDN roster field brainUrl)';
+      }
+    }
+
     var animBox = document.getElementById('anim-btns');
     animBox.innerHTML = '';
     if (root && root.userData.animActions) {
-      Object.keys(root.userData.animActions).forEach(function (name) {
+      // Prefer semantic package order when available
+      var names = Object.keys(root.userData.animActions);
+      var order =
+        (window.TvsUnitLoader && TvsUnitLoader.SEMANTIC_ROLES) || [];
+      names.sort(function (a, b) {
+        var ia = order.indexOf(a);
+        var ib = order.indexOf(b);
+        if (ia < 0) ia = 99;
+        if (ib < 0) ib = 99;
+        return ia - ib || a.localeCompare(b);
+      });
+      names.forEach(function (name) {
         var b = document.createElement('button');
         b.type = 'button';
         b.textContent = name;
+        b.title = name;
         b.onclick = function () {
           root.userData.playClip(name);
+          if (window.TvsCseSfx) TvsCseSfx.playForAnim(name);
           Array.prototype.forEach.call(animBox.querySelectorAll('button'), function (x) { x.classList.remove('on'); });
           b.classList.add('on');
         };
         animBox.appendChild(b);
       });
     }
+    if (window.TvsCseSfx && TvsCseSfx.warm) {
+      TvsCseSfx.warm(['combat_hit', 'ranged_fire', 'explosion']).catch(function () {});
+    }
   }
 
-  var TINTS = [
-    0xffffff, 0xff6644, 0x44aaff, 0x55dd88, 0xffcc33, 0xcc66ff, 0xff88aa, 0x88ffe0,
-  ];
+  function stopBrainDemo() {
+    brainDemo = null;
+    var pb = document.getElementById('pill-brain');
+    if (pb && currentRoot && currentRoot.userData && currentRoot.userData.brainMerged) {
+      var bm = currentRoot.userData.brainMerged;
+      pb.innerHTML =
+        '<span class="k">Brain</span><b>' +
+        (bm.archetype || '?') +
+        ' · idle</b>';
+    }
+  }
+
+  function startBrainDemo(roots) {
+    roots = (roots || []).filter(function (r) {
+      return r && r.userData && r.userData.aiAgent;
+    });
+    if (!roots.length) {
+      setStatus('No AI agents — load unit from CDN roster with brain', true);
+      return;
+    }
+    roots.forEach(function (r) {
+      if (r.userData.aiAgent && r.userData.aiAgent.setHome) {
+        r.userData.aiAgent.setHome(r.position.x, r.position.z);
+      }
+    });
+    brainDemo = {
+      roots: roots,
+      t: 0,
+      // Dummy foe circles in front of lineup so chase/attack goals fire
+      dummy: { x: 0, z: 4 },
+    };
+    setStatus('AI demo · ' + roots.length + ' agent(s) · dummy target at z=4 · goals from CDN brain.json');
+  }
+
+  var TINTS =
+    (window.TvsVoxelColors && TvsVoxelColors.TINT_SWATCHES) ||
+    [0xffffff, 0xff6644, 0x44aaff, 0x55dd88, 0xffcc33, 0xcc66ff, 0xff88aa, 0x88ffe0];
   (function buildSwatches() {
     var box = document.getElementById('swatches');
     TINTS.forEach(function (hex) {
       var el = document.createElement('button');
       el.type = 'button';
       el.className = 'sw';
-      el.style.background = '#' + hex.toString(16).padStart(6, '0');
+      el.style.background = '#' + (hex >>> 0).toString(16).padStart(6, '0');
+      el.title = '#' + (hex >>> 0).toString(16).padStart(6, '0');
       el.onclick = function () {
         if (currentRoot && currentRoot.userData.setColorTint) {
           currentRoot.userData.setColorTint(hex);
+          setCheck('c-color', true);
+        } else if (currentRoot && window.TvsVoxelColors) {
+          TvsVoxelColors.applyColorTint(currentRoot, hex, { THREE: THREE, mode: 'multiply' });
           setCheck('c-color', true);
         }
         Array.prototype.forEach.call(box.querySelectorAll('.sw'), function (s) { s.classList.remove('sel'); });
@@ -366,6 +1204,8 @@
 
   async function loadUnit(unit) {
     selectedUnit = unit;
+    selectedAsset = null;
+    selectedRace = null;
     clearStage();
     setStatus('Loading ' + unit.displayName + '…');
     setCheck('c-fbx', 'run');
@@ -378,22 +1218,227 @@
     });
 
     try {
-      var root = await TvsUnitLoader.loadTvsUnit(unit, {
+      var loadOpts = {
         THREE: THREE,
         FBXLoader: THREE.FBXLoader,
         height: 2.0,
         withTexture: true,
         withAnims: true,
+        withBrain: true,
         loadSidecars: true,
-        verify: true,
-        maxClips: 8,
-      });
+        verify: false,
+        maxClips: 20,
+        preferGlb: true,
+      };
+      var root = await TvsUnitLoader.loadTvsUnit(unit, loadOpts);
+      function countMeshes(r) {
+        var n = 0;
+        if (!r) return 0;
+        r.traverse(function (o) {
+          if ((o.isMesh || o.isSkinnedMesh) && o.geometry) n++;
+        });
+        return n;
+      }
+      function meshPaintScore(r) {
+        // 0 = nothing drawable; >0 has verts with non-zero spread
+        var score = 0;
+        if (!r) return 0;
+        r.traverse(function (o) {
+          if ((!o.isMesh && !o.isSkinnedMesh) || !o.geometry) return;
+          var pos = o.geometry.attributes && o.geometry.attributes.position;
+          if (!pos || !pos.count) return;
+          var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+          var step = Math.max(1, Math.floor(pos.count / 64));
+          for (var i = 0; i < pos.count; i += step) {
+            var x = pos.getX(i), y = pos.getY(i);
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+          }
+          var spread = Math.max(maxX - minX, maxY - minY);
+          if (isFinite(spread) && spread > 1e-4) score += pos.count;
+        });
+        return score;
+      }
+      // Empty hierarchy OR zero-spread verts (quantization/skin fail) → FBX
+      var needFbx =
+        unit.modelUrl &&
+        (countMeshes(root) < 1 || meshPaintScore(root) < 8);
+      if (needFbx) {
+        console.warn('[tvs] weak GLB paint — retry FBX', unit.unitId, {
+          meshes: countMeshes(root),
+          paint: meshPaintScore(root),
+        });
+        try {
+          if (root && root.parent) root.parent.remove(root);
+          disposeObject(root);
+        } catch (eR) {}
+        root = await TvsUnitLoader.loadTvsUnit(
+          unit,
+          Object.assign({}, loadOpts, { preferGlb: false })
+        );
+      }
+      finishMaterials(root);
+      // Last-resort atlas rebind if still untextured after materials pass
+      if (
+        !meshHasTexture(root) &&
+        unit.textureUrl &&
+        window.TvsVoxelColors &&
+        TvsVoxelColors.applyAtlasMap
+      ) {
+        try {
+          var tl = new THREE.TextureLoader();
+          var tex = await new Promise(function (resolve, reject) {
+            tl.load(unit.textureUrl, resolve, undefined, reject);
+          });
+          TvsVoxelColors.applyAtlasMap(root, tex, { THREE: THREE, flipY: false });
+          root.userData.externalAtlas = true;
+          root.userData.textureUrl = unit.textureUrl;
+        } catch (eAtlas) {
+          console.warn('[tvs] atlas rebind', eAtlas);
+        }
+        finishMaterials(root);
+      }
       currentRoot = root;
       scene.add(root);
+      try {
+        root.updateMatrixWorld(true);
+        root.traverse(function (o) {
+          if (o.isMesh || o.isSkinnedMesh) {
+            o.visible = true;
+            o.frustumCulled = false;
+          }
+        });
+        /**
+         * SI + upright for showcase.
+         * Production TVS GLBs are already Y-up ~2 m after TvsUnitLoader.finalizeGameDelivery.
+         * NEVER force rotation.x = −π/2 on every skinned mesh — that lays Y-up kits on their
+         * side / upside-down and, combined with a second height fit, looks 100× + deformed.
+         * Only rotate when AABB proves Z-up (author cm FBX still on side).
+         * Do NOT re-bind skeleton after root transforms (destroys skin).
+         */
+        (function stageUnitSiUpright(r) {
+          if (!r) return;
+          r.updateMatrixWorld(true);
+          var box0 = new THREE.Box3().setFromObject(r);
+          var size0 = new THREE.Vector3();
+          box0.getSize(size0);
+          var sx = size0.x || 0;
+          var sy = size0.y || 0;
+          var sz = size0.z || 0;
+          var maxDim = Math.max(sx, sy, sz);
+
+          // Decade unit fix if still cm-scale after loader
+          if (maxDim > 40) {
+            r.scale.multiplyScalar(0.01);
+            r.updateMatrixWorld(true);
+            box0 = new THREE.Box3().setFromObject(r);
+            box0.getSize(size0);
+            sx = size0.x;
+            sy = size0.y;
+            sz = size0.z;
+            maxDim = Math.max(sx, sy, sz);
+            r.userData.unitFix = (r.userData.unitFix || 1) * 0.01;
+          }
+
+          // Detect Z-up (lying flat): height axis is Z and much larger than Y
+          var looksZUp =
+            sz > 0.4 &&
+            sz > sy * 1.35 &&
+            sy < Math.max(1.2, sz * 0.55);
+          // Y already tall enough for a standing humanoid
+          var looksYUp = sy >= 1.0 && sy >= sz * 0.85;
+
+          if (looksZUp && !looksYUp && !r.userData.productionBaked) {
+            r.rotation.x = -Math.PI / 2;
+            r.rotation.z = 0;
+            r.userData.showcaseUpright = -Math.PI / 2;
+            r.updateMatrixWorld(true);
+          } else {
+            // Keep loader orientation (Y-up production)
+            if (Math.abs(r.rotation.x) > 0.01 && r.userData.productionBaked) {
+              r.rotation.x = 0;
+            }
+            r.userData.showcaseUpright = 0;
+            r.updateMatrixWorld(true);
+          }
+
+          // Uniform height to ~2 m only when outside humanoid band (no non-uniform scale)
+          var h1 = measureHeight(r);
+          if (h1 > 0.05 && (h1 < 1.35 || h1 > 2.55)) {
+            var sFit = 2.0 / h1;
+            if (sFit > 0.15 && sFit < 8) {
+              r.scale.multiplyScalar(sFit);
+              r.updateMatrixWorld(true);
+              r.userData.showcaseHeightFit = sFit;
+            }
+          }
+
+          // Feet on floor + center XZ
+          var boxG = new THREE.Box3().setFromObject(r);
+          r.position.y -= boxG.min.y;
+          var cx = (boxG.min.x + boxG.max.x) * 0.5;
+          var cz = (boxG.min.z + boxG.max.z) * 0.5;
+          r.position.x -= cx;
+          r.position.z -= cz;
+          r.updateMatrixWorld(true);
+          boxG = new THREE.Box3().setFromObject(r);
+          r.position.y -= boxG.min.y;
+          r.userData.nativeHeight = boxG.max.y - boxG.min.y;
+          r.userData.feetGrounded = true;
+        })(root);
+      } catch (ePose) {
+        console.warn('[tvs] stage SI upright', ePose);
+      }
+      // Play pack idle immediately (unit loader already bound anims when withAnims)
+      try {
+        if (root.userData.playClip) {
+          root.userData.playClip('idle', 0) ||
+            root.userData.playClip('locomotion', 0);
+        }
+        fillAnimButtons(root);
+      } catch (eAnim0) {}
+      frameOnRoot(root);
       setCheck('c-fbx', true);
       updatePills(root, unit);
       fillDetail(unit, root);
-      setStatus(unit.displayName + ' ready · drag to orbit · scroll to zoom');
+      var animN =
+        root.userData.animActions ? Object.keys(root.userData.animActions).length : 0;
+      var hasBrain = !!(root.userData.aiAgent || root.userData.brain);
+      setCheck('c-brain', hasBrain);
+      setCheck('c-anim', animN > 0);
+      var arch =
+        (root.userData.brainMerged && root.userData.brainMerged.archetype) ||
+        unit.classHint ||
+        '—';
+      setStatus(
+        unit.displayName +
+          ' · CDN · h≈' +
+          (measureHeight(root) ? measureHeight(root).toFixed(2) + 'm' : '?') +
+          ' · tex ' +
+          (meshHasTexture(root) ? 'OK' : 'MISSING') +
+          ' · clips ' +
+          (animN || 'none') +
+          ' · brain ' +
+          (hasBrain ? arch : 'none') +
+          ' · UUID ' +
+          String(unit.grudgeUuid || '—').slice(0, 13)
+      );
+      // Optional Danger pack merge — keep CDN pack clips if Danger fails
+      ensureDangerMixer(root)
+        .then(function () {
+          var n2 =
+            root.userData.animActions ? Object.keys(root.userData.animActions).length : animN;
+          setCheck('c-anim', n2 > 0);
+          fillAnimButtons(root);
+          if (root.userData.playClip && !root.userData.currentAnim) {
+            root.userData.playClip('idle', 0) || root.userData.playClip('locomotion', 0);
+          }
+          updatePills(root, unit);
+        })
+        .catch(function () {
+          fillAnimButtons(root);
+          setCheck('c-anim', animN > 0);
+        });
     } catch (err) {
       console.error(err);
       setCheck('c-fbx', false);
@@ -403,66 +1448,854 @@
     }
   }
 
+  function detachExplorer() {
+    if (explorerUnbind) {
+      try { explorerUnbind(); } catch (e) {}
+      explorerUnbind = null;
+    }
+    explorer = null;
+    explorerActive = false;
+    hideMainPanel();
+    var hp = document.getElementById('pill-hp');
+    if (hp) hp.innerHTML = '<span class="k">HP</span><b>—</b>';
+  }
+
+  function showMainPanel(meta, st) {
+    var panel = document.getElementById('cpx-main-panel');
+    if (!panel) return;
+    // Single action bar — hide right-panel combat chrome while CraftPix owns input
+    panel.style.display = 'block';
+    var animH = document.getElementById('anim-btns');
+    if (animH && animH.parentElement) {
+      var prev = animH.previousElementSibling;
+      if (prev && prev.tagName === 'H3') prev.style.display = 'none';
+      animH.style.display = 'none';
+    }
+    var name = (meta && (meta.displayName || meta.label || meta.unitId)) || 'Explorer';
+    var elN = document.getElementById('cpx-name');
+    var elM = document.getElementById('cpx-meta');
+    if (elN) elN.textContent = name;
+    if (elM)
+      elM.textContent =
+        ((meta && meta.pack) || 'voxel') +
+        ' · ' +
+        ((meta && meta.classHint) || 'melee') +
+        ' · CraftPix HUD';
+    var port = document.getElementById('cpx-portrait');
+    if (port && meta && meta.textureUrl) {
+      port.style.backgroundImage = 'url(' + meta.textureUrl + ')';
+    } else if (port && selectedRace && window.TvsVoxelRaceDefaults) {
+      port.style.backgroundImage =
+        'url(' + TvsVoxelRaceDefaults.portraitUrl(selectedRace) + ')';
+    }
+    // Theme once when first shown (compositions only for vitals/dock — not full-page decorate)
+    if (window.CraftpixRpgUI && !window.__cpxBooted) {
+      window.__cpxBooted = true;
+      try {
+        if (CraftpixRpgUI.boot) {
+          CraftpixRpgUI.boot({ compositions: ['hudVitals', 'hudDock'] }).catch(function () {
+            if (CraftpixRpgUI.applyTheme) CraftpixRpgUI.applyTheme();
+          });
+        } else if (CraftpixRpgUI.applyTheme) CraftpixRpgUI.applyTheme();
+      } catch (eC) {}
+    }
+    updateMainBars(st);
+  }
+
+  function hideMainPanel() {
+    var panel = document.getElementById('cpx-main-panel');
+    if (panel) panel.style.display = 'none';
+    var animH = document.getElementById('anim-btns');
+    if (animH) {
+      animH.style.display = '';
+      var prev = animH.previousElementSibling;
+      if (prev && prev.tagName === 'H3') prev.style.display = '';
+    }
+  }
+
+  /** Resolve mine-loader / codex icon URL for explorer hotbar slots (no emoji SSOT). */
+  function explorerIconUrl(iconId) {
+    iconId = String(iconId || '');
+    var MINE = 'assets/mine-loader/ui-icons/';
+    var MOBILITY = {
+      dodge: MINE + 'ambush.png',
+      shadow_edge: MINE + 'ambush.png',
+      dash: MINE + 'charge.png',
+      blood_rush: MINE + 'charge.png',
+      harvest: MINE + 'support-beam.png',
+      jump: MINE + 'parkour.png',
+      climb: MINE + 'parkour.png',
+      craft: MINE + 'build.png',
+      ss_shield_bash: MINE + 'attack.png',
+      ss_dash_strike: MINE + 'charge.png',
+      gs_whirlwind: MINE + 'aoe-blast.png',
+    };
+    if (window.GrudgeGameHud && GrudgeGameHud.skillIconUrl) {
+      var skillU = GrudgeGameHud.skillIconUrl(iconId);
+      if (skillU && skillU.indexOf('skill-slot.png') < 0) return skillU;
+    }
+    if (window.GrudgeCodex) {
+      if (iconId === 'harvest' || iconId === 'wood') {
+        var ru = GrudgeCodex.resourceIconUrl('wood');
+        if (ru) return ru;
+      }
+      if (iconId === 'craft') {
+        var bu = GrudgeCodex.buildIconUrl('wood');
+        if (bu) return bu;
+      }
+    }
+    if (window.GrudgeGameHud) {
+      if (iconId === 'harvest' && GrudgeGameHud.resourceIconUrl)
+        return GrudgeGameHud.resourceIconUrl('wood');
+      if (iconId === 'craft' && GrudgeGameHud.buildIconUrl) return GrudgeGameHud.buildIconUrl('wood');
+    }
+    return MOBILITY[iconId] || MINE + 'skill-slot.png';
+  }
+
+  function setSlotIcon(el, url, fallbackEmoji) {
+    if (!el) return;
+    if (window.GrudgeGameHud && GrudgeGameHud.setHudIcon) {
+      GrudgeGameHud.setHudIcon(el, url, fallbackEmoji || '');
+      // keep key + cd overlays (setHudIcon clears text)
+      ensureSlotChrome(el);
+      return;
+    }
+    if (window.GrudgeCodex && GrudgeCodex.setHudIcon) {
+      GrudgeCodex.setHudIcon(el, url, fallbackEmoji || '');
+      ensureSlotChrome(el);
+      return;
+    }
+    el.textContent = '';
+    if (url) {
+      var img = document.createElement('img');
+      img.className = 'hud-icon-img';
+      img.alt = '';
+      img.src = url;
+      img.onerror = function () {
+        img.remove();
+        if (fallbackEmoji) el.appendChild(document.createTextNode(fallbackEmoji));
+      };
+      el.appendChild(img);
+    } else if (fallbackEmoji) {
+      el.appendChild(document.createTextNode(fallbackEmoji));
+    }
+    ensureSlotChrome(el);
+  }
+
+  function ensureSlotChrome(el) {
+    if (!el) return;
+    var key = el.getAttribute('data-key-label');
+    if (!key) {
+      var sk = el.querySelector('.cpx-slot-key');
+      if (sk) key = sk.textContent;
+    }
+    if (key && !el.querySelector('.cpx-slot-key')) {
+      var k = document.createElement('span');
+      k.className = 'cpx-slot-key';
+      k.textContent = key;
+      el.appendChild(k);
+    }
+    if (el.getAttribute('data-cd') && !el.querySelector('.cpx-cd')) {
+      var cd = document.createElement('i');
+      cd.className = 'cpx-cd';
+      cd.hidden = true;
+      el.appendChild(cd);
+    }
+  }
+
+  /** Fill CraftPix hotbar from ObjectStore feeds + mine-loader codex paths. */
+  function fillExplorerHotbar() {
+    var slots = document.querySelectorAll('#cpx-hotbar [data-skill]');
+    slots.forEach(function (btn) {
+      var iconId = btn.getAttribute('data-icon-id') || btn.getAttribute('data-skill');
+      var emoji = btn.getAttribute('data-emoji') || '';
+      var keyEl = btn.querySelector('.cpx-slot-key');
+      if (keyEl) btn.setAttribute('data-key-label', keyEl.textContent || '');
+      var url = explorerIconUrl(iconId);
+      setSlotIcon(btn, url, emoji);
+    });
+  }
+
+  function updateHotbarCds() {
+    if (!explorer || !explorer.getCds) return;
+    var cds = explorer.getCds();
+    document.querySelectorAll('#cpx-hotbar [data-cd]').forEach(function (btn) {
+      var kind = btn.getAttribute('data-cd');
+      var left = kind === 'dash' ? cds.dash : cds.dodge;
+      var max = kind === 'dash' ? cds.dashMax : cds.dodgeMax;
+      var overlay = btn.querySelector('.cpx-cd');
+      if (left > 0.05) {
+        btn.classList.add('is-cd');
+        if (overlay) {
+          overlay.hidden = false;
+          overlay.textContent = left >= 1 ? String(Math.ceil(left)) : left.toFixed(1);
+        }
+        var frac = max > 0 ? left / max : 0;
+        btn.style.setProperty('--cd', String(frac));
+      } else {
+        btn.classList.remove('is-cd');
+        if (overlay) {
+          overlay.hidden = true;
+          overlay.textContent = '';
+        }
+      }
+    });
+  }
+
+  function updateMainBars(st) {
+    if (!st) return;
+    var pct = (st.health / Math.max(1, st.maxHealth)) * 100;
+    // Stamina strip ≈ ready-to-dodge (1 - dodgeCd/max)
+    var dodgeLeft = st.dodgeCd != null ? st.dodgeCd : 0;
+    var dodgeMax =
+      (explorer && explorer.DODGE_CD) ||
+      (window.TvsExplorerRig && TvsExplorerRig.DODGE_CD) ||
+      0.8;
+    var staPct = Math.max(0, Math.min(100, (1 - dodgeLeft / Math.max(0.01, dodgeMax)) * 100));
+    if (window.CraftpixRpgUI && CraftpixRpgUI.setBar) {
+      CraftpixRpgUI.setBar('cpx-hp', pct, 'hp');
+      CraftpixRpgUI.setBar('cpx-sta', staPct, 'load');
+    } else {
+      var fill = document.querySelector('#cpx-hp i');
+      if (fill) fill.style.width = pct + '%';
+      var sta = document.querySelector('#cpx-sta i');
+      if (sta) sta.style.width = staPct + '%';
+    }
+    var hp = document.getElementById('pill-hp');
+    if (hp)
+      hp.innerHTML =
+        '<span class="k">HP</span><b>' + Math.round(st.health) + '/' + st.maxHealth + '</b>';
+    var mx = document.getElementById('pill-mixer');
+    if (mx && currentRoot && currentRoot.userData)
+      mx.innerHTML =
+        '<span class="k">Mixer</span><b>' +
+        (currentRoot.userData.dangerAnim || (currentRoot.userData.mixer ? 'on' : '—')) +
+        '</b>';
+    updateHotbarCds();
+  }
+
+  function fillAnimButtons(root) {
+    var animBox = document.getElementById('anim-btns');
+    if (!animBox || !root || !root.userData.animActions) return;
+    var n = Object.keys(root.userData.animActions).length;
+    if (!n) return;
+    animBox.innerHTML = '';
+    Object.keys(root.userData.animActions).forEach(function (name) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = name;
+      b.onclick = function () {
+        root.userData.playClip(name);
+        Array.prototype.forEach.call(animBox.querySelectorAll('button'), function (x) {
+          x.classList.remove('on');
+        });
+        b.classList.add('on');
+      };
+      animBox.appendChild(b);
+    });
+    setCheck('c-anim', true);
+    var mx = document.getElementById('pill-mixer');
+    if (mx)
+      mx.innerHTML =
+        '<span class="k">Mixer</span><b>' +
+        (root.userData.dangerAnim || (root.userData.mixer ? 'on' : '—')) +
+        ' · ' +
+        n +
+        ' clips</b>';
+  }
+
+  async function ensureDangerMixer(root) {
+    if (!root) return null;
+    // Explorer race already has Mixamo bones + clips from TvsExplorerSkeleton
+    if (root.userData.dangerAnim === 'explorer-mixamo' && root.userData.playClip) {
+      fillAnimButtons(root);
+      return {
+        mixer: root.userData.mixer,
+        actions: root.userData.animActions,
+        playClip: root.userData.playClip,
+        updateMixer: root.userData.updateMixer,
+      };
+    }
+    if (!window.TvsDangerAnim) return null;
+    try {
+      var bound = await TvsDangerAnim.bindDangerAnims(root, {
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+      });
+      if (bound) fillAnimButtons(root);
+      return bound;
+    } catch (e) {
+      console.warn('[danger-anim]', e);
+      return null;
+    }
+  }
+
+  async function attachExplorer(root, meta) {
+    detachExplorer();
+    if (!root || !window.TvsExplorerRig) return null;
+    await ensureDangerMixer(root);
+    var classHint = (meta && meta.classHint) || (selectedRace && selectedRace.classHint) || 'melee';
+    var weapon =
+      classHint === 'ranged'
+        ? { id: 'dagger', type: 'melee', range: 1.8, damage: 10 }
+        : classHint === 'magic'
+          ? { id: 'mace', type: 'melee', range: 2.0, damage: 12 }
+          : { id: 'sword_shield', type: 'melee', range: 2.4, damage: 14 };
+    explorer = TvsExplorerRig.create(root, {
+      THREE: THREE,
+      weapon: weapon,
+      health: 100,
+      onGait: function (g, st) {
+        document.getElementById('pill-anim').innerHTML =
+          '<span class="k">Clip</span><b>' + g + '</b>';
+        updateMainBars(st);
+      },
+      onDamage: function (amt, hp) {
+        setStatus('Took ' + amt + ' dmg · HP ' + Math.round(hp));
+        if (explorer) updateMainBars(explorer.getState());
+      },
+      onHarvest: function (t) {
+        setStatus('Harvesting… ' + t.toFixed(1) + 's');
+      },
+      onSkill: function (name) {
+        setStatus('Skill · ' + name);
+      },
+    });
+    explorerUnbind = explorer.bindKeys(window);
+    explorerActive = true;
+    showMainPanel(meta, explorer.getState());
+    fillExplorerHotbar();
+    setStatus(
+      ((meta && meta.displayName) || 'Explorer') +
+        ' · Mixer · WASD · F skill · Q dodge · V dash · E harvest'
+    );
+    setCheck('c-anim', true);
+    return explorer;
+  }
+
+  async function loadRace(race) {
+    selectedRace = race;
+    selectedUnit = null;
+    selectedAsset = null;
+    clearStage();
+    detachExplorer();
+    var label = (race && race.label) || (race && race.id) || 'race';
+    setStatus('Building default race · ' + label + '…');
+    setCheck('c-fbx', 'run');
+    setCheck('c-tex', 'run');
+    setCheck('c-scale', 'run');
+    setCheck('c-anim', false);
+    setCheck('c-color', 'run');
+    document.querySelectorAll('.unit').forEach(function (el) {
+      el.classList.toggle('sel', el.dataset.id === 'voxel-race-' + race.id);
+    });
+    try {
+      if (!window.TvsVoxelRaceDefaults) throw new Error('TvsVoxelRaceDefaults missing');
+      var root = await TvsVoxelRaceDefaults.loadRace(race, { THREE: THREE, manifest: raceManifest });
+      currentRoot = root;
+      scene.add(root);
+      frameOnRoot(root);
+      var unitRec = TvsVoxelRaceDefaults.asUnitRecord(race);
+      setCheck('c-fbx', true);
+      setCheck('c-tex', true);
+      setCheck('c-color', true);
+      var h = measureHeight(root);
+      setCheck('c-scale', h > 1.2 && h < 2.6);
+      updatePills(root, unitRec);
+      document.getElementById('pill-tex').innerHTML = '<span class="k">Body</span><b>procedural SI</b>';
+      document.getElementById('pill-anim').innerHTML = '<span class="k">Rig</span><b>explorer limbs</b>';
+      fillDetail(unitRec, root);
+      document.getElementById('sel-meta').textContent =
+        'voxel-races · ' + (race.classHint || '') + ' · ' + (race.heightM || 1.8) + 'm · explorer-ready';
+      document.getElementById('meta-json').textContent = JSON.stringify({
+        id: race.id,
+        avatarId: race.avatarId,
+        grudgeUuid: unitRec.grudgeUuid,
+        heightM: race.heightM,
+        classHint: race.classHint,
+        look: race.look,
+        kind: race.kind,
+        renderPipeline: race.renderPipeline,
+        cdnBase: unitRec.cdnBase,
+        nativeHeight: root.userData.nativeHeight,
+        source: raceManifest && raceManifest._loadedFrom,
+        explorerSkeleton: true,
+      }, null, 2);
+      // Danger Room mixer + explorer (async bind)
+      attachExplorer(root, unitRec).then(function () {
+        setStatus(label + ' ready · SI ' + h.toFixed(2) + 'm · Danger mixer · WASD');
+      });
+    } catch (err) {
+      console.error(err);
+      setCheck('c-fbx', false);
+      setStatus(String(err && err.message || err), true);
+    }
+  }
+
   function renderList() {
     var packF = document.getElementById('pack-filter').value;
     var classF = document.getElementById('class-filter').value;
     var list = document.getElementById('unit-list');
     list.innerHTML = '';
-    if (!roster) return;
-    var units = roster.units.slice();
-    if (packF) units = units.filter(function (u) { return u.pack === packF; });
-    if (classF) units = units.filter(function (u) { return u.classHint === classF; });
+    browseMode = document.getElementById('mode-filter').value || 'all';
+    updateFilterVisibility();
 
-    var byPack = {};
-    units.forEach(function (u) {
-      if (!byPack[u.pack]) byPack[u.pack] = [];
-      byPack[u.pack].push(u);
+    // ── Default races (Avatar Edit 6) ─────────────────────────────────────
+    if (browseMode === 'races') {
+      if (!window.TvsVoxelRaceDefaults) {
+        list.innerHTML = '<div class="pack-h">Race module missing</div>';
+        return;
+      }
+      var races = TvsVoxelRaceDefaults.listRaces(raceManifest).filter(function (r) {
+        return matchesSearch((r.label || '') + ' ' + (r.id || '') + ' ' + (r.blurb || ''));
+      });
+      var h0 = document.createElement('div');
+      h0.className = 'pack-h';
+      h0.textContent = 'default races (' + races.length + ')';
+      list.appendChild(h0);
+      races.forEach(function (r) {
+        var el = document.createElement('div');
+        el.className = 'unit' + (selectedRace && selectedRace.id === r.id ? ' sel' : '');
+        el.dataset.id = 'voxel-race-' + r.id;
+        el.innerHTML =
+          '<div><div class="name">' + (r.label || r.id) + '</div>' +
+          '<div class="meta">' + (r.heightM || 1.8) + 'm · ' + (r.blurb || r.avatarId) + '</div></div>' +
+          '<div class="hint">' + (r.classHint || 'race') + '</div>';
+        el.onclick = function () { loadRace(r); };
+        list.appendChild(el);
+      });
+      return;
+    }
+
+    if (browseMode === 'units') {
+      if (!roster) return;
+      var units = roster.units.slice();
+      if (packF) units = units.filter(function (u) { return u.pack === packF; });
+      if (classF) units = units.filter(function (u) { return u.classHint === classF; });
+      units = units.filter(function (u) {
+        return matchesSearch((u.displayName || '') + ' ' + (u.unitId || '') + ' ' + (u.pack || ''));
+      });
+      var byPack = {};
+      units.forEach(function (u) {
+        if (!byPack[u.pack]) byPack[u.pack] = [];
+        byPack[u.pack].push(u);
+      });
+      Object.keys(byPack).sort().forEach(function (pack) {
+        var h = document.createElement('div');
+        h.className = 'pack-h';
+        h.textContent = pack + ' (' + byPack[pack].length + ')';
+        list.appendChild(h);
+        byPack[pack].forEach(function (u) {
+          var el = document.createElement('div');
+          el.className = 'unit' + (selectedUnit && selectedUnit.unitId === u.unitId ? ' sel' : '');
+          el.dataset.id = u.unitId;
+          el.innerHTML =
+            '<div><div class="name">' + u.displayName.replace(/^Voxel\s+/i, '') + '</div>' +
+            '<div class="meta">' + u.unitId + '</div></div>' +
+            '<div class="hint">' + u.classHint + '</div>';
+          el.onclick = function () { loadUnit(u); };
+          list.appendChild(el);
+        });
+      });
+      return;
+    }
+
+    // Category browse from CDN catalog (enriched with SI targets vs 2 m character)
+    if (!catalog || !window.TvsVoxelAssets) {
+      list.innerHTML = '<div class="pack-h">Catalog not loaded</div>';
+      return;
+    }
+    var assets;
+    if (browseMode === 'buildings') assets = TvsVoxelAssets.listBuildings(catalog);
+    else if (browseMode === 'animals') assets = TvsVoxelAssets.listAnimals(catalog);
+    else if (browseMode === 'weapons' && TvsVoxelAssets.listWeapons) assets = TvsVoxelAssets.listWeapons(catalog);
+    else if (browseMode === 'items' && TvsVoxelAssets.listItems) assets = TvsVoxelAssets.listItems(catalog);
+    else if (browseMode === 'nature' && TvsVoxelAssets.listNature) assets = TvsVoxelAssets.listNature(catalog);
+    else if (browseMode === 'all') assets = TvsVoxelAssets.listAllAssets(catalog, { includeCharacters: true });
+    else assets = TvsVoxelAssets.listProps(catalog);
+    if (packF) assets = assets.filter(function (a) { return a.pack === packF; });
+    assets = assets.filter(function (a) {
+      return matchesSearch(
+        (a.name || '') +
+          ' ' +
+          (a.slug || '') +
+          ' ' +
+          (a.pack || '') +
+          ' ' +
+          (a.role || '') +
+          ' ' +
+          (a.category || '') +
+          ' ' +
+          (a.categoryLabel || '')
+      );
     });
-    Object.keys(byPack).sort().forEach(function (pack) {
+    if (!assets.length) {
+      list.innerHTML = '<div class="pack-h">No mesh assets in this filter</div>';
+      return;
+    }
+    // Optional header: scale SSOT
+    if (window.TvsAssetCategories) {
+      var info = document.createElement('div');
+      info.className = 'pack-h';
+      info.textContent =
+        'SI vs 2.0 m character · ' +
+        browseMode +
+        ' · ' +
+        assets.length +
+        ' mesh(es)';
+      list.appendChild(info);
+    }
+    var byPackA = {};
+    assets.forEach(function (a) {
+      var p = a.pack || 'misc';
+      if (!byPackA[p]) byPackA[p] = [];
+      byPackA[p].push(a);
+    });
+    Object.keys(byPackA).sort().forEach(function (pack) {
       var h = document.createElement('div');
       h.className = 'pack-h';
-      h.textContent = pack + ' (' + byPack[pack].length + ')';
+      h.textContent = pack + ' (' + byPackA[pack].length + ')';
       list.appendChild(h);
-      byPack[pack].forEach(function (u) {
+      byPackA[pack].forEach(function (a) {
         var el = document.createElement('div');
-        el.className = 'unit' + (selectedUnit && selectedUnit.unitId === u.unitId ? ' sel' : '');
-        el.dataset.id = u.unitId;
+        var id = a.slug || a.id;
+        el.className = 'unit' + (selectedAsset && (selectedAsset.slug || selectedAsset.id) === id ? ' sel' : '');
+        el.dataset.id = id;
+        var label = (a.name || a.slug || id).replace(/^Voxel\s*/i, '').replace(/_/g, ' ');
+        var tgt =
+          a.targetHeightM != null
+            ? a.targetHeightM + 'm'
+            : a.targetM != null
+              ? a.targetM + 'm'
+              : '';
+        var catHint = (a.categoryLabel || a.role || a.kind || browseMode) + (tgt ? ' · ' + tgt : '');
         el.innerHTML =
-          '<div><div class="name">' + u.displayName.replace(/^Voxel\s+/i, '') + '</div>' +
-          '<div class="meta">' + u.unitId + '</div></div>' +
-          '<div class="hint">' + u.classHint + '</div>';
-        el.onclick = function () { loadUnit(u); };
+          '<div><div class="name">' + label + '</div>' +
+          '<div class="meta">' + (a.slug || a.id) + (a.fitAxis ? ' · fit:' + a.fitAxis : '') + '</div></div>' +
+          '<div class="hint">' + catHint + '</div>';
+        el.onclick = function () { loadWorldAsset(a); };
         list.appendChild(el);
       });
     });
   }
 
+  var forceExternalAtlas = false;
+
+  async function loadWorldAsset(asset) {
+    selectedAsset = asset;
+    selectedUnit = null;
+    selectedRace = null;
+    clearStage();
+    var label = asset.slug || asset.name || asset.id;
+    setStatus('Loading ' + label + '…');
+    setCheck('c-fbx', 'run');
+    setCheck('c-tex', 'run');
+    setCheck('c-scale', 'run');
+    setCheck('c-anim', false);
+    setCheck('c-color', 'run');
+
+    // Prefer unit-roster path for characters (full texture + anim sidecars)
+    var role = String(asset.role || asset.kind || '').toLowerCase();
+    if ((role === 'characters' || role === 'character') && roster && roster.units) {
+      var uid = asset.slug || asset.unitId;
+      var asUnit =
+        (window.TvsUnitLoader && TvsUnitLoader.findUnit && TvsUnitLoader.findUnit(roster, uid)) ||
+        roster.units.find(function (u) {
+          return u.unitId === uid || (u.unitId && uid && u.unitId.indexOf(uid) >= 0);
+        });
+      if (asUnit) {
+        await loadUnit(asUnit);
+        selectedAsset = asset;
+        return;
+      }
+    }
+
+    try {
+      var root = await TvsVoxelAssets.loadStaticAsset(asset, {
+        THREE: THREE,
+        GLTFLoader: THREE.GLTFLoader,
+        FBXLoader: THREE.FBXLoader,
+        catalog: catalog,
+        withTexture: true,
+        forceTexture: forceExternalAtlas,
+        preferExternalAtlas: forceExternalAtlas,
+      });
+      // If embeds missing, retry with forced external atlas once
+      if (!meshHasTexture(root) && !forceExternalAtlas) {
+        try {
+          var root2 = await TvsVoxelAssets.loadStaticAsset(asset, {
+            THREE: THREE,
+            GLTFLoader: THREE.GLTFLoader,
+            FBXLoader: THREE.FBXLoader,
+            catalog: catalog,
+            withTexture: true,
+            forceTexture: true,
+            preferExternalAtlas: true,
+          });
+          if (meshHasTexture(root2)) {
+            disposeObject(root);
+            root = root2;
+          } else {
+            disposeObject(root2);
+          }
+        } catch (e2) {
+          /* keep first root */
+        }
+      }
+      finishMaterials(root);
+      currentRoot = root;
+      scene.add(root);
+      frameOnRoot(root);
+      setCheck('c-fbx', true);
+      var fromGlb = /\.glb/i.test(root.userData.loadedFrom || '');
+      var texOk = meshHasTexture(root);
+      setCheck('c-tex', texOk);
+      setCheck('c-color', !!(root.userData && root.userData.setColorTint));
+      var h = measureHeight(root);
+      setCheck('c-scale', h > 0.05);
+      updatePills(root, {
+        grudgeUuid: asset.grudgeUuid,
+        displayName: label,
+        pack: asset.pack,
+        classHint: asset.role,
+        unitId: asset.slug,
+      });
+      document.getElementById('sel-name').textContent = label;
+      document.getElementById('sel-meta').textContent =
+        (root.userData.categoryLabel || asset.categoryLabel || asset.role || '') +
+        ' · target ' +
+        (root.userData.targetMeasureM != null
+          ? Number(root.userData.targetMeasureM).toFixed(2)
+          : root.userData.targetHeight != null
+            ? Number(root.userData.targetHeight).toFixed(2)
+            : '?') +
+        'm · ' +
+        (fromGlb ? 'GLB' : 'FBX') +
+        ' · h=' +
+        h.toFixed(2) +
+        'm';
+      document.getElementById('meta-json').textContent = JSON.stringify({
+        slug: asset.slug,
+        pack: asset.pack,
+        role: asset.role,
+        kind: asset.kind,
+        format: asset.format,
+        grudgeUuid: asset.grudgeUuid,
+        r2Key: asset.r2Key,
+        category: root.userData.category || asset.category,
+        categoryLabel: root.userData.categoryLabel || asset.categoryLabel,
+        targetHeightM: root.userData.targetMeasureM || root.userData.targetHeight,
+        fitAxis: root.userData.fitAxis || asset.fitAxis,
+        relativeToCharacter: root.userData.relativeToCharacter,
+        characterHeightM: 2.0,
+        gameUsage: root.userData.gameUsage || asset.gameUsage,
+        siScaleDef: root.userData.siScaleDef,
+        loadedFrom: root.userData.loadedFrom,
+        textureUrl: root.userData.textureUrl,
+        externalAtlas: root.userData.externalAtlas,
+        hasTexture: texOk,
+        productionBaked: root.userData.productionBaked,
+        nativeHeight: root.userData.nativeHeight,
+        scaleFactor: root.userData.scaleFactor,
+        frameSize: root.userData.frameSize,
+      }, null, 2);
+      // World static: no unit anim pack — show empty anim bar (props/buildings)
+      document.getElementById('anim-btns').innerHTML = '';
+      setCheck('c-anim', false);
+      setStatus(
+        label +
+          ' ready · ' +
+          (fromGlb ? 'GLB' : 'FBX') +
+          ' · h=' +
+          h.toFixed(2) +
+          'm · tex ' +
+          (texOk ? 'OK' : 'MISSING') +
+          ' · F frame · V fly'
+      );
+      renderList();
+    } catch (err) {
+      console.error(err);
+      setCheck('c-fbx', false);
+      setStatus(String(err && err.message || err), true);
+    }
+  }
+
+  document.getElementById('mode-filter').onchange = function () {
+    selectedAsset = null;
+    selectedRace = null;
+    renderList();
+  };
   document.getElementById('pack-filter').onchange = renderList;
   document.getElementById('class-filter').onchange = renderList;
+  var searchEl = document.getElementById('asset-search');
+  if (searchEl) {
+    var searchTimer = null;
+    searchEl.addEventListener('input', function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderList, 120);
+    });
+  }
+  document.getElementById('btn-force-tex').onclick = function () {
+    forceExternalAtlas = !forceExternalAtlas;
+    this.classList.toggle('active', forceExternalAtlas);
+    setStatus(
+      forceExternalAtlas
+        ? 'Force external PNG atlas ON — reloading selection…'
+        : 'Force atlas OFF — prefer GLB embeds'
+    );
+    if (selectedAsset) loadWorldAsset(selectedAsset);
+    else if (selectedUnit) loadUnit(selectedUnit);
+  };
+
+  document.getElementById('btn-races').onclick = async function () {
+    if (!window.TvsVoxelRaceDefaults) {
+      setStatus('Race module missing', true);
+      return;
+    }
+    document.getElementById('mode-filter').value = 'races';
+    clearStage();
+    setStatus('Loading default race lineup (6)…');
+    try {
+      raceManifest = raceManifest || (await TvsVoxelRaceDefaults.loadManifest());
+      var races = TvsVoxelRaceDefaults.listRaces(raceManifest);
+      var roots = [];
+      for (var i = 0; i < races.length; i++) {
+        var r = await TvsVoxelRaceDefaults.loadRace(races[i], {
+          THREE: THREE,
+          manifest: raceManifest,
+        });
+        // Compact shoulder spacing from measured width (SI; never 100× stride)
+        r.updateMatrixWorld(true);
+        var rb = new THREE.Box3().setFromObject(r);
+        var rs = new THREE.Vector3();
+        rb.getSize(rs);
+        var bodyW = rs.x;
+        if (!(bodyW > 0.1) || bodyW > 4) bodyW = 0.85;
+        roots.push({ root: r, halfW: Math.max(0.3, bodyW * 0.5) });
+      }
+      var gap = 0.4;
+      var cursor = 0;
+      for (var j = 0; j < roots.length; j++) {
+        var halfW = roots[j].halfW;
+        if (j === 0) cursor = halfW;
+        else cursor += halfW + gap;
+        roots[j].root.position.x = cursor;
+        roots[j].root.position.z = 0;
+        scene.add(roots[j].root);
+        cursor += halfW;
+      }
+      var mid = cursor * 0.5;
+      roots.forEach(function (entry) {
+        entry.root.position.x -= mid;
+      });
+      armyRoots = roots.map(function (e) {
+        return e.root;
+      });
+      currentRoot = armyRoots[0] || null;
+      selectedRace = races[0] || null;
+      // Frame whole lineup
+      if (armyRoots.length) {
+        var lineBox = new THREE.Box3();
+        armyRoots.forEach(function (ar) {
+          lineBox.expandByObject(ar);
+        });
+        var lc = new THREE.Vector3();
+        lineBox.getCenter(lc);
+        frameTarget.copy(lc);
+        var ls = new THREE.Vector3();
+        lineBox.getSize(ls);
+        dist = Math.max(6, Math.max(ls.x, ls.y, ls.z) * 1.4 + 2);
+      } else {
+        frameTarget.set(0, 1, 0);
+        dist = 8;
+      }
+      pitch = 0.18;
+      setCheck('c-fbx', true);
+      setCheck('c-tex', true);
+      setCheck('c-scale', true);
+      setCheck('c-color', true);
+      document.getElementById('sel-name').textContent = 'Default race lineup';
+      document.getElementById('sel-meta').textContent = races.map(function (x) { return x.label; }).join(' · ');
+      document.getElementById('meta-json').textContent = JSON.stringify({
+        kind: 'voxel-avatar-race-defaults',
+        count: races.length,
+        races: races.map(function (x) {
+          return { id: x.id, heightM: x.heightM, classHint: x.classHint };
+        }),
+        source: raceManifest && raceManifest._loadedFrom,
+      }, null, 2);
+      setStatus('Race lineup · human · barbarian · orc · undead · dwarf · elf');
+      renderList();
+    } catch (err) {
+      setStatus(String(err && err.message || err), true);
+    }
+  };
 
   document.getElementById('btn-army').onclick = async function () {
     clearStage();
-    setStatus('Loading army sample (melee / ranged / magic / civilian)…');
+    stopBrainDemo();
+    setStatus('Loading army from CDN roster (melee / ranged / magic / civilian) + brains…');
     try {
       var sample = await TvsUnitLoader.loadArmySample({
         THREE: THREE,
         FBXLoader: THREE.FBXLoader,
         height: 2.0,
-        withTexture: true,
+        withBrain: true,
         withAnims: true,
-        maxClips: 4,
+        loadSidecars: true,
+        withTexture: true,
+        maxClips: 20,
       });
       armyRoots = sample.roots;
-      armyRoots.forEach(function (r) { scene.add(r); });
+      armyRoots.forEach(function (r, idx) {
+        scene.add(r);
+        if (r.userData.aiAgent && r.userData.aiAgent.setHome) {
+          r.userData.aiAgent.setHome(r.position.x, r.position.z);
+        }
+      });
       selectedUnit = sample.units[0];
       currentRoot = armyRoots[0];
+      frameOnRoot(null);
+      frameTarget.set(0, 1, 0);
+      dist = 9;
       updatePills(currentRoot, selectedUnit);
       fillDetail(selectedUnit, currentRoot);
-      setStatus('Army sample · ' + sample.units.map(function (u) { return u.displayName; }).join(' · '));
+      var brainN = armyRoots.filter(function (r) {
+        return r.userData && r.userData.aiAgent;
+      }).length;
+      var animN = armyRoots.filter(function (r) {
+        return r.userData && r.userData.animActions && Object.keys(r.userData.animActions).length;
+      }).length;
+      setStatus(
+        'Army CDN · ' +
+          sample.units.map(function (u) {
+            return u.displayName;
+          }).join(' · ') +
+          ' · brains ' +
+          brainN +
+          '/' +
+          armyRoots.length +
+          ' · anims ' +
+          animN +
+          ' · Demo AI to run strategy'
+      );
       setCheck('c-fbx', true);
+      setCheck('c-brain', brainN > 0);
+      setCheck('c-anim', animN > 0);
+      // Auto-start strategy demo on army
+      startBrainDemo(armyRoots);
     } catch (err) {
       setStatus(String(err && err.message || err), true);
     }
+  };
+
+  document.getElementById('btn-brain-demo').onclick = function () {
+    var roots = armyRoots && armyRoots.length ? armyRoots.slice() : currentRoot ? [currentRoot] : [];
+    startBrainDemo(roots);
+  };
+  document.getElementById('btn-brain-stop').onclick = function () {
+    stopBrainDemo();
+    setStatus('AI demo stopped');
   };
 
   document.getElementById('btn-settlements').onclick = async function () {
@@ -518,25 +2351,177 @@
     }
   };
 
-  // Deep-link #settlements
-  if (location.hash === '#settlements') {
-    setTimeout(function () {
-      var b = document.getElementById('btn-settlements');
-      if (b) b.click();
-    }, 600);
-  }
+  document.getElementById('btn-prefabs').onclick = async function () {
+    if (!window.TvsNpcPrefabs) {
+      setStatus('TvsNpcPrefabs missing — check js/tvs-npc-prefabs.js', true);
+      return;
+    }
+    clearStage();
+    stopBrainDemo();
+    prefabRoots = [];
+    setStatus('Spawning 5 NPC prefabs (armour · magic · weapons · missions · enemy camp)…');
+    dist = 32;
+    try {
+      if (window.TvsProductionPipeline && TvsProductionPipeline.ensureMeshoptReady) {
+        await TvsProductionPipeline.ensureMeshoptReady();
+      }
+      var groups = await TvsNpcPrefabs.spawnAll({
+        THREE: THREE,
+        FBXLoader: THREE.FBXLoader,
+        withAnims: true,
+        withBrain: true,
+        unitHeight: 2.0,
+        ringRadius: 18,
+        maxClips: 20,
+        verify: true,
+      });
+      groups.forEach(function (g) {
+        scene.add(g);
+        prefabRoots.push(g);
+      });
+      armyRoots = groups;
+      currentRoot = groups[0] || null;
+      var reports = groups.map(function (g) {
+        return g.userData.prefabReport;
+      });
+      var okPhys = reports.reduce(function (n, r) {
+        return n + (r && r.withPhysics ? r.withPhysics : 0);
+      }, 0);
+      var okMix = reports.reduce(function (n, r) {
+        return n + (r && r.withMixer ? r.withMixer : 0);
+      }, 0);
+      var okSkel = reports.reduce(function (n, r) {
+        return n + (r && r.withSkeleton ? r.withSkeleton : 0);
+      }, 0);
+      var okBrain = reports.reduce(function (n, r) {
+        return n + (r && r.withBrain ? r.withBrain : 0);
+      }, 0);
+      setCheck('c-fbx', true);
+      setCheck('c-tex', true);
+      setCheck('c-scale', true);
+      setCheck('c-anim', okMix > 0);
+      setCheck('c-brain', okBrain > 0);
+      document.getElementById('sel-name').textContent = 'NPC prefabs ×5';
+      document.getElementById('sel-meta').textContent =
+        'armour · magic · weapons · missions · enemy-camp · SI 2 m · Meshopt · capsule physics';
+      document.getElementById('meta-json').textContent = JSON.stringify(
+        {
+          prefabs: reports,
+          physics: 'capsule from collider.json · box AABB for buildings',
+          skeleton: 'TVS Armature skins preserved',
+          anims: 'AnimationMixer + CDN anim pack GLB',
+          brain: 'TvsAiBrain from brain.json',
+          loader: 'GLTFLoader + MeshoptDecoder + finalizeGameDelivery',
+          yardstick: 'character 2.0 m · forward +Z',
+          cdn: 'assets/voxels/npc-prefabs.json → models/voxels/tvs/npc-prefabs.json',
+        },
+        null,
+        2
+      );
+      setStatus(
+        'Prefabs ready · actors physics ' +
+          okPhys +
+          ' · mixer ' +
+          okMix +
+          ' · skeleton ' +
+          okSkel +
+          ' · brain ' +
+          okBrain +
+          ' · Demo AI for enemy camp'
+      );
+      // Run AI on hostile prefab actors
+      var hostiles = [];
+      groups.forEach(function (g) {
+        (g.userData.actors || []).forEach(function (a) {
+          if (a.mesh && a.mesh.userData && a.mesh.userData.friendly === false) {
+            hostiles.push(a.mesh);
+          }
+        });
+      });
+      if (hostiles.length) startBrainDemo(hostiles);
+    } catch (err) {
+      console.error(err);
+      setStatus(String(err && err.message || err), true);
+    }
+  };
+
+  // Explorer HUD actions
+  document.getElementById('btn-exp-play').onclick = function () {
+    if (!currentRoot) {
+      setStatus('Load a race or unit first', true);
+      return;
+    }
+    if (explorerActive) {
+      detachExplorer();
+      setStatus('Explorer OFF · orbit camera · CraftPix HUD hidden');
+      return;
+    }
+    var meta =
+      (selectedRace && window.TvsVoxelRaceDefaults && TvsVoxelRaceDefaults.asUnitRecord(selectedRace)) ||
+      selectedUnit ||
+      selectedAsset ||
+      { displayName: 'Unit', classHint: 'melee' };
+    attachExplorer(currentRoot, meta);
+  };
+  // Combat / mobility: CraftPix #cpx-hotbar only (no second action bar)
+  // CraftPix hotbar → skills / mobility (codex icons)
+  document.querySelectorAll('#cpx-hotbar [data-skill]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var skill = btn.getAttribute('data-skill');
+      if (!explorer || !currentRoot) return;
+      if (skill === 'craft') {
+        var c = document.getElementById('cpx-craft');
+        if (c) c.style.display = c.style.display === 'none' ? 'block' : 'none';
+        return;
+      }
+      if (skill === 'harvest') explorer.harvest(0.2);
+      else if (skill === 'jump') explorer.jump();
+      else if (skill === 'climb') explorer.setClimb(true);
+      else if (skill === 'dodge' && explorer.dodge) explorer.dodge();
+      else if (skill === 'dash' && explorer.dash) explorer.dash();
+      else if (skill === 'atk-ss-1') explorer.skillAttack();
+      else if (currentRoot.userData.playClip) {
+        currentRoot.userData.playClip(skill);
+        if (explorer.play) explorer.play(skill, 0.08);
+      } else explorer.skillAttack();
+    });
+  });
+  var craftClose = document.getElementById('cpx-craft-close');
+  if (craftClose)
+    craftClose.onclick = function () {
+      var c = document.getElementById('cpx-craft');
+      if (c) c.style.display = 'none';
+    };
 
   document.getElementById('btn-verify').onclick = async function () {
-    setStatus('Verifying CDN endpoints…');
+    setStatus('Verifying CDN + Meshopt + sample GLB…');
     var urls = [
-      TvsUnitLoader.CDN_ROSTER,
+      (window.TvsUnitLoader && TvsUnitLoader.CDN_ROSTER) ||
+        'https://assets.grudge-studio.com/models/voxels/tvs/unit-roster.json',
       'https://assets.grudge-studio.com/models/voxels/tvs/catalog.json',
+      'https://assets.grudge-studio.com/models/voxels/tvs/unit-roster.production.json',
+      'https://assets.grudge-studio.com/models/voxels/tvs/races/voxel-race-defaults.json',
     ];
-    if (roster && roster.units[0]) {
-      urls.push(roster.units[0].modelUrl, roster.units[0].textureUrl);
+    var sampleGlb = null;
+    if (roster && roster.units && roster.units[0]) {
+      sampleGlb = roster.units[0].glbUrl || roster.units[0].modelUrl;
+      if (roster.units[0].textureUrl) urls.push(roster.units[0].textureUrl);
+      if (sampleGlb) urls.push(sampleGlb.replace(/\.fbx($|\?)/i, '.glb$1'));
+    } else {
+      sampleGlb =
+        'https://assets.grudge-studio.com/models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.glb';
+      urls.push(sampleGlb);
+    }
+    if (catalog && window.TvsVoxelAssets) {
+      var b0 = TvsVoxelAssets.listBuildings(catalog)[0];
+      if (b0) {
+        var bu = TvsVoxelAssets.absAssetUrl(b0, true);
+        if (bu) urls.push(bu);
+      }
     }
     var ok = 0;
     for (var i = 0; i < urls.length; i++) {
+      if (!urls[i]) continue;
       try {
         var r = await fetch(urls[i], { method: 'HEAD', mode: 'cors' });
         if (r.ok) ok++;
@@ -548,51 +2533,378 @@
         } catch (_) {}
       }
     }
-    setStatus('CDN check: ' + ok + '/' + urls.length + ' OK');
+    var meshOk = false;
+    var meshopt = false;
+    try {
+      if (window.TvsProductionPipeline && TvsProductionPipeline.ensureMeshoptReady) {
+        meshopt = await TvsProductionPipeline.ensureMeshoptReady();
+      }
+      var testUrl =
+        (roster && roster.units && roster.units[0] && roster.units[0].glbUrl) ||
+        sampleGlb;
+      if (testUrl && window.TvsProductionPipeline) {
+        var probe = await TvsProductionPipeline.loadProductionGlb(testUrl, {
+          voxel: true,
+          ground: true,
+        });
+        meshOk = !!(probe && probe.userData);
+        if (probe) {
+          scene.remove(probe);
+          disposeObject(probe);
+        }
+      }
+    } catch (ve) {
+      console.warn('[verify]', ve);
+    }
+    setStatus(
+      'CDN ' +
+        ok +
+        '/' +
+        urls.length +
+        ' · Meshopt ' +
+        (meshopt ? 'ready' : 'NO') +
+        ' · sample GLB ' +
+        (meshOk ? 'OK' : 'FAIL')
+    );
     setCheck('c-roster', ok > 0);
+    setCheck('c-fbx', meshOk);
+    setCheck('c-tex', meshOk);
   };
 
   function animate() {
     requestAnimationFrame(animate);
-    var dt = clock.getDelta();
+    var dt = Math.min(0.05, clock.getDelta());
     if (currentRoot && currentRoot.userData.updateMixer) currentRoot.userData.updateMixer(dt);
     armyRoots.forEach(function (r) {
       if (r.userData.updateMixer) r.userData.updateMixer(dt);
     });
-    var target = currentRoot ? currentRoot.position.clone().add(new THREE.Vector3(0, 1, 0)) : new THREE.Vector3(0, 1, 0);
-    camera.position.x = target.x + Math.sin(yaw) * Math.cos(pitch) * dist;
-    camera.position.y = target.y + Math.sin(pitch) * dist + 0.4;
-    camera.position.z = target.z + Math.cos(yaw) * Math.cos(pitch) * dist;
-    camera.lookAt(target);
+    // Prefab mixers + hostile AI tick
+    if (prefabRoots.length && window.TvsNpcPrefabs) {
+      prefabRoots.forEach(function (g) {
+        TvsNpcPrefabs.updatePrefab(g, dt, {
+          runAi: !explorerActive && !!brainDemo,
+          time: clock.elapsedTime,
+          target: brainDemo && brainDemo.dummy,
+        });
+      });
+    }
+
+    // CDN brain strategy demo (patrol / chase / attack vs dummy)
+    if (brainDemo && brainDemo.roots && brainDemo.roots.length && !explorerActive) {
+      brainDemo.t += dt;
+      var ang = brainDemo.t * 0.7;
+      brainDemo.dummy.x = Math.sin(ang) * 3.5;
+      brainDemo.dummy.z = 3.5 + Math.cos(ang) * 1.2;
+      var lastLabel = null;
+      brainDemo.roots.forEach(function (r) {
+        var agent = r.userData && r.userData.aiAgent;
+        if (!agent) return;
+        var intent = agent.tick(dt, {
+          self: { x: r.position.x, z: r.position.z },
+          target: brainDemo.dummy,
+          enemy: brainDemo.dummy,
+          hpPct: 1,
+          time: brainDemo.t,
+          home: { x: r.userData._homeX != null ? r.userData._homeX : r.position.x, z: r.userData._homeZ != null ? r.userData._homeZ : r.position.z },
+        });
+        if (r.userData._homeX == null) {
+          r.userData._homeX = r.position.x;
+          r.userData._homeZ = r.position.z;
+        }
+        if (intent.moveDir && intent.speed > 0) {
+          r.position.x += intent.moveDir.x * intent.speed * dt;
+          r.position.z += intent.moveDir.z * intent.speed * dt;
+          // Keep y grounded
+          if (intent.face) r.rotation.y = Math.atan2(intent.face.x, intent.face.z);
+        }
+        agent.applyAnim(r, intent);
+        lastLabel = intent.state + (intent.fire ? ' · fire' : '') + ' · ' + (intent.goalId || '');
+      });
+      if (lastLabel) {
+        document.getElementById('pill-brain').innerHTML =
+          '<span class="k">Intent</span><b>' + lastLabel + '</b>';
+      }
+    }
+
+    // Explorer character control (races / units) — ground locomotion
+    if (explorerActive && explorer && currentRoot) {
+      var camY = camMode === 'fly' ? flyYaw : yaw;
+      explorer.update(dt, { camYaw: camY });
+      // Soft TPS follow
+      var st = explorer.getState();
+      var lookAt = currentRoot.position.clone();
+      lookAt.y += 1.2;
+      var back = 4.2;
+      camera.position.set(
+        lookAt.x - Math.sin(st.yaw) * back,
+        lookAt.y + 1.4,
+        lookAt.z - Math.cos(st.yaw) * back
+      );
+      if (camera.position.y < 0.3) camera.position.y = 0.3;
+      camera.lookAt(lookAt);
+      frameTarget.copy(lookAt);
+    }
+
+    // Soft pulse on frame ring
+    if (frameRing) {
+      var t = clock.elapsedTime;
+      frameRing.material.opacity = 0.4 + Math.sin(t * 2.2) * 0.12;
+    }
+    if (stageRing && stageRing.visible) {
+      stageRing.material.opacity = 0.22 + Math.sin(clock.elapsedTime * 1.4) * 0.06;
+    }
+
+    if (!(explorerActive && explorer)) {
+      if (camMode === 'fly') {
+        // WASD + QE flight relative to look yaw
+        var speed = flySpeed * (keys.ShiftLeft || keys.ShiftRight ? 3.2 : 1);
+        var forward = new THREE.Vector3(Math.sin(flyYaw), 0, Math.cos(flyYaw));
+        var right = new THREE.Vector3(Math.cos(flyYaw), 0, -Math.sin(flyYaw));
+        var move = new THREE.Vector3();
+        if (keys.KeyW || keys.ArrowUp) move.add(forward);
+        if (keys.KeyS || keys.ArrowDown) move.sub(forward);
+        if (keys.KeyA || keys.ArrowLeft) move.sub(right);
+        if (keys.KeyD || keys.ArrowRight) move.add(right);
+        if (keys.KeyE || keys.Space) move.y += 1;
+        if (keys.KeyQ || keys.ControlLeft || keys.ControlRight) move.y -= 1;
+        if (move.lengthSq() > 0) {
+          move.normalize().multiplyScalar(speed * dt);
+          flyPos.add(move);
+        }
+        var lookDir = new THREE.Vector3(
+          Math.sin(flyYaw) * Math.cos(flyPitch),
+          Math.sin(flyPitch),
+          Math.cos(flyYaw) * Math.cos(flyPitch)
+        );
+        camera.position.copy(flyPos);
+        camera.lookAt(flyPos.x + lookDir.x, flyPos.y + lookDir.y, flyPos.z + lookDir.z);
+      } else {
+        var target = frameTarget.clone().add(panOffset);
+        camera.position.x = target.x + Math.sin(yaw) * Math.cos(pitch) * dist;
+        camera.position.y = target.y + Math.sin(pitch) * dist;
+        camera.position.z = target.z + Math.cos(yaw) * Math.cos(pitch) * dist;
+        if (camera.position.y < 0.15) camera.position.y = 0.15;
+        camera.lookAt(target);
+      }
+    }
     renderer.render(scene, camera);
   }
   animate();
 
   (async function boot() {
     try {
-      roster = await TvsUnitLoader.loadTvsRoster();
-      setCheck('c-roster', true);
-      setStatus('Roster: ' + (roster.units && roster.units.length) + ' units · CDN ' + (roster.cdnBase || ''));
+      // 1) Assets first — never block roster/catalog on HUD chrome
+      setStatus('Init Meshopt + CDN roster/catalog…');
+      var meshoptOk = false;
+      if (window.TvsProductionPipeline && TvsProductionPipeline.ensureMeshoptReady) {
+        try {
+          meshoptOk = await TvsProductionPipeline.ensureMeshoptReady();
+        } catch (me) {
+          console.warn('[tvs] meshopt', me);
+        }
+      }
+      if (!meshoptOk) {
+        console.warn('[tvs] MeshoptDecoder not ready — compressed GLBs will fail');
+      }
+
+      if (window.TvsVoxelRaceDefaults) {
+        try {
+          raceManifest = await TvsVoxelRaceDefaults.loadManifest();
+        } catch (re) {
+          console.warn('[tvs] races', re);
+          raceManifest = TvsVoxelRaceDefaults.EMBEDDED;
+        }
+      }
+
+      try {
+        roster = await TvsUnitLoader.loadTvsRoster();
+      } catch (re2) {
+        console.warn('[tvs] roster', re2);
+        roster = { units: [] };
+      }
+
+      try {
+        catalog = await TvsVoxelAssets.loadCatalog();
+      } catch (ce) {
+        console.warn('[tvs] catalog', ce);
+        catalog = null;
+      }
+
+      // 2) Single HUD SSOT = CraftPix Main Panel (only when explorer plays — theme now)
+      if (window.CraftpixRpgUI) {
+        try {
+          if (CraftpixRpgUI.applyTheme) CraftpixRpgUI.applyTheme();
+        } catch (ce) {
+          console.warn('[craftpix]', ce);
+        }
+      }
+      // Icon feeds lazy — do not block first unit paint
+      if (window.GrudgeGameHud && GrudgeGameHud.loadFeeds) {
+        GrudgeGameHud.loadFeeds()
+          .then(function () {
+            fillExplorerHotbar();
+          })
+          .catch(function (fe) {
+            console.warn('[hud-feeds]', fe);
+            fillExplorerHotbar();
+          });
+      } else {
+        fillExplorerHotbar();
+      }
+
+      var nUnits = (roster.units && roster.units.length) || 0;
+      var stats = catalog && TvsVoxelAssets.catalogStats
+        ? TvsVoxelAssets.catalogStats(catalog)
+        : { buildings: 0, props: 0, animals: 0, characters: 0, all: 0 };
+      var nRaces = raceManifest && raceManifest.races ? raceManifest.races.length : 0;
+      setCheck('c-roster', nUnits > 0 || nRaces > 0 || !!catalog);
+      setStatus(
+        (meshoptOk ? 'Meshopt OK · ' : 'Meshopt MISSING · ') +
+        nRaces + ' races · ' + nUnits + ' units · ' +
+        stats.buildings + ' buildings · ' + stats.props + ' props · ' +
+        stats.animals + ' animals · ' +
+        (stats.characters || 0) + ' catalog chars · ' +
+        (stats.all || 0) + ' world meshes'
+      );
 
       var packs = {};
       (roster.units || []).forEach(function (u) { packs[u.pack] = true; });
+      if (catalog && catalog.packs) {
+        Object.keys(catalog.packs).forEach(function (p) { packs[p] = true; });
+      }
       var sel = document.getElementById('pack-filter');
       Object.keys(packs).sort().forEach(function (p) {
         var o = document.createElement('option');
         o.value = p; o.textContent = p;
         sel.appendChild(o);
       });
-      renderList();
 
-      // Default: best knights champion
-      var best =
-        TvsUnitLoader.findUnit(roster, 'voxel-knights-champion') ||
-        TvsUnitLoader.pickBestUnit(roster, 'swordsman') ||
-        roster.units[0];
-      if (best) await loadUnit(best);
+      // Deep-link modes
+      var hash = (location.hash || '').replace(/^#/, '');
+      if (hash === 'settlements') {
+        document.getElementById('mode-filter').value = 'units';
+        renderList();
+        setTimeout(function () {
+          var b = document.getElementById('btn-settlements');
+          if (b) b.click();
+        }, 400);
+        return;
+      }
+      if (hash === 'army') {
+        document.getElementById('mode-filter').value = 'units';
+        renderList();
+        setTimeout(function () {
+          var b = document.getElementById('btn-army');
+          if (b) b.click();
+        }, 400);
+        return;
+      }
+      if (hash === 'prefabs' || hash === 'npc-prefabs') {
+        setTimeout(function () {
+          var b = document.getElementById('btn-prefabs');
+          if (b) b.click();
+        }, 400);
+        return;
+      }
+      if (hash === 'buildings' || hash === 'props' || hash === 'animals' || hash === 'all' || hash === 'units') {
+        document.getElementById('mode-filter').value = hash;
+        renderList();
+        if ((hash === 'all' || hash === 'buildings' || hash === 'props' || hash === 'animals') && catalog && window.TvsVoxelAssets) {
+          var first =
+            hash === 'buildings' ? TvsVoxelAssets.listBuildings(catalog)[0] :
+            hash === 'props' ? TvsVoxelAssets.listProps(catalog)[0] :
+            hash === 'animals' ? TvsVoxelAssets.listAnimals(catalog)[0] :
+            TvsVoxelAssets.listAllAssets(catalog)[0];
+          if (first) await loadWorldAsset(first);
+        } else if (hash === 'units' && roster.units && roster.units[0]) {
+          var bestU =
+            TvsUnitLoader.findUnit(roster, 'voxel-knights-champion') ||
+            roster.units[0];
+          if (bestU) await loadUnit(bestU);
+        }
+        return;
+      }
+      if (hash === 'races' || hash === 'race') {
+        document.getElementById('mode-filter').value = 'races';
+        renderList();
+        if (location.search.indexOf('lineup') >= 0) {
+          document.getElementById('btn-races').click();
+          return;
+        }
+        var human =
+          window.TvsVoxelRaceDefaults &&
+          TvsVoxelRaceDefaults.getRace('human', raceManifest);
+        if (human) await loadRace(human);
+        return;
+      }
+
+      // Named race deep-link e.g. #orc
+      if (window.TvsVoxelRaceDefaults) {
+        var named = TvsVoxelRaceDefaults.getRace(hash, raceManifest);
+        if (named) {
+          document.getElementById('mode-filter').value = 'races';
+          renderList();
+          await loadRace(named);
+          return;
+        }
+      }
+
+      // Default: show units list + load champion (not first catalog bush at wrong SI height)
+      document.getElementById('mode-filter').value = 'units';
+      updateFilterVisibility();
+      renderList();
+      var champ =
+        (roster &&
+          roster.units &&
+          TvsUnitLoader.findUnit &&
+          TvsUnitLoader.findUnit(roster, 'voxel-knights-champion')) ||
+        (roster && roster.units && roster.units[0]) ||
+        null;
+      if (champ) {
+        // loadUnit owns status (do not clobber with roster summary after paint)
+        await loadUnit(champ);
+      } else if (
+        window.TvsVoxelRaceDefaults &&
+        raceManifest
+      ) {
+        document.getElementById('mode-filter').value = 'races';
+        updateFilterVisibility();
+        renderList();
+        var human = TvsVoxelRaceDefaults.getRace('human', raceManifest);
+        if (human) await loadRace(human);
+        else
+          setStatus(
+            (meshoptOk ? 'Meshopt OK · ' : 'Meshopt MISSING · ') +
+              nRaces +
+              ' races · ' +
+              nUnits +
+              ' units · pick list'
+          );
+      } else if (catalog && window.TvsVoxelAssets) {
+        document.getElementById('mode-filter').value = 'buildings';
+        renderList();
+        var firstB = TvsVoxelAssets.listBuildings(catalog)[0];
+        if (firstB) await loadWorldAsset(firstB);
+        else
+          setStatus(
+            (meshoptOk ? 'Meshopt OK · ' : 'Meshopt MISSING · ') +
+              nRaces +
+              ' races · ' +
+              nUnits +
+              ' units · pick list'
+          );
+      } else {
+        setStatus(
+          (meshoptOk ? 'Meshopt OK · ' : 'Meshopt MISSING · ') +
+            nRaces +
+            ' races · ' +
+            nUnits +
+            ' units · CDN assets.grudge-studio.com · pick list or Race lineup'
+        );
+      }
     } catch (err) {
       setCheck('c-roster', false);
-      setStatus('Failed to load roster: ' + (err && err.message || err), true);
+      setStatus('Failed to boot showcase: ' + (err && err.message || err), true);
     }
   })();
 })();
