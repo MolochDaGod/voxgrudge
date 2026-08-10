@@ -1223,11 +1223,13 @@ window.TVS_JS = (function () {
         FBXLoader: THREE.FBXLoader,
         height: 2.0,
         withTexture: true,
+        // Pack anims only (unit.animationPackUrl → same TVS skeleton GLBs)
         withAnims: true,
         withBrain: true,
         loadSidecars: true,
         verify: false,
-        maxClips: 20,
+        // idle + loco + attack + defend + jump + sit (+ a few extras)
+        maxClips: 12,
         preferGlb: true,
       };
       var root = await TvsUnitLoader.loadTvsUnit(unit, loadOpts);
@@ -1300,6 +1302,10 @@ window.TVS_JS = (function () {
       }
       currentRoot = root;
       scene.add(root);
+      // Sizing: loader already collapsed Armature×100 + SI ~2m. Only feet + center.
+      // Do NOT rotate, re-bind skeleton, or stack another height fit (causes giant/deform).
+      // Anims: only pack-rigged clips from unit.animationPackUrl (same TVS skeleton).
+      // Do NOT call ensureDangerMixer — Mixamo Danger FBX is a different rig ("made up").
       try {
         root.updateMatrixWorld(true);
         root.traverse(function (o) {
@@ -1308,94 +1314,37 @@ window.TVS_JS = (function () {
             o.frustumCulled = false;
           }
         });
-        /**
-         * SI + upright for showcase.
-         * Production TVS GLBs are already Y-up ~2 m after TvsUnitLoader.finalizeGameDelivery.
-         * NEVER force rotation.x = −π/2 on every skinned mesh — that lays Y-up kits on their
-         * side / upside-down and, combined with a second height fit, looks 100× + deformed.
-         * Only rotate when AABB proves Z-up (author cm FBX still on side).
-         * Do NOT re-bind skeleton after root transforms (destroys skin).
-         */
-        (function stageUnitSiUpright(r) {
-          if (!r) return;
-          r.updateMatrixWorld(true);
-          var box0 = new THREE.Box3().setFromObject(r);
-          var size0 = new THREE.Vector3();
-          box0.getSize(size0);
-          var sx = size0.x || 0;
-          var sy = size0.y || 0;
-          var sz = size0.z || 0;
-          var maxDim = Math.max(sx, sy, sz);
-
-          // Decade unit fix if still cm-scale after loader
-          if (maxDim > 40) {
-            r.scale.multiplyScalar(0.01);
-            r.updateMatrixWorld(true);
-            box0 = new THREE.Box3().setFromObject(r);
-            box0.getSize(size0);
-            sx = size0.x;
-            sy = size0.y;
-            sz = size0.z;
-            maxDim = Math.max(sx, sy, sz);
-            r.userData.unitFix = (r.userData.unitFix || 1) * 0.01;
+        var hNow = measureHeight(root);
+        if (hNow > 40) {
+          root.scale.multiplyScalar(0.01);
+          root.updateMatrixWorld(true);
+          hNow = measureHeight(root);
+        } else if (hNow > 0.05 && (hNow < 1.2 || hNow > 2.8)) {
+          var s = 2.0 / hNow;
+          if (s > 0.2 && s < 5) {
+            root.scale.multiplyScalar(s);
+            root.updateMatrixWorld(true);
           }
-
-          // Detect Z-up (lying flat): height axis is Z and much larger than Y
-          var looksZUp =
-            sz > 0.4 &&
-            sz > sy * 1.35 &&
-            sy < Math.max(1.2, sz * 0.55);
-          // Y already tall enough for a standing humanoid
-          var looksYUp = sy >= 1.0 && sy >= sz * 0.85;
-
-          if (looksZUp && !looksYUp && !r.userData.productionBaked) {
-            r.rotation.x = -Math.PI / 2;
-            r.rotation.z = 0;
-            r.userData.showcaseUpright = -Math.PI / 2;
-            r.updateMatrixWorld(true);
-          } else {
-            // Keep loader orientation (Y-up production)
-            if (Math.abs(r.rotation.x) > 0.01 && r.userData.productionBaked) {
-              r.rotation.x = 0;
-            }
-            r.userData.showcaseUpright = 0;
-            r.updateMatrixWorld(true);
-          }
-
-          // Uniform height to ~2 m only when outside humanoid band (no non-uniform scale)
-          var h1 = measureHeight(r);
-          if (h1 > 0.05 && (h1 < 1.35 || h1 > 2.55)) {
-            var sFit = 2.0 / h1;
-            if (sFit > 0.15 && sFit < 8) {
-              r.scale.multiplyScalar(sFit);
-              r.updateMatrixWorld(true);
-              r.userData.showcaseHeightFit = sFit;
-            }
-          }
-
-          // Feet on floor + center XZ
-          var boxG = new THREE.Box3().setFromObject(r);
-          r.position.y -= boxG.min.y;
-          var cx = (boxG.min.x + boxG.max.x) * 0.5;
-          var cz = (boxG.min.z + boxG.max.z) * 0.5;
-          r.position.x -= cx;
-          r.position.z -= cz;
-          r.updateMatrixWorld(true);
-          boxG = new THREE.Box3().setFromObject(r);
-          r.position.y -= boxG.min.y;
-          r.userData.nativeHeight = boxG.max.y - boxG.min.y;
-          r.userData.feetGrounded = true;
-        })(root);
+        }
+        var boxG = new THREE.Box3().setFromObject(root);
+        root.position.y -= boxG.min.y;
+        root.position.x -= (boxG.min.x + boxG.max.x) * 0.5;
+        root.position.z -= (boxG.min.z + boxG.max.z) * 0.5;
+        root.updateMatrixWorld(true);
+        boxG = new THREE.Box3().setFromObject(root);
+        root.position.y -= boxG.min.y;
+        root.userData.nativeHeight = boxG.max.y - boxG.min.y;
+        root.userData.feetGrounded = true;
       } catch (ePose) {
-        console.warn('[tvs] stage SI upright', ePose);
+        console.warn('[tvs] stage feet', ePose);
       }
-      // Play pack idle immediately (unit loader already bound anims when withAnims)
+      // Pack clips only (TVS Human_* / pack animations on author skeleton)
       try {
+        fillAnimButtons(root);
         if (root.userData.playClip) {
           root.userData.playClip('idle', 0) ||
             root.userData.playClip('locomotion', 0);
         }
-        fillAnimButtons(root);
       } catch (eAnim0) {}
       frameOnRoot(root);
       setCheck('c-fbx', true);
@@ -1412,33 +1361,15 @@ window.TVS_JS = (function () {
         '—';
       setStatus(
         unit.displayName +
-          ' · CDN · h≈' +
+          ' · pack rig · h≈' +
           (measureHeight(root) ? measureHeight(root).toFixed(2) + 'm' : '?') +
           ' · tex ' +
           (meshHasTexture(root) ? 'OK' : 'MISSING') +
           ' · clips ' +
           (animN || 'none') +
           ' · brain ' +
-          (hasBrain ? arch : 'none') +
-          ' · UUID ' +
-          String(unit.grudgeUuid || '—').slice(0, 13)
+          (hasBrain ? arch : 'none')
       );
-      // Optional Danger pack merge — keep CDN pack clips if Danger fails
-      ensureDangerMixer(root)
-        .then(function () {
-          var n2 =
-            root.userData.animActions ? Object.keys(root.userData.animActions).length : animN;
-          setCheck('c-anim', n2 > 0);
-          fillAnimButtons(root);
-          if (root.userData.playClip && !root.userData.currentAnim) {
-            root.userData.playClip('idle', 0) || root.userData.playClip('locomotion', 0);
-          }
-          updatePills(root, unit);
-        })
-        .catch(function () {
-          fillAnimButtons(root);
-          setCheck('c-anim', animN > 0);
-        });
     } catch (err) {
       console.error(err);
       setCheck('c-fbx', false);

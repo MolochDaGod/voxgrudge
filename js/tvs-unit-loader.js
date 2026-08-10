@@ -24,7 +24,7 @@
     CDN + "/" + TVS_PREFIX + "/unit-roster.json";
   var CDN_CATALOG = CDN + "/" + TVS_PREFIX + "/catalog.json";
 
-  var DEFAULT_HEIGHT = 1.8; // fleet SI yardstick (was 2.0)
+  var DEFAULT_HEIGHT = 2.0;
   var HUMAN_CLIP_RE = /human[-_]/i;
   var ANIMAL_CLIP_RE = /^(horse|cow|pig|sheep|chicken|duck|bull|owl|corgi|goat)[-_]/i;
 
@@ -440,118 +440,108 @@
   // ── scale ──────────────────────────────────────────────────────────────────
 
   /**
-   * Body-only bbox: prefer SkinnedMesh after skeleton.pose().
-   * Skip weapon-only meshes so spears don't inflate height.
-   * IMPORTANT: pose skeleton first — bind-pose AABBs can be near-zero and
-   * trigger a false unitFix×100 → 100× giant characters.
+   * World AABB for SI measure. Prefer full setFromObject after author-scale
+   * collapse — skinned geometry.boundingBox * matrixWorld often separates
+   * mesh parts (bind pose vs scaled skeleton) and yields 100× junk.
    */
-  function poseSkeletons(object3d) {
-    object3d.traverse(function (ch) {
-      if (ch.isSkinnedMesh && ch.skeleton) {
-        try {
-          ch.skeleton.pose();
-          ch.skeleton.update();
-        } catch (e) {
-          /* */
-        }
-      }
-    });
-  }
-
   function measureBodyBox(object3d, THREE) {
-    var box = new THREE.Box3();
-    var found = false;
-    poseSkeletons(object3d);
     object3d.updateMatrixWorld(true);
-    object3d.traverse(function (ch) {
-      if (!ch.isMesh && !ch.isSkinnedMesh) return;
-      if (ch.visible === false) return;
-      var n = (ch.name || "").toLowerCase();
-      if (
-        /weapon|sword|axe|bow|staff|shield|spear|arrow|tool|prop|quiver|bag/i.test(n) &&
-        !/body|torso|legs|arms|head|units_/i.test(n)
-      ) {
-        return;
-      }
-      // World AABB after pose (more reliable than raw geometry BB × matrix)
-      try {
-        box.expandByObject(ch);
-        found = true;
-      } catch (e) {
-        /* */
-      }
-    });
-    if (!found) {
-      try {
-        box.setFromObject(object3d);
-      } catch (e) {
-        /* empty */
-      }
-    }
-    return box;
+    return new THREE.Box3().setFromObject(object3d);
   }
-
-  /** Humanoid player band (m) — reject 100× giants / dust motes. */
-  var HEIGHT_BAND_MIN = 0.9;
-  var HEIGHT_BAND_MAX = 2.6;
 
   /**
-   * Normalize character height in meters (fleet SI · 1.8 m human).
-   * Production TVS GLBs may already be ~1.8–2.0 m — light pass if in band.
-   * grudge6 CDN kits are often 12–22 m raw OR cm — always full fit + post-check.
+   * Ground / optional unit-fix only. NEVER stretch production GLBs.
+   *
+   * Production grudge-convert GLBs are already SI (characters ~1.8–2 m, buildings
+   * already baked). Calling height/size.y on those is the forbidden stretch and
+   * yields junk like scaleFactor 0.01 + nativeHeight 200.
+   *
+   * opts.alreadyBaked / userData.productionBaked → feet only, scale untouched.
+   * opts.groundOnly → same (buildings/props/env).
+   * Raw FBX only: decade unitFix when bbox clearly cm-authored (>40), then
+   * optional character targetHeight if opts.allowStretch === true (characters).
    */
-  function normalizeHeight(object3d, targetHeight, THREE, opts) {
+  function groundFeetOnly(object3d, THREE, opts) {
+    if (!object3d || !THREE) return object3d;
     opts = opts || {};
-    if (!object3d || !targetHeight || !THREE) return object3d;
-
-    // Always clear pitch/roll so heroes never lie parallel to ground
-    object3d.rotation.x = 0;
-    object3d.rotation.z = 0;
-
-    // grudge6 / forceFull: never trust "alreadyBaked" — CDN kits are modular raw
-    var forceFull =
-      opts.forceFull === true ||
-      opts.asset === "grudge6" ||
-      (object3d.userData && object3d.userData.assetSource === "grudge6");
-
-    if (!forceFull && (opts.alreadyBaked || object3d.userData.productionBaked)) {
-      // Light pass: only ground feet; keep baked mesh scale if within band
+    // Always SI-guard first (Armature scale 100 / giant bbox)
+    if (global.TvsProductionPipeline && global.TvsProductionPipeline.ensureSiWorldScale) {
+      global.TvsProductionPipeline.ensureSiWorldScale(object3d, {
+        targetHeight: opts.targetHeight || object3d.userData.targetHeight,
+        fitHeight: opts.fitHeight === true,
+        maxDimM: opts.maxDimM != null ? opts.maxDimM : 40,
+      });
+    } else {
       object3d.updateMatrixWorld(true);
-      var boxB = measureBodyBox(object3d, THREE);
-      var sizeB = new THREE.Vector3();
-      boxB.getSize(sizeB);
-      if (sizeB.y > HEIGHT_BAND_MIN && sizeB.y < HEIGHT_BAND_MAX) {
-        var err = Math.abs(sizeB.y - targetHeight) / targetHeight;
-        if (err > 0.15) {
-          // Baked height drifted — full renormalize (TVS 2.0 → fleet 1.8)
-          object3d.userData.productionBaked = false;
-        } else {
-          // Soft residual fit into target when close
-          if (err > 0.04) {
-            object3d.scale.multiplyScalar(targetHeight / sizeB.y);
-            object3d.updateMatrixWorld(true);
-            boxB = measureBodyBox(object3d, THREE);
-            boxB.getSize(sizeB);
-          }
-          object3d.position.y -= boxB.min.y;
-          object3d.userData.nativeHeight = sizeB.y;
-          object3d.userData.targetHeight = targetHeight;
-          object3d.userData.scaleFactor = object3d.scale.x;
-          object3d.userData.unitFix = 1;
-          object3d.userData.feetGrounded = true;
-          object3d.userData.productionBaked = true;
-          return object3d;
-        }
-      } else {
-        // Out of band despite "baked" flag — full fit (prevents 100× / dust)
-        object3d.userData.productionBaked = false;
+      var boxProbe = new THREE.Box3().setFromObject(object3d);
+      var sz = new THREE.Vector3();
+      boxProbe.getSize(sz);
+      if (Math.max(sz.x, sz.y, sz.z) > 40) {
+        object3d.scale.multiplyScalar(0.01);
+        object3d.userData.unitFix = (object3d.userData.unitFix || 1) * 0.01;
+        object3d.userData.fixedAuthorScale = true;
       }
     }
+    object3d.updateMatrixWorld(true);
+    // Prefer full world AABB — skinned geometry.boundingBox * scale can be wrong
+    var box = new THREE.Box3().setFromObject(object3d);
+    var size = new THREE.Vector3();
+    box.getSize(size);
+    // Sanity: if still absurd, force fit to target / 2 m
+    if (Math.max(size.x, size.y, size.z) > 40) {
+      var th = opts.targetHeight || object3d.userData.targetHeight || 2;
+      var s = th / Math.max(size.y, 1e-6);
+      if (s > 0.00001 && s < 1) {
+        object3d.scale.multiplyScalar(s);
+        object3d.updateMatrixWorld(true);
+        box = new THREE.Box3().setFromObject(object3d);
+        box.getSize(size);
+        object3d.userData.unitFix = (object3d.userData.unitFix || 1) * s;
+      }
+    }
+    object3d.position.y -= box.min.y;
+    object3d.userData.nativeHeight = size.y;
+    object3d.userData.scaleFactor = object3d.scale.x;
+    if (object3d.userData.unitFix == null) object3d.userData.unitFix = 1;
+    object3d.userData.feetGrounded = true;
+    object3d.userData.productionBaked = true;
+    return object3d;
+  }
 
+  function normalizeHeight(object3d, targetHeight, THREE, opts) {
+    opts = opts || {};
+    if (!object3d || !THREE) return object3d;
+    if (targetHeight) object3d.userData.targetHeight = targetHeight;
+
+    // Production GLB / ground-only: SI-guard + feet (may fix scale 100 leftovers)
+    if (
+      opts.alreadyBaked ||
+      opts.groundOnly ||
+      object3d.userData.productionBaked ||
+      object3d.userData.noStretch
+    ) {
+      return groundFeetOnly(object3d, THREE, {
+        targetHeight: targetHeight,
+        // Heroes: allow gentle height fit to 2.0 after decade fix
+        fitHeight: opts.fitHeight === true || (!!targetHeight && targetHeight <= 2.5),
+        maxDimM: opts.maxDimM,
+      });
+    }
+
+    // Measured already SI (0.3–50 m): treat as baked, do not unitFix 0.01
+    object3d.updateMatrixWorld(true);
+    var box0 = measureBodyBox(object3d, THREE);
+    var size0 = new THREE.Vector3();
+    box0.getSize(size0);
+    if (size0.y >= 0.3 && size0.y <= 50) {
+      object3d.userData.productionBaked = true;
+      if (targetHeight) object3d.userData.targetHeight = targetHeight;
+      return groundFeetOnly(object3d, THREE);
+    }
+
+    // Raw FBX cm path only
     object3d.scale.set(1, 1, 1);
     object3d.position.set(0, 0, 0);
-    // keep yaw if already set for art-forward; zero pitch/roll already done
-    poseSkeletons(object3d);
     object3d.updateMatrixWorld(true);
 
     var box = measureBodyBox(object3d, THREE);
@@ -562,106 +552,43 @@
       return object3d;
     }
 
-    var beforeH = size.y;
-
-    // Decade unit fix:
-    //  - cm FBX/GLB often ~100–300 units tall
-    //  - grudge6 CDN kits often ~12–22 m raw → residual fit only (no ×0.01)
-    //  - NEVER ×100 on a near-zero bbox without post-height guard (100× giant bug)
     var unitFix = 1;
-    if (size.y > 40) {
-      unitFix = 0.01;
-    } else if (size.y < 0.05) {
-      // Only decade-up if post-fix lands in human band; else residual only
-      unitFix = 100;
-    }
+    if (size.y > 40) unitFix = 0.01;
+    else if (size.y < 0.05) unitFix = 100;
     if (unitFix !== 1) {
       object3d.scale.setScalar(unitFix);
       object3d.updateMatrixWorld(true);
       box = measureBodyBox(object3d, THREE);
       box.getSize(size);
-      // Guard: unitFix×100 on a bad tiny measure makes 100× giants
-      if (unitFix === 100 && (size.y > HEIGHT_BAND_MAX || size.y < HEIGHT_BAND_MIN * 0.5)) {
-        console.warn(
-          "[TvsUnitLoader] reject unitFix×100 (would leave h=" +
-            size.y.toFixed(3) +
-            ") — residual fit from identity",
-        );
-        object3d.scale.set(1, 1, 1);
+    }
+
+    // Characters only: optional height match after unitFix (allowStretch)
+    if (opts.allowStretch && targetHeight && size.y > 1e-6) {
+      var s = targetHeight / size.y;
+      // Reject insane stretch (the 0.01 × 100× failure mode)
+      if (s > 0.2 && s < 5) {
+        object3d.scale.multiplyScalar(s);
         object3d.updateMatrixWorld(true);
         box = measureBodyBox(object3d, THREE);
         box.getSize(size);
-        unitFix = 1;
+      } else {
+        console.warn(
+          "[TvsUnitLoader] skip stretch s=" + s + " nativeH=" + size.y + " — ground only"
+        );
       }
     }
 
-    var s = targetHeight / Math.max(size.y, 1e-4);
-    // Hard caps — never 100× a humanoid
-    if (s > 12) s = 12;
-    if (s < 0.02) s = 0.02;
-    if (s > 4 || s < 0.08) {
-      console.warn("[TvsUnitLoader] scale factor", s.toFixed(4), "nativeH", beforeH.toFixed(3), "afterUnit", size.y.toFixed(3), "unitFix", unitFix);
-    }
-
-    object3d.scale.multiplyScalar(s);
     object3d.updateMatrixWorld(true);
     var box2 = measureBodyBox(object3d, THREE);
+    object3d.position.y -= box2.min.y;
     var size2 = new THREE.Vector3();
     box2.getSize(size2);
-
-    // Final band clamp: if still outside [0.9, 2.6], force exact target height
-    if (size2.y > HEIGHT_BAND_MAX || size2.y < HEIGHT_BAND_MIN) {
-      var s2 = targetHeight / Math.max(size2.y, 1e-4);
-      s2 = Math.min(Math.max(s2, 0.02), 12);
-      object3d.scale.multiplyScalar(s2);
-      object3d.updateMatrixWorld(true);
-      box2 = measureBodyBox(object3d, THREE);
-      box2.getSize(size2);
-      console.warn(
-        "[TvsUnitLoader] post-band re-fit → h=" +
-          size2.y.toFixed(3) +
-          "m (was out of " +
-          HEIGHT_BAND_MIN +
-          "–" +
-          HEIGHT_BAND_MAX +
-          ")",
-      );
-    }
-
-    object3d.position.y -= box2.min.y;
-    // Sanity re-plant
-    object3d.updateMatrixWorld(true);
-    box2 = measureBodyBox(object3d, THREE);
-    if (Math.abs(box2.min.y) > 0.02) {
-      object3d.position.y -= box2.min.y;
-    }
-    box2.getSize(size2);
-    object3d.userData.nativeHeight = beforeH;
-    object3d.userData.measuredAfterUnitFix = size.y;
-    object3d.userData.measuredFinal = size2.y;
-    object3d.userData.targetHeight = targetHeight;
+    object3d.userData.nativeHeight = size2.y / (unitFix || 1);
+    object3d.userData.measuredAfterUnitFix = size2.y;
+    object3d.userData.targetHeight = targetHeight || size2.y;
     object3d.userData.scaleFactor = object3d.scale.x;
     object3d.userData.unitFix = unitFix;
     object3d.userData.feetGrounded = true;
-    if (size2.y > HEIGHT_BAND_MAX || size2.y < HEIGHT_BAND_MIN) {
-      console.error(
-        "[TvsUnitLoader] STILL out of band after fit h=" +
-          size2.y.toFixed(3) +
-          " scale=" +
-          object3d.scale.x.toFixed(4),
-      );
-    } else {
-      console.info(
-        "[TvsUnitLoader] SI fit " +
-          beforeH.toFixed(2) +
-          "m → " +
-          size2.y.toFixed(2) +
-          "m (target " +
-          targetHeight +
-          ") scale×" +
-          object3d.scale.x.toFixed(4),
-      );
-    }
     return object3d;
   }
 
@@ -699,12 +626,18 @@
   }
 
   function hasUsableMap(root) {
+    if (global.TvsVoxelColors && global.TvsVoxelColors.hasUsableMap) {
+      return global.TvsVoxelColors.hasUsableMap(root);
+    }
     var ok = false;
     root.traverse(function (ch) {
       if ((!ch.isMesh && !ch.isSkinnedMesh) || !ch.material) return;
       var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
       mats.forEach(function (m) {
-        if (m && m.map && m.map.image) ok = true;
+        if (!m || !m.map) return;
+        var img = m.map.image;
+        if (img && (img.width || img.naturalWidth || img.data)) ok = true;
+        else if (m.map.source && m.map.source.data) ok = true;
       });
     });
     return ok;
@@ -744,17 +677,60 @@
 
   async function loadGlbFromUrl(THREE, url, opts) {
     opts = opts || {};
-    var GLTFLoader = opts.GLTFLoader || (THREE && THREE.GLTFLoader) || global.GLTFLoader;
-    if (!GLTFLoader) throw new Error("GLTFLoader required for GLB");
-    var loader = new GLTFLoader();
-    if (global.VoxGltfConfigure) {
+    // All production TVS GLBs are Meshopt — wait before parse
+    if (global.TvsProductionPipeline && global.TvsProductionPipeline.ensureMeshoptReady) {
       try {
-        loader = global.VoxGltfConfigure(loader) || loader;
-      } catch (e) {}
-    } else if (global.VoxGameCanvas && VoxGameCanvas.configureGltfLoader) {
+        await global.TvsProductionPipeline.ensureMeshoptReady();
+      } catch (eMesh) {
+        console.warn("[TvsUnitLoader] meshopt", eMesh && eMesh.message);
+      }
+    }
+    // Prefer pipeline path (fetch + parse + materials)
+    if (
+      global.TvsProductionPipeline &&
+      global.TvsProductionPipeline.loadProductionGlb &&
+      opts.usePipeline !== false
+    ) {
       try {
-        loader = VoxGameCanvas.configureGltfLoader(loader) || loader;
-      } catch (e) {}
+        var pipeRoot = await global.TvsProductionPipeline.loadProductionGlb(url, {
+          voxel: true,
+          // Unit loader finalizeGameDelivery owns SI/ground once — raw avoids double collapse
+          raw: opts.raw === true || opts.ground === false,
+          ground: opts.ground !== false && opts.raw !== true,
+          // Heroes: kill scale-100 + fit ~2 m; anim carriers pass ground:false
+          targetHeight: opts.targetHeight != null ? opts.targetHeight : 2.0,
+          fitHeight: opts.ground !== false && opts.fitHeight !== false && opts.raw !== true,
+          maxDimM: opts.maxDimM != null ? opts.maxDimM : 12,
+        });
+        // Mimic gltf shape for callers that expect .scene
+        return {
+          scene: pipeRoot,
+          scenes: [pipeRoot],
+          animations: pipeRoot.userData.gltfAnimations || [],
+        };
+      } catch (ePipe) {
+        console.warn("[TvsUnitLoader] pipeline GLB fail, fallback", url, ePipe && ePipe.message);
+      }
+    }
+    var loader = null;
+    if (global.TvsProductionPipeline && global.TvsProductionPipeline.getGltfLoader) {
+      try {
+        loader = global.TvsProductionPipeline.getGltfLoader();
+      } catch (e0) {}
+    }
+    if (!loader) {
+      var GLTFLoader = opts.GLTFLoader || (THREE && THREE.GLTFLoader) || global.GLTFLoader;
+      if (!GLTFLoader) throw new Error("GLTFLoader required for GLB");
+      loader = new GLTFLoader();
+      if (global.VoxGltfConfigure) {
+        try {
+          loader = global.VoxGltfConfigure(loader) || loader;
+        } catch (e) {}
+      } else if (global.VoxGameCanvas && VoxGameCanvas.configureGltfLoader) {
+        try {
+          loader = VoxGameCanvas.configureGltfLoader(loader) || loader;
+        } catch (e) {}
+      }
     }
     // Magic-byte verify glTF
     if (opts.verify !== false) {
@@ -820,6 +796,15 @@
    * Avoids broken FBX Phong materials without maps.
    */
   function applyTextureToRoot(root, texture, THREE) {
+    if (global.TvsVoxelColors && global.TvsVoxelColors.applyAtlasMap) {
+      global.TvsVoxelColors.applyAtlasMap(root, texture, { THREE: THREE, flipY: false });
+      return root.userData.sharedAtlasMaterial || texture;
+    }
+    if (global.TvsVoxelColors && global.TvsVoxelColors.prepVoxelTexture) {
+      global.TvsVoxelColors.prepVoxelTexture(texture, { THREE: THREE, flipY: false, voxel: true });
+    } else {
+      prepVoxelTexture(THREE, texture, false);
+    }
     var shared = new THREE.MeshStandardMaterial({
       map: texture,
       color: 0xffffff,
@@ -842,16 +827,45 @@
         }
       });
       ch.material = shared;
+      ch.castShadow = true;
+      ch.receiveShadow = true;
     });
     return shared;
   }
 
   function attachColorApi(root, THREE) {
+    // Prefer fleet colour SSOT (multiply tint keeps atlas maps readable)
+    if (global.TvsVoxelColors && global.TvsVoxelColors.attachColorApi) {
+      global.TvsVoxelColors.attachColorApi(root, { THREE: THREE });
+      var mats0 = collectMaterials(root);
+      root.userData.materials = mats0;
+      root.userData.setEmissive = function (hex, intensity) {
+        intensity = intensity == null ? 0.25 : intensity;
+        var c =
+          typeof hex === "number"
+            ? hex
+            : parseInt(String(hex).replace("#", ""), 16);
+        mats0.forEach(function (m) {
+          if (m.emissive) {
+            m.emissive.setHex(c);
+            if ("emissiveIntensity" in m) m.emissiveIntensity = intensity;
+          }
+        });
+        return root;
+      };
+      return root;
+    }
+
     var mats = collectMaterials(root);
     mats.forEach(function (m) {
       if (!m.userData) m.userData = {};
       if (m.color && m.userData._baseColor == null) {
         m.userData._baseColor = m.color.getHex();
+      }
+      // Textured: never leave black base (kills strip atlases)
+      if (m.map && m.color && m.color.getHex() === 0x000000) {
+        m.color.setHex(0xffffff);
+        m.userData._baseColor = 0xffffff;
       }
     });
 
@@ -860,8 +874,18 @@
     root.userData.setColorTint = function (hex) {
       var c = typeof hex === "number" ? hex : parseInt(String(hex).replace("#", ""), 16);
       if (!isFinite(c)) c = 0xffffff;
+      var tint = new THREE.Color(c);
       mats.forEach(function (m) {
-        if (m.color) m.color.setHex(c);
+        if (!m.color) return;
+        var baseHex =
+          m.userData._baseColor != null
+            ? m.userData._baseColor
+            : m.map
+              ? 0xffffff
+              : m.color.getHex();
+        var base = new THREE.Color(baseHex);
+        // Multiply so maps stay visible
+        m.color.setRGB(base.r * tint.r, base.g * tint.g, base.b * tint.b);
       });
       root.userData.colorTint = c;
       return root;
@@ -909,9 +933,61 @@
     var score = 0;
     if (preferHuman && HUMAN_CLIP_RE.test(id)) score += 50;
     if (ANIMAL_CLIP_RE.test(id)) score -= 40;
+    // Prefer plain idle over banner/bar variants when picking "idle"
+    if (/banner|bar-idle|drawn/i.test(id)) score -= 5;
     if (/idle/i.test(id)) score += 2;
     return score;
   }
+
+  /**
+   * Map free-form / author TVS clip ids → semantic roles.
+   * Author names from pipeline allClips: human-dig-anim, human-command-anim,
+   * human-barter-anim, human-drunk-anim, human-praying-anim, human-mounted-anim, …
+   */
+  function semanticFromClipName(name) {
+    var n = String(name || "").toLowerCase();
+    // Work / social / mount (before generic idle so "bar-idle" still → idle)
+    if (/dig|harvest|farm|mine|hoe|shovel|pickaxe|work-?anim/.test(n)) return "dig";
+    if (/barter|trade|deal|haggle/.test(n)) return "barter";
+    if (/drunk|drink|toast|swig/.test(n)) return "drunk";
+    if (/pray|praying|kneel|worship/.test(n)) return "pray";
+    if (/preach|sermon|bless/.test(n)) return "preach";
+    if (/command|order|signal|point(?!er)/.test(n)) return "command";
+    if (/mounted|riding(?!-broom)|ride(?!.*broom)/.test(n)) return "mounted";
+    if (/broom|riding-broom/.test(n)) return "broom";
+    if (/aim|draw.?bow|ready.?bow|bow.?ready/.test(n)) return "aim";
+    if (/spell|cast|wand|staff.?spell|magic(?!.?block)/.test(n)) return "cast";
+    // Combat / loco
+    if (/death|die|dead/.test(n)) return "death";
+    if (/hit.?react|hurt|damage|recieve|receive/.test(n)) return "hit";
+    if (/defend|block|guard|parry|magic.?block/.test(n)) return "defend";
+    if (/attack|slash|strike|swing|punch|shoot|flanchet/.test(n)) return "attack";
+    if (/jump|leap/.test(n)) return "jump";
+    if (/sit|sitt|seat/.test(n)) return "sit";
+    if (/walk|run|locom|move|jog|sprint|charg/.test(n)) return "locomotion";
+    if (/idle|stand|wait|breath|ready|banner|bar-idle|drawnidle|normal.?idol/.test(n))
+      return "idle";
+    return null;
+  }
+
+  /**
+   * Baked anim packages (load order / preferOrder).
+   * locomotion → traversal → equipped weapon → social overlays.
+   * maxClips default 20 covers all three core packages + social extras.
+   */
+  var ANIM_PACKAGES = {
+    locomotion: ["idle", "locomotion"],
+    traversal: ["jump", "sit", "dig", "mounted", "broom"],
+    weapon: ["attack", "defend", "aim", "cast", "command", "hit", "death"],
+    social: ["barter", "drunk", "pray", "preach"],
+  };
+
+  /** Flatten packages for preferOrder (core three first, then social). */
+  var SEMANTIC_ROLES = []
+    .concat(ANIM_PACKAGES.locomotion)
+    .concat(ANIM_PACKAGES.traversal)
+    .concat(ANIM_PACKAGES.weapon)
+    .concat(ANIM_PACKAGES.social);
 
   function resolveClipMap(animsJson, unit) {
     var out = {};
@@ -923,22 +999,45 @@
       });
     var preferHuman = !isAnimal;
 
+    // Primary map from author clips{}
     var clips = animsJson.clips || {};
     Object.keys(clips).forEach(function (sem) {
       var c = clips[sem];
-      if (c && c.url) {
-        out[sem] = Object.assign({}, c, { url: absCdnUrl(c.url) });
+      if (c && (c.url || c.glbUrl || c.fbxUrl)) {
+        out[sem] = Object.assign({}, c, {
+          url: absCdnUrl(c.glbUrl || c.url || c.fbxUrl),
+          glbUrl: absCdnUrl(c.glbUrl || c.url),
+        });
       }
     });
 
-    if (preferHuman && animsJson.allClips) {
+    // Expand allClips → semantic roles (dig, command, barter, pray, …)
+    if (animsJson.allClips && animsJson.allClips.length) {
       var bySem = {};
       animsJson.allClips.forEach(function (c) {
-        var sem = c.semantic || "other";
+        if (!c) return;
+        var id = c.id || "";
+        // Animals: keep animal clips; humanoids: skip pure animal except mount mounts
+        if (preferHuman && ANIMAL_CLIP_RE.test(id) && !/human/i.test(id)) {
+          // horse-* only for mounted role if no human-mounted
+          if (!/horse|mount/i.test(id)) return;
+        }
+        var sem =
+          semanticFromClipName(id) ||
+          (c.semantic && c.semantic !== "other" ? c.semantic : null);
+        if (!sem) return;
+        // Don't map horse-walk to human locomotion
+        if (preferHuman && /horse|cow|pig|sheep|chicken|duck|owl|corgi/i.test(id) && sem !== "mounted") {
+          return;
+        }
+        var entry = Object.assign({}, c, {
+          url: absCdnUrl(c.glbUrl || c.url || c.fbxUrl),
+          glbUrl: absCdnUrl(c.glbUrl || c.url),
+        });
         if (!bySem[sem]) bySem[sem] = [];
-        bySem[sem].push(Object.assign({}, c, { url: absCdnUrl(c.url) }));
+        bySem[sem].push(entry);
       });
-      ["idle", "locomotion", "attack", "defend", "jump", "sit"].forEach(function (sem) {
+      SEMANTIC_ROLES.forEach(function (sem) {
         var list = bySem[sem] || [];
         if (!list.length) return;
         list.sort(function (a, b) {
@@ -952,27 +1051,137 @@
       });
     }
 
+    // Direct id: keys for admin / playClip("human-dig-anim") — not auto-loaded
     if (animsJson.allClips) {
       animsJson.allClips.forEach(function (c) {
-        if (c.id && c.url) out["id:" + c.id] = Object.assign({}, c, { url: absCdnUrl(c.url) });
+        if (c && c.id && (c.url || c.glbUrl)) {
+          out["id:" + c.id] = Object.assign({}, c, {
+            url: absCdnUrl(c.glbUrl || c.url),
+            glbUrl: absCdnUrl(c.glbUrl || c.url),
+          });
+        }
       });
     }
     return out;
   }
 
+  /** Collect bone/node names under root for track filtering. */
+  function collectBoneNames(root) {
+    var names = {};
+    root.traverse(function (o) {
+      if (o.name) names[o.name] = true;
+      // Three r128 skinned meshes store skeleton.bones
+      if (o.isSkinnedMesh && o.skeleton && o.skeleton.bones) {
+        o.skeleton.bones.forEach(function (b) {
+          if (b && b.name) names[b.name] = true;
+        });
+      }
+    });
+    return names;
+  }
+
+  /**
+   * Keep only tracks that target nodes present on the loaded skeleton.
+   * Drops foreign Mixamo/Human tracks that would spam console warnings.
+   *
+   * Track names: "BoneName.quaternion" — bone may itself contain dots
+   * (TVS: "Bicep.Right", "Hip.Left"). Must split on the LAST property suffix only.
+   */
+  function boneNameFromTrack(trackName) {
+    var n = String(trackName || "");
+    // Three: "Bone.quaternion" | "Bone.position" | "Bone.scale"
+    // Also: "mixamorig:Hips.quaternion" / "Armature|Bone.quaternion"
+    var lastDot = n.lastIndexOf(".");
+    if (lastDot <= 0) return n;
+    var prop = n.slice(lastDot + 1).toLowerCase();
+    if (
+      prop === "quaternion" ||
+      prop === "position" ||
+      prop === "scale" ||
+      prop === "rotation" ||
+      prop === "matrix" ||
+      prop === "weights"
+    ) {
+      return n.slice(0, lastDot);
+    }
+    // Fallback: strip trailing property after last dot
+    return n.slice(0, lastDot);
+  }
+
+  /**
+   * Keep / rematch tracks onto TVS pack bones (Base, Torso, Bicep.Right, …).
+   * Rewrites "Armature|Bone.quaternion" → "Bone.quaternion" when needed.
+   * Does NOT invent Mixamo tracks — only author pack clips on this skeleton.
+   */
+  function filterClipToSkeleton(clip, boneNames, THREE) {
+    if (!clip || !clip.tracks || !clip.tracks.length) return clip;
+    var kept = [];
+    for (var i = 0; i < clip.tracks.length; i++) {
+      var t = clip.tracks[i];
+      var trackName = String(t.name || "");
+      var bone = boneNameFromTrack(trackName);
+      var bare = bone.indexOf("|") >= 0 ? bone.split("|").pop() : bone;
+      // strip leading "Armature." if present
+      if (bare.indexOf("Armature.") === 0) bare = bare.slice(9);
+      var prop = "";
+      var lastDot = trackName.lastIndexOf(".");
+      if (lastDot > 0) prop = trackName.slice(lastDot); // ".quaternion" etc
+      var target = null;
+      if (boneNames[bone]) target = bone;
+      else if (boneNames[bare]) target = bare;
+      if (!target) continue;
+      // Rematch track name to actual skeleton bone so mixer binds
+      if (target + prop !== trackName && prop) {
+        try {
+          t.name = target + prop;
+        } catch (eRename) {
+          /* immutable track — keep original if bone matched loosely */
+        }
+      }
+      kept.push(t);
+    }
+    if (!kept.length) return null;
+    if (kept.length === clip.tracks.length) return clip;
+    var next = clip.clone();
+    next.tracks = kept;
+    return next;
+  }
+
+  /** Load animations from a sidecar GLB (preferred) or FBX pack entry. */
   async function loadAnimClipsFromUrl(url, FBXLoader, THREE, opts) {
     opts = opts || {};
-    var u = String(url || "");
+    if (!url) return [];
+    var u = String(url);
+    // Prefer glbUrl sibling when entry only had fbx
+    if (/\.fbx($|\?)/i.test(u) && opts.preferGlb !== false) {
+      var glbTry = u.replace(/\.fbx($|\?)/i, ".glb$1");
+      try {
+        var g0 = await loadGlbFromUrl(THREE, glbTry, {
+          verify: opts.verify !== false,
+          GLTFLoader: opts.GLTFLoader,
+          ground: false,
+          usePipeline: false,
+        });
+        if (g0 && g0.animations && g0.animations.length) return g0.animations;
+      } catch (eGlb) {
+        /* fall through to original */
+      }
+    }
     if (/\.glb($|\?)/i.test(u) || /\.gltf($|\?)/i.test(u)) {
-      var gltf = await loadGlbFromUrl(THREE, u, {
+      var g = await loadGlbFromUrl(THREE, u, {
         verify: opts.verify !== false,
         GLTFLoader: opts.GLTFLoader,
+        // Anim packs are armature-only — never ground/stretch the clip carrier
+        ground: false,
+        usePipeline: false,
       });
-      return gltf.animations || [];
+      return (g && g.animations) || [];
     }
-    if (!FBXLoader) throw new Error("FBXLoader required for anim " + u);
-    var animRoot = await loadFbxFromUrl(FBXLoader, u, { verify: opts.verify !== false });
-    return animRoot.animations || [];
+    if (!FBXLoader) return [];
+    var animRoot = await loadFbxFromUrl(FBXLoader, u, {
+      verify: opts.verify !== false,
+    });
+    return (animRoot && animRoot.animations) || [];
   }
 
   async function loadAndBindAnims(root, clipMap, FBXLoader, THREE, opts) {
@@ -980,79 +1189,105 @@
     var mixer = new THREE.AnimationMixer(root);
     var actions = {};
     var clips = {};
-    var keys = Object.keys(clipMap).filter(function (k) {
+    var boneNames = collectBoneNames(root);
+    var keys = Object.keys(clipMap || {}).filter(function (k) {
       return k.indexOf("id:") !== 0;
     });
-    var maxLoad = opts.maxClips || 6;
+    // Packages: locomotion → traversal → weapon → social (dig, command, barter, …)
+    var preferOrder = SEMANTIC_ROLES.slice();
+    // Optional: restrict to named packages (e.g. opts.animPackages: ["locomotion","weapon"])
+    if (opts.animPackages && opts.animPackages.length) {
+      preferOrder = [];
+      opts.animPackages.forEach(function (pkg) {
+        var list = ANIM_PACKAGES[pkg];
+        if (list) preferOrder = preferOrder.concat(list);
+      });
+    }
+    keys.sort(function (a, b) {
+      var ia = preferOrder.indexOf(a);
+      var ib = preferOrder.indexOf(b);
+      if (ia < 0) ia = 99;
+      if (ib < 0) ib = 99;
+      return ia - ib;
+    });
+    // Production default: 20 — enough for locomotion + traversal + equipped weapon packs
+    var maxLoad = opts.maxClips != null ? opts.maxClips : 20;
     var loadKeys = keys.slice(0, maxLoad);
 
-    await Promise.all(
-      loadKeys.map(async function (sem) {
-        var entry = clipMap[sem];
-        if (!entry || !entry.url) return;
-        // Prefer production GLB when anims.json still points at FBX
-        var urls = [];
-        if (entry.glbUrl) urls.push(entry.glbUrl);
-        if (entry.url) {
-          urls.push(entry.url);
-          if (/\.fbx($|\?)/i.test(entry.url)) {
-            urls.push(String(entry.url).replace(/\.fbx($|\?)/i, ".glb$1"));
-          }
-        }
-        var seen = {};
-        var list = [];
-        for (var ui = 0; ui < urls.length && !list.length; ui++) {
-          var tryUrl = absCdnUrl(urls[ui]) || urls[ui];
-          if (!tryUrl || seen[tryUrl]) continue;
-          seen[tryUrl] = true;
-          try {
-            list = await loadAnimClipsFromUrl(tryUrl, FBXLoader, THREE, opts);
-            if (list && list.length) entry._resolvedUrl = tryUrl;
-          } catch (err) {
-            list = [];
-            if (ui === urls.length - 1) {
-              console.warn("[TvsUnitLoader] anim fail", sem, tryUrl, err && err.message);
-            }
-          }
-        }
-        if (!list.length) return;
-        var clip = list[0].clone();
-        clip.name = sem;
-        clips[sem] = clip;
-        // Grounded kits: drop hip/root .position tracks (DRC SSOT — kills float)
-        if (clip && clip.tracks) {
-          var kept = clip.tracks.filter(function (t) {
-            return (t.name || "").indexOf(".position") === -1;
-          });
-          if (kept.length && kept.length < clip.tracks.length) {
-            try {
-              clip = new THREE.AnimationClip(clip.name, clip.duration, kept);
-            } catch (eStrip) {
-              /* keep original */
-            }
-          }
-        }
-        var action = mixer.clipAction(clip);
-        action.enabled = true;
-        actions[sem] = action;
-      })
-    );
+    // 1) Embedded GLB clips first (same skeleton — preferred)
+    var embedded = root.animations || [];
+    embedded.forEach(function (clip, i) {
+      var rawName = clip.name || "embedded-" + i;
+      var filtered = filterClipToSkeleton(clip, boneNames, THREE) || clip;
+      var sem = semanticFromClipName(rawName) || rawName;
+      if (!clips[sem]) {
+        var c = filtered.clone();
+        c.name = sem;
+        clips[sem] = c;
+        actions[sem] = mixer.clipAction(c);
+      }
+      if (!clips[rawName]) {
+        clips[rawName] = filtered;
+        actions[rawName] = mixer.clipAction(filtered);
+      }
+    });
 
-    if (root.animations && root.animations.length) {
-      root.animations.forEach(function (clip, i) {
-        var name = clip.name || "embedded-" + i;
-        if (!clips[name]) {
-          clips[name] = clip;
-          actions[name] = mixer.clipAction(clip);
-        }
-      });
+    // 2) External pack — production clips are GLB (grudge-convert); FBX fallback
+    if (loadKeys.length) {
+      await Promise.all(
+        loadKeys.map(async function (sem) {
+          if (actions[sem]) return; // already have embedded
+          var entry = clipMap[sem];
+          if (!entry) return;
+          var url = entry.glbUrl || entry.url || entry.fbxUrl;
+          if (!url) return;
+          try {
+            var list = await loadAnimClipsFromUrl(url, FBXLoader, THREE, opts);
+            if (!list.length) return;
+            // Prefer clip whose tracks match skeleton; try all if first fails filter
+            var clip = null;
+            for (var ci = 0; ci < list.length; ci++) {
+              clip = filterClipToSkeleton(list[ci].clone(), boneNames, THREE);
+              if (clip) break;
+            }
+            if (!clip) {
+              // Rematch full clip once more (pack is same TVS humanoid rig)
+              clip = filterClipToSkeleton(list[0].clone(), boneNames, THREE);
+              if (!clip) {
+                console.warn(
+                  "[TvsUnitLoader] pack clip has no tracks for this skeleton",
+                  sem,
+                  "bones",
+                  Object.keys(boneNames).length
+                );
+                return;
+              }
+            }
+            clip.name = sem;
+            clips[sem] = clip;
+            var action = mixer.clipAction(clip);
+            action.enabled = true;
+            actions[sem] = action;
+          } catch (err) {
+            console.warn("[TvsUnitLoader] anim fail", sem, url, err && err.message);
+          }
+        })
+      );
     }
 
     var current = null;
 
+    var ONESHOT_RE =
+      /^(attack|dig|command|barter|drunk|pray|preach|cast|jump|hit|death|slash|aim)$/i;
+
     function playClip(name, fade) {
       fade = fade == null ? 0.15 : fade;
       var action = actions[name];
+      if (!action) {
+        // resolve semantic alias or substring
+        var want = semanticFromClipName(name) || name;
+        action = actions[want];
+      }
       if (!action) {
         var k = Object.keys(actions).find(function (n) {
           return n.toLowerCase().indexOf(String(name).toLowerCase()) >= 0;
@@ -1063,9 +1298,22 @@
       if (current && current !== action) {
         current.fadeOut(fade);
       }
+      var oneShot = ONESHOT_RE.test(String(name));
+      if (THREE.LoopOnce != null) {
+        action.setLoop(oneShot ? THREE.LoopOnce : THREE.LoopRepeat, oneShot ? 1 : Infinity);
+        action.clampWhenFinished = !!oneShot;
+      }
       action.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(fade).play();
       current = action;
       root.userData.currentAnim = name;
+      // Combat SFX on one-shots (CSE mattflat pack when TvsCseSfx is loaded)
+      if (oneShot && global.TvsCseSfx && typeof global.TvsCseSfx.playForAnim === "function") {
+        try {
+          global.TvsCseSfx.playForAnim(name);
+        } catch (eSfx) {
+          /* non-fatal */
+        }
+      }
       return action;
     }
 
@@ -1073,17 +1321,127 @@
       if (mixer) mixer.update(dt);
     }
 
+    /** List loaded semantic roles for UI / AI. */
+    function listAnims() {
+      return Object.keys(actions).filter(function (k) {
+        return k.indexOf("id:") !== 0;
+      });
+    }
+
     root.userData.mixer = mixer;
     root.userData.animActions = actions;
     root.userData.animClips = clips;
     root.userData.playClip = playClip;
     root.userData.updateMixer = updateMixer;
+    root.userData.listAnims = listAnims;
     root.userData.clipMap = clipMap;
+    root.userData.skeletonBones = Object.keys(boneNames).length;
+    root.userData.semanticRoles = listAnims();
+
+    // Hand / grip bones for weapon & tool placement (AI + equip)
+    installHandAttachmentApi(root, THREE);
 
     if (actions.idle) playClip("idle", 0);
     else if (actions.locomotion) playClip("locomotion", 0);
 
-    return { mixer: mixer, actions: actions, playClip: playClip };
+    return { mixer: mixer, actions: actions, playClip: playClip, listAnims: listAnims };
+  }
+
+  /**
+   * Find hand / weapon bones on TVS humanoid kits (Bicep.Right, Hand.Right, …)
+   * and expose attachProp / detachProp for tools & weapons.
+   */
+  function installHandAttachmentApi(root, THREE) {
+    if (!root || !THREE) return;
+
+    function findBone(predicates) {
+      var found = null;
+      root.traverse(function (o) {
+        if (found || !o.name) return;
+        var n = String(o.name);
+        for (var i = 0; i < predicates.length; i++) {
+          if (predicates[i].test(n)) {
+            found = o;
+            return;
+          }
+        }
+      });
+      return found;
+    }
+
+    var rightHand =
+      findBone([
+        /hand\.?right/i,
+        /right\.?hand/i,
+        /hand_r\b/i,
+        /\br_hand\b/i,
+        /weapon\.?right/i,
+        /hold\.?right/i,
+      ]) ||
+      findBone([/bicep\.?right/i, /forearm\.?right/i, /arm\.?right/i]);
+    var leftHand =
+      findBone([
+        /hand\.?left/i,
+        /left\.?hand/i,
+        /hand_l\b/i,
+        /\bl_hand\b/i,
+        /weapon\.?left/i,
+      ]) || findBone([/bicep\.?left/i, /forearm\.?left/i]);
+
+    root.userData.handBones = {
+      right: rightHand ? rightHand.name : null,
+      left: leftHand ? leftHand.name : null,
+    };
+    root.userData._handAttachments = root.userData._handAttachments || {};
+
+    /**
+     * Attach a weapon/tool Object3D to a hand bone.
+     * opts: { hand: "right"|"left", pos, rot, scale, grip }
+     */
+    root.userData.attachProp = function (obj, opts) {
+      opts = opts || {};
+      if (!obj) return false;
+      var hand = String(opts.hand || "right").toLowerCase();
+      var bone = hand === "left" ? leftHand : rightHand;
+      if (!bone) {
+        console.warn("[TvsUnitLoader] no hand bone for", hand, root.userData.handBones);
+        return false;
+      }
+      var key = opts.slot || hand;
+      var prev = root.userData._handAttachments[key];
+      if (prev && prev.parent) prev.parent.remove(prev);
+      bone.add(obj);
+      if (opts.pos) obj.position.set(opts.pos.x || 0, opts.pos.y || 0, opts.pos.z || 0);
+      else obj.position.set(0, 0, 0);
+      if (opts.rot) {
+        obj.rotation.set(
+          opts.rot.x || 0,
+          opts.rot.y || 0,
+          opts.rot.z || 0
+        );
+      }
+      if (opts.scale != null) {
+        var s = typeof opts.scale === "number" ? opts.scale : 1;
+        obj.scale.setScalar(s);
+      }
+      // SI grip default: small offset along bone +Y for TVS props
+      if (opts.grip === true) {
+        obj.position.y += 0.05;
+        obj.rotation.x = opts.rot && opts.rot.x != null ? opts.rot.x : -Math.PI / 2;
+      }
+      root.userData._handAttachments[key] = obj;
+      obj.userData.attachedTo = bone.name;
+      obj.userData.attachSlot = key;
+      return true;
+    };
+
+    root.userData.detachProp = function (slot) {
+      slot = slot || "right";
+      var prev = root.userData._handAttachments[slot];
+      if (prev && prev.parent) prev.parent.remove(prev);
+      delete root.userData._handAttachments[slot];
+      return !!prev;
+    };
   }
 
   // ── main load ──────────────────────────────────────────────────────────────
@@ -1116,6 +1474,9 @@
           var gltf = await loadGlbFromUrl(THREE, gUrl, {
             verify: opts.verify !== false,
             GLTFLoader: opts.GLTFLoader,
+            // Caller (this function) runs finalizeGameDelivery once
+            raw: true,
+            ground: false,
           });
           group = gltf.scene || gltf.scenes[0];
           if (gltf.animations && gltf.animations.length) {
@@ -1162,7 +1523,12 @@
     // GLB: prefer embedded atlas (already compressed); rebind only if missing.
     // FBX: always rebind external 256×1 strip (NearestFilter).
     if (format === "glb") {
-      prepEmbeddedTextures(group, THREE);
+      // Prefer shared pipeline materials (keeps embeds, voxel Nearest, sRGB)
+      if (global.TvsProductionPipeline && global.TvsProductionPipeline.prepMeshMaterials) {
+        global.TvsProductionPipeline.prepMeshMaterials(group, { voxel: true });
+      } else {
+        prepEmbeddedTextures(group, THREE);
+      }
       if (opts.withTexture !== false && !hasUsableMap(group) && (unit.textureUrl || TEXTURE_ALIASES[unit.unitId])) {
         try {
           var loadedGlb = await loadTextureWithFallbacks(THREE, unit);
@@ -1189,27 +1555,117 @@
       }
     }
 
-    normalizeHeight(group, height, THREE, {
-      alreadyBaked: format === "glb" || group.userData.productionBaked,
-    });
-    attachColorApi(group, THREE);
-    if (opts.colorTint != null) group.userData.setColorTint(opts.colorTint);
+    // Characters: 2.0 m yardstick · uniform grow · face +Z · feet ground (game delivery)
+    group.userData.category = "character";
+    group.userData.categoryLabel = "Characters";
+    group.userData.fitAxis = "y";
+    group.userData.relativeToCharacter = 1;
+    group.userData.characterHeightM = DEFAULT_HEIGHT;
+    group.userData.gameUsage = "Playable / NPC humanoids — feet ground, ~2 m tall, forward +Z";
+    var faceOpts = {
+      targetHeight: height,
+      targetM: height,
+      fitHeight: true,
+      fitAxis: "y",
+      maxDimM: 12,
+      category: "character",
+      relativeToCharacter: 1,
+      isCharacter: true,
+      yawOffset: opts.yawOffset,
+      faceMinusZ: opts.faceMinusZ === true,
+      yawDeg: opts.yawDeg,
+      centerXZ: opts.centerXZ,
+      keepXZ: opts.keepXZ,
+    };
+    if (
+      global.TvsProductionPipeline &&
+      global.TvsProductionPipeline.finalizeGameDelivery
+    ) {
+      group.userData.productionBaked = format === "glb";
+      global.TvsProductionPipeline.finalizeGameDelivery(group, faceOpts);
+    } else if (format === "glb") {
+      group.userData.productionBaked = true;
+      normalizeHeight(group, height, THREE, {
+        alreadyBaked: true,
+        groundOnly: true,
+        fitHeight: true,
+        maxDimM: 12,
+      });
+    } else {
+      normalizeHeight(group, height, THREE, {
+        allowStretch: opts.allowStretch !== false,
+        fitHeight: true,
+      });
+    }
+    // Colour SSOT: white base with maps, tint API, Nearest voxel filters
+    if (global.TvsVoxelColors) {
+      if (global.TvsVoxelColors.ensureReadableAlbedo) {
+        global.TvsVoxelColors.ensureReadableAlbedo(group, { THREE: THREE });
+      }
+      if (global.TvsVoxelColors.attachColorApi) {
+        global.TvsVoxelColors.attachColorApi(group, { THREE: THREE });
+      } else {
+        attachColorApi(group, THREE);
+      }
+    } else {
+      attachColorApi(group, THREE);
+    }
+    group.userData.hasTexture = hasUsableMap(group);
+    if (opts.colorTint != null && group.userData.setColorTint) {
+      group.userData.setColorTint(opts.colorTint);
+    }
 
+    // Sidecars from CDN/database: collider · anim pack · AI brain (default ON)
+    var wantBrain = opts.withBrain !== false;
+    var wantAnims = opts.withAnims !== false;
     if (opts.loadSidecars !== false) {
-      var collider = await fetchJson(unit.colliderUrl);
-      var animsJson = await fetchJson(unit.animationPackUrl);
-      var brain = opts.withBrain && unit.brainUrl ? await fetchJson(unit.brainUrl) : null;
+      var collider = unit.colliderUrl ? await fetchJson(unit.colliderUrl) : null;
+      var animsJson = unit.animationPackUrl ? await fetchJson(unit.animationPackUrl) : null;
+      var brain = null;
+      if (wantBrain && unit.brainUrl) {
+        try {
+          brain = await fetchJson(unit.brainUrl);
+        } catch (brainErr) {
+          console.warn("[TvsUnitLoader] brain fetch fail", unit.brainUrl, brainErr && brainErr.message);
+        }
+      }
 
       group.userData.collider = collider;
       group.userData.animationPack = animsJson;
       group.userData.brain = brain;
 
-      if (collider && opts.debugColliders) {
-        var rootC = (collider.colliders || []).find(function (c) {
-          return c.name === "character_root" || c.type === "capsule";
+      // Physics descriptor for Rapier/Cannon (from baked collider.json)
+      if (global.TvsNpcPrefabs && global.TvsNpcPrefabs.physicsFromCollider) {
+        group.userData.physics = global.TvsNpcPrefabs.physicsFromCollider(collider, {
+          friendly: opts.team !== "enemy",
+          layer: opts.team === "enemy" ? "hostile" : "character",
         });
-        if (rootC && rootC.type === "capsule" && THREE.CapsuleGeometry) {
-          var geo = new THREE.CapsuleGeometry(rootC.radius || 0.32, rootC.height || 1.0, 4, 8);
+        group.userData.physicsReady = true;
+      } else if (collider && collider.rootCollider) {
+        var rc = collider.rootCollider;
+        var cap = rc.capsule || {};
+        group.userData.physics = {
+          type: rc.type || "capsule",
+          align: cap.align || "Y",
+          radius: Math.min(cap.radius != null ? cap.radius : 0.35, 0.55),
+          height: Math.min(Math.max(cap.height != null ? cap.height : 1.3, 0.5), 2.0),
+          center: rc.center || [0, 1, 0],
+          bodyType: "kinematicPosition",
+          layer: "character",
+          source: "collider.json",
+        };
+        group.userData.physicsReady = true;
+      }
+
+      if (collider && opts.debugColliders) {
+        var phys = group.userData.physics;
+        var rootC =
+          collider.rootCollider ||
+          (collider.colliders || []).find(function (c) {
+            return c.name === "character_root" || c.type === "capsule";
+          });
+        if (phys && THREE.CapsuleGeometry) {
+          var geo = new THREE.CapsuleGeometry(phys.radius || 0.32, phys.height || 1.0, 4, 8);
           var mat = new THREE.MeshBasicMaterial({
             color: 0x3dd6c6,
             wireframe: true,
@@ -1217,13 +1673,26 @@
             opacity: 0.35,
           });
           var mesh = new THREE.Mesh(geo, mat);
-          mesh.position.fromArray(rootC.center || [0, 0.85, 0]);
+          mesh.position.fromArray(phys.center || [0, 0.85, 0]);
           mesh.name = "tvs-collider-debug";
           group.add(mesh);
+        } else if (rootC && rootC.type === "capsule" && THREE.CapsuleGeometry) {
+          var cap0 = rootC.capsule || rootC;
+          var geo2 = new THREE.CapsuleGeometry(cap0.radius || 0.32, cap0.height || 1.0, 4, 8);
+          var mat2 = new THREE.MeshBasicMaterial({
+            color: 0x3dd6c6,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.35,
+          });
+          var mesh2 = new THREE.Mesh(geo2, mat2);
+          mesh2.position.fromArray(rootC.center || [0, 0.85, 0]);
+          mesh2.name = "tvs-collider-debug";
+          group.add(mesh2);
         }
       }
 
-      if (opts.withAnims !== false && animsJson) {
+      if (wantAnims && animsJson) {
         var clipMap = resolveClipMap(animsJson, unit);
         await loadAndBindAnims(group, clipMap, FBXLoader, THREE, opts);
       } else if (group.animations && group.animations.length) {
@@ -1242,11 +1711,22 @@
         };
       }
 
-      if (brain && global.TvsAiBrain) {
-        group.userData.aiAgent = global.TvsAiBrain.createAgent(brain, {
-          unitId: unit.unitId,
-          team: opts.team || "a",
-        });
+      // AI strategy agent from database brain JSON
+      if (brain) {
+        if (global.TvsAiBrain && global.TvsAiBrain.createAgent) {
+          group.userData.aiAgent = global.TvsAiBrain.createAgent(brain, {
+            unitId: unit.unitId,
+            team: opts.team || "a",
+            home: opts.home || { x: 0, z: 0 },
+          });
+          group.userData.brainMerged =
+            group.userData.aiAgent.brain || global.TvsAiBrain.mergeBrain(brain);
+          group.userData.voxBehavior =
+            global.TvsAiBrain.toVoxBehavior(group.userData.brainMerged);
+        } else {
+          group.userData.brainMerged = brain;
+          console.warn("[TvsUnitLoader] TvsAiBrain missing — brain JSON loaded, no agent");
+        }
       }
     }
 
@@ -1260,6 +1740,9 @@
     };
 
     // Consistency report for debugging #hero / showcase
+    var animKeys = group.userData.animActions
+      ? Object.keys(group.userData.animActions)
+      : [];
     group.userData.importReport = {
       unitId: unit.unitId,
       format: format,
@@ -1267,6 +1750,11 @@
       glbUrl: unit.glbUrl,
       modelUrl: unit.modelUrl,
       textureUrl: group.userData.textureUrl || unit.textureUrl,
+      brainUrl: unit.brainUrl,
+      animationPackUrl: unit.animationPackUrl,
+      colliderUrl: unit.colliderUrl,
+      grudgeUuid: unit.grudgeUuid,
+      classHint: unit.classHint,
       height: group.userData.targetHeight,
       measuredHeight: group.userData.measuredAfterUnitFix || group.userData.nativeHeight,
       scale: group.userData.scaleFactor,
@@ -1274,7 +1762,21 @@
       productionBaked: !!group.userData.productionBaked,
       hasTexture: !!group.userData.texture || hasUsableMap(group),
       hasMixer: !!group.userData.mixer,
+      animClips: animKeys,
+      hasBrain: !!group.userData.brain,
+      hasAiAgent: !!group.userData.aiAgent,
+      strategy: group.userData.brainMerged
+        ? {
+            id: group.userData.brainMerged.id,
+            archetype: group.userData.brainMerged.archetype,
+            goals: (group.userData.brainMerged.goals || []).map(function (g) {
+              return g.id + "→" + g.action;
+            }),
+            voxBehavior: group.userData.voxBehavior || null,
+          }
+        : null,
       compressed: format === "glb",
+      source: "cdn-roster",
     };
     console.info("[TvsUnitLoader] loaded", group.userData.importReport);
 
@@ -1282,6 +1784,11 @@
   }
 
   async function loadArmySample(opts) {
+    opts = opts || {};
+    // Army always pulls CDN roster + brain + anims unless caller disables
+    if (opts.withBrain === undefined) opts.withBrain = true;
+    if (opts.withAnims === undefined) opts.withAnims = true;
+    if (opts.loadSidecars === undefined) opts.loadSidecars = true;
     var roster = await loadTvsRoster();
     var picks = ["melee", "ranged", "magic", "civilian"]
       .map(function (c) {
@@ -1289,10 +1796,39 @@
       })
       .filter(Boolean);
     var roots = [];
+    // Compact shoulder gap (SI meters). Width from post-SI AABB — never fixed 100× stride.
+    var gap = 0.4;
+    var cursor = 0;
     for (var i = 0; i < picks.length; i++) {
-      var root = await loadTvsUnit(picks[i], opts);
-      root.position.x = (i - (picks.length - 1) / 2) * 2.5;
+      var root = await loadTvsUnit(
+        picks[i],
+        Object.assign({}, opts, {
+          home: { x: 0, z: 0 },
+          team: opts.team || "a",
+        })
+      );
+      // Placement after SI: measured width so characters stand shoulder-to-shoulder
+      root.updateMatrixWorld(true);
+      var box = new THREE.Box3().setFromObject(root);
+      var size = new THREE.Vector3();
+      box.getSize(size);
+      // Clamp absurd widths from pre-fix explode (should not happen after pipeline)
+      var bodyW = size.x;
+      if (!(bodyW > 0.1) || bodyW > 4) bodyW = 0.9;
+      var halfW = Math.max(0.3, bodyW * 0.5);
+      if (i === 0) cursor = halfW;
+      else cursor += halfW + gap;
+      root.position.x = cursor;
+      root.position.z = 0;
       roots.push(root);
+      cursor += halfW;
+    }
+    // Center the line on x=0
+    if (roots.length) {
+      var mid = cursor * 0.5;
+      roots.forEach(function (r) {
+        r.position.x -= mid;
+      });
     }
     return { roster: roster, units: picks, roots: roots };
   }
@@ -1319,6 +1855,9 @@
     normalizeHeight: normalizeHeight,
     prepEmbeddedTextures: prepEmbeddedTextures,
     resolveClipMap: resolveClipMap,
+    semanticFromClipName: semanticFromClipName,
+    SEMANTIC_ROLES: SEMANTIC_ROLES,
+    ANIM_PACKAGES: ANIM_PACKAGES,
     assertRealFbx: assertRealFbx,
     headOk: headOk,
   };
