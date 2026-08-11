@@ -23,55 +23,165 @@
       return meshCache[key].clone(true);
     }
 
-    var loader = new FBXLoader();
-    var root = await new Promise(function (resolve, reject) {
-      loader.load(url, resolve, undefined, reject);
-    });
+    var root = null;
+    var tryUrls = [];
+    if (url) {
+      tryUrls.push(url);
+      // Prefer GLB sibling when plan still points at FBX
+      if (/\.fbx($|\?)/i.test(url)) {
+        tryUrls.unshift(String(url).replace(/\.fbx($|\?)/i, ".glb$1"));
+      }
+    }
 
-    if (textureUrl) {
+    for (var u = 0; u < tryUrls.length && !root; u++) {
+      var tryUrl = tryUrls[u];
       try {
-        var tex = await new Promise(function (resolve, reject) {
-          new THREE.TextureLoader().load(textureUrl, resolve, undefined, reject);
-        });
-        tex.magFilter = THREE.NearestFilter;
-        tex.minFilter = THREE.NearestFilter;
-        tex.generateMipmaps = false;
-        root.traverse(function (ch) {
-          if (!ch.isMesh || !ch.material) return;
-          var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
-          for (var i = 0; i < mats.length; i++) {
-            var m = mats[i].clone();
-            m.map = tex;
-            m.needsUpdate = true;
-            if (m.color) m.color.setHex(0xffffff);
-            if ("roughness" in m) m.roughness = 0.9;
-            if ("metalness" in m) m.metalness = 0;
-            mats[i] = m;
+        if (/\.glb($|\?)/i.test(tryUrl)) {
+          if (global.TvsProductionPipeline && global.TvsProductionPipeline.loadProductionGlb) {
+            root = await global.TvsProductionPipeline.loadProductionGlb(tryUrl, {
+              voxel: true,
+              ground: false,
+            });
+          } else {
+            var GLTFLoader = opts.GLTFLoader || THREE.GLTFLoader || global.GLTFLoader;
+            if (!GLTFLoader) continue;
+            var gltfLoader = new GLTFLoader();
+            var gltf = await new Promise(function (resolve, reject) {
+              gltfLoader.load(tryUrl, resolve, undefined, reject);
+            });
+            root = gltf.scene || gltf.scenes[0];
           }
-          ch.material = Array.isArray(ch.material) ? mats : mats[0];
-          ch.castShadow = true;
-          ch.receiveShadow = true;
+        } else {
+          var loader = new FBXLoader();
+          root = await new Promise(function (resolve, reject) {
+            loader.load(tryUrl, resolve, undefined, reject);
+          });
+        }
+      } catch (eLoad) {
+        root = null;
+      }
+    }
+    if (!root) throw new Error("mesh load failed: " + url);
+
+    var isGlbLoaded = false;
+    for (var gi0 = 0; gi0 < tryUrls.length; gi0++) {
+      if (/\.glb($|\?)/i.test(tryUrls[gi0])) {
+        isGlbLoaded = !!(root.userData && (root.userData.pipeline || root.userData.loadedFrom));
+        if (/\.glb($|\?)/i.test(root.userData && root.userData.loadedFrom)) isGlbLoaded = true;
+        break;
+      }
+    }
+    // Also detect by loaded pipeline flag
+    if (root.userData && (root.userData.pipeline === "tvs-production" || root.userData.productionBaked)) {
+      isGlbLoaded = true;
+    }
+
+    function meshHasMap(r) {
+      if (global.TvsVoxelColors && global.TvsVoxelColors.hasUsableMap) {
+        return global.TvsVoxelColors.hasUsableMap(r);
+      }
+      if (global.TvsProductionPipeline && global.TvsProductionPipeline.hasUsableMap) {
+        return global.TvsProductionPipeline.hasUsableMap(r);
+      }
+      var ok = false;
+      r.traverse(function (ch) {
+        if (!ch.isMesh || !ch.material) return;
+        var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
+        mats.forEach(function (m) {
+          if (m && m.map && m.map.image) ok = true;
         });
+      });
+      return ok;
+    }
+
+    // Always normalize materials (Phong→Standard, Nearest, white-with-map)
+    if (global.TvsProductionPipeline && global.TvsProductionPipeline.prepMeshMaterials) {
+      global.TvsProductionPipeline.prepMeshMaterials(root, { voxel: true });
+    }
+
+    // Bind external atlas when FBX or GLB missing embeds
+    var needTex = textureUrl && (!isGlbLoaded || !meshHasMap(root));
+    if (needTex) {
+      try {
+        var tex;
+        if (global.TvsProductionPipeline && global.TvsProductionPipeline.loadTextureUrl) {
+          tex = await global.TvsProductionPipeline.loadTextureUrl(textureUrl, {
+            voxel: true,
+            flipY: false,
+          });
+        } else {
+          tex = await new Promise(function (resolve, reject) {
+            new THREE.TextureLoader().load(textureUrl, resolve, undefined, reject);
+          });
+          tex.magFilter = THREE.NearestFilter;
+          tex.minFilter = THREE.NearestFilter;
+          tex.generateMipmaps = false;
+          tex.flipY = false;
+          if ("colorSpace" in tex && THREE.SRGBColorSpace != null) {
+            tex.colorSpace = THREE.SRGBColorSpace;
+          } else if (THREE.sRGBEncoding != null) {
+            tex.encoding = THREE.sRGBEncoding;
+          }
+        }
+        if (global.TvsVoxelColors && global.TvsVoxelColors.applyAtlasMap) {
+          global.TvsVoxelColors.applyAtlasMap(root, tex, { THREE: THREE, flipY: false });
+        } else {
+          root.traverse(function (ch) {
+            if (!ch.isMesh || !ch.material) return;
+            var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
+            for (var i = 0; i < mats.length; i++) {
+              var m = mats[i].clone();
+              m.map = tex;
+              m.needsUpdate = true;
+              if (m.color) m.color.setHex(0xffffff);
+              if ("roughness" in m) m.roughness = 0.9;
+              if ("metalness" in m) m.metalness = 0;
+              mats[i] = m;
+            }
+            ch.material = Array.isArray(ch.material) ? mats : mats[0];
+            ch.castShadow = true;
+            ch.receiveShadow = true;
+          });
+        }
       } catch (e) {
         /* texture optional */
       }
     }
 
-    if (height && global.TvsUnitLoader && global.TvsUnitLoader.normalizeHeight) {
-      global.TvsUnitLoader.normalizeHeight(root, height, THREE);
-    } else if (height) {
-      root.updateMatrixWorld(true);
-      var box = new THREE.Box3().setFromObject(root);
-      var size = new THREE.Vector3();
-      box.getSize(size);
-      if (size.y > 0.001) {
-        var s = height / size.y;
-        root.scale.setScalar(s);
-        root.updateMatrixWorld(true);
-        var box2 = new THREE.Box3().setFromObject(root);
-        root.position.y -= box2.min.y;
+    if (global.TvsVoxelColors && global.TvsVoxelColors.ensureReadableAlbedo) {
+      global.TvsVoxelColors.ensureReadableAlbedo(root, { THREE: THREE });
+    }
+    if (global.TvsVoxelColors && global.TvsVoxelColors.attachColorApi) {
+      global.TvsVoxelColors.attachColorApi(root, { THREE: THREE });
+    }
+
+    // Production GLB: keep bake scale + embedded textures. Ground feet only.
+    // Never stretch to recipe height (that caused scaleFactor 0.01 / native 200).
+    var isGlb = !!(root.userData && root.userData.pipeline === "tvs-production");
+    if (!isGlb) {
+      for (var gi = 0; gi < tryUrls.length; gi++) {
+        if (/\.glb($|\?)/i.test(tryUrls[gi])) {
+          isGlb = true;
+          break;
+        }
       }
     }
+    root.userData.noStretch = true;
+    root.userData.productionBaked = isGlb;
+    if (global.TvsProductionPipeline && global.TvsProductionPipeline.groundFeet) {
+      global.TvsProductionPipeline.groundFeet(root);
+    } else if (global.TvsUnitLoader && global.TvsUnitLoader.normalizeHeight) {
+      global.TvsUnitLoader.normalizeHeight(root, null, THREE, {
+        alreadyBaked: isGlb,
+        groundOnly: true,
+        allowStretch: false,
+      });
+    } else {
+      root.updateMatrixWorld(true);
+      var boxG = new THREE.Box3().setFromObject(root);
+      root.position.y -= boxG.min.y;
+    }
+    // height arg kept for cache key only — not applied as stretch
 
     meshCache[key] = root;
     return root.clone(true);
@@ -158,9 +268,12 @@
             height: opts.unitHeight || 2.0,
             withTexture: true,
             withAnims: opts.withAnims !== false,
+            withBrain: opts.withBrain !== false,
             loadSidecars: true,
-            maxClips: 4,
+            maxClips: opts.maxClips != null ? opts.maxClips : 20,
             verify: false,
+            team: actor.friendly === false ? "enemy" : "npc",
+            home: { x: actor.x || 0, z: actor.z || 0 },
           });
           body.position.set(actor.x, 0, actor.z);
           body.rotation.y = actor.rot || 0;

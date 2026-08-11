@@ -1,9 +1,12 @@
 /**
- * TVS Hero preview stage for #hero panel — same loader as in-game (scale/texture/GLB).
+ * Hero preview stage for #hero panel.
+ *
+ * Primary: Avatar Explorer races (TvsVoxelRaceDefaults) — player body + procedural clips.
+ * Legacy: TVS pack unit via TvsUnitLoader (NPC fallback only).
  *
  *   TvsHeroPreview.mount({
- *     host: document.getElementById('tvs-hero-preview'),
- *     THREE, unit, colorTint,
+ *     host: document.getElementById('race-hero-preview'),
+ *     THREE, race | unit, colorTint,
  *   });
  */
 (function (global) {
@@ -14,7 +17,10 @@
   function mount(opts) {
     opts = opts || {};
     var THREE = opts.THREE || global.THREE;
-    var host = opts.host || document.getElementById("tvs-hero-preview");
+    var host =
+      opts.host ||
+      document.getElementById("race-hero-preview") ||
+      document.getElementById("tvs-hero-preview");
     if (!THREE || !host) {
       console.warn("[TvsHeroPreview] THREE + host required");
       return null;
@@ -33,8 +39,18 @@
     status.textContent = "Loading hero…";
     host.appendChild(status);
 
-    var w = host.clientWidth || 320;
-    var h = Math.max(220, Math.min(360, host.clientHeight || 280));
+    // Panel may be display:none (#hero inactive) — never use 0×0 canvas
+    function measure() {
+      var cw = host.clientWidth;
+      var ch = host.clientHeight;
+      var w = cw > 40 ? cw : 320;
+      var h = ch > 80 ? ch : 300;
+      h = Math.max(240, Math.min(360, h));
+      return { w: w, h: h };
+    }
+    var sz = measure();
+    var w = sz.w;
+    var h = sz.h;
 
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -77,6 +93,14 @@
     var clock = new THREE.Clock();
     var yaw = 0.4;
 
+    function clearRoot() {
+      if (root) {
+        scene.remove(root);
+        root = null;
+      }
+      mixer = null;
+    }
+
     function frame() {
       if (disposed) return;
       raf = requestAnimationFrame(frame);
@@ -91,6 +115,74 @@
     }
     frame();
 
+    function frameCameraOn(model) {
+      if (!model) return;
+      model.updateMatrixWorld(true);
+      var box = new THREE.Box3().setFromObject(model);
+      var size = new THREE.Vector3();
+      var center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
+      var hgt = size.y > 0.01 ? size.y : 1.8;
+      var lookY = Math.max(0.9, center.y);
+      camera.position.set(1.5, lookY + 0.35, Math.max(2.6, hgt * 1.55 + 0.8));
+      camera.lookAt(0, lookY, 0);
+    }
+
+    /** Avatar Explorer race (player SSOT). */
+    async function loadRace(race, tint) {
+      if (!race) {
+        status.textContent = "No race selected";
+        status.className = "tvs-hero-preview__status bad";
+        return;
+      }
+      if (!global.TvsVoxelRaceDefaults) {
+        status.textContent = "Race module offline";
+        status.className = "tvs-hero-preview__status bad";
+        return;
+      }
+      var label = race.label || race.id || "race";
+      status.textContent = "Loading " + label + "…";
+      status.className = "tvs-hero-preview__status";
+      try {
+        clearRoot();
+        var model = await TvsVoxelRaceDefaults.loadRace(race, {
+          THREE: THREE,
+          manifest: opts.manifest,
+        });
+        if (disposed) return;
+        if (tint != null && tint !== 0xffffff && model.userData && model.userData.setColorTint) {
+          model.userData.setColorTint(tint);
+        }
+        root = model;
+        scene.add(root);
+        if (model.userData.mixer) mixer = model.userData.mixer;
+        if (model.userData.playClip) {
+          try {
+            model.userData.playClip("idle", 0);
+          } catch (eIdle) {}
+        }
+        frameCameraOn(model);
+        var h =
+          model.userData.nativeHeight ||
+          model.userData.targetHeight ||
+          (race && race.heightM) ||
+          "?";
+        status.textContent =
+          label +
+          " · explorer · h≈" +
+          (typeof h === "number" ? h.toFixed(2) + "m" : h) +
+          " · idle/walk";
+        status.className = "tvs-hero-preview__status ok";
+        if (opts.onReady) opts.onReady({ kind: "voxel-avatar-race", height: h }, model);
+      } catch (err) {
+        console.warn("[TvsHeroPreview] race", err);
+        status.textContent = "Race load failed: " + (err && err.message ? err.message : err);
+        status.className = "tvs-hero-preview__status bad";
+      }
+    }
+
+    /** Legacy TVS pack unit (NPC only — not play default). */
     async function loadUnit(unit, tint) {
       if (!unit || !global.TvsUnitLoader) {
         status.textContent = "TVS loader offline";
@@ -100,11 +192,7 @@
       status.textContent = "Loading " + (unit.displayName || unit.unitId) + "…";
       status.className = "tvs-hero-preview__status";
       try {
-        if (root) {
-          scene.remove(root);
-          root = null;
-        }
-        mixer = null;
+        clearRoot();
         var model = await TvsUnitLoader.loadTvsUnit(unit, {
           THREE: THREE,
           FBXLoader: THREE.FBXLoader,
@@ -114,13 +202,14 @@
           withAnims: true,
           loadSidecars: true,
           preferGlb: true,
-          maxClips: 2,
+          maxClips: 20,
           colorTint: tint != null && tint !== 0xffffff ? tint : null,
         });
         if (disposed) return;
         root = model;
         scene.add(root);
         if (model.userData.mixer) mixer = model.userData.mixer;
+        frameCameraOn(model);
         var rep = model.userData.importReport || {};
         var h = rep.measuredHeight || rep.height || "?";
         status.textContent =
@@ -140,10 +229,23 @@
       }
     }
 
-    if (opts.unit) loadUnit(opts.unit, opts.colorTint);
+    if (opts.race) loadRace(opts.race, opts.colorTint);
+    else if (opts.unit) loadUnit(opts.unit, opts.colorTint);
+
+    function resize() {
+      var m = measure();
+      w = m.w;
+      h = m.h;
+      camera.aspect = w / Math.max(1, h);
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+      renderer.domElement.style.height = h + "px";
+    }
 
     var api = {
+      loadRace: loadRace,
       loadUnit: loadUnit,
+      resize: resize,
       dispose: function () {
         disposed = true;
         cancelAnimationFrame(raf);
@@ -154,10 +256,16 @@
         if (active === api) active = null;
       },
       getReport: function () {
-        return root && root.userData ? root.userData.importReport : null;
+        return root && root.userData ? root.userData.importReport || root.userData : null;
       },
     };
     active = api;
+    // If mounted while hidden, resize once after layout
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(function () {
+        if (!disposed) resize();
+      });
+    }
     return api;
   }
 
